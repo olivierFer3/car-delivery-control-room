@@ -71,3 +71,11 @@ DATASET_DIR=/path/to/your/copy npm run db:seed
 The seed replaces the database in one transaction after checking every collection's row count against the manifest in that folder, so change values rather than the number of rows, or update the manifest as well. The running app reads the new rows on the next request. A reviewer can use this to check that a changed alert, window or thread moves the board and the record together.
 
 All names, messages and events in the bundled dataset are fictional. The starter uses Bahn's birch, asphalt and sand colours and loads Unbounded, Poppins and Reddit Mono from Google Fonts as the brand's published fallback faces, falling back to Arial without a network. It does not bundle licensed brand fonts or copy Portal screens.
+
+## Participant incident backend
+
+The separately persisted fictional incident workflow, shared API contract,
+Person A/B ownership, provider configuration, demo commands and remaining
+verification are documented in [the incident handoff](../docs/IMPLEMENTATION.md).
+UI-ready pending/executed responses are in
+[`docs/examples/incident-responses.json`](../docs/examples/incident-responses.json).

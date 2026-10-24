@@ -1,0 +1,924 @@
+{
+  "pending": {
+    "id": "demo-ferry-603",
+    "orderId": "ord-00603",
+    "signalId": "alert-x5259ff7f2e03f0e6",
+    "scenario": "delay",
+    "simulationTime": "2026-10-21T09:00:00Z",
+    "state": "needs_decision",
+    "summary": "Mock: move the fictional ferry booking",
+    "evidence": [
+      {
+        "id": "alert-x5259ff7f2e03f0e6",
+        "source": "dataset:alert-x5259ff7f2e03f0e6",
+        "at": "2026-10-21T07:00:00Z",
+        "text": "{\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"alert-x5259ff7f2e03f0e6\",\"order_id\":\"ord-00603\",\"severity\":\"high\",\"signal\":\"FERRY_CONNECTION_RISK\",\"status\":\"OPEN\",\"summary\":\"Review ferry cutoff for CD-420603; source is a conversation, not a verified outcome.\",\"triggered_at\":\"2026-10-21T07:00:00Z\"}",
+        "kind": "record"
+      },
+      {
+        "id": "msg-xf06d346a050b3e0a",
+        "source": "dataset:msg-xf06d346a050b3e0a",
+        "at": "2026-10-21T06:58:00Z",
+        "text": "{\"author_id\":\"drv-121\",\"author_type\":\"driver\",\"authored_at\":\"2026-10-21T06:58:00Z\",\"body\":\"The queue before the terminal has barely moved. The booked crossing for CD-420603 may close before I reach check-in.\",\"channel\":\"support_chat\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-xf06d346a050b3e0a\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"visibility\":\"PUBLIC\"}",
+        "kind": "reported"
+      },
+      {
+        "id": "msg-x6facdfad04774a58",
+        "source": "dataset:msg-x6facdfad04774a58",
+        "at": "2026-10-21T07:10:00Z",
+        "text": "{\"author_id\":\"ops-support\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T07:10:00Z\",\"body\":\"I am checking the check-in deadline and next available sailing. Please send your latest ETA when it updates.\",\"channel\":\"support_chat\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x6facdfad04774a58\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"drv-121\",\"recipient_type\":\"driver\",\"visibility\":\"PUBLIC\"}",
+        "kind": "record"
+      },
+      {
+        "id": "msg-x108ad4ae10c6ef5e",
+        "source": "dataset:msg-x108ad4ae10c6ef5e",
+        "at": "2026-10-21T07:14:00Z",
+        "text": "{\"author_id\":\"ops-support\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T07:14:00Z\",\"body\":\"Do not cancel the current booking or promise another crossing until capacity and fare terms are confirmed.\",\"channel\":\"internal_note\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x108ad4ae10c6ef5e\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"visibility\":\"INTERNAL\"}",
+        "kind": "record"
+      },
+      {
+        "id": "msg-x9d7829f6508ab7c0",
+        "source": "dataset:msg-x9d7829f6508ab7c0",
+        "at": "2026-10-21T07:31:00Z",
+        "text": "{\"author_id\":\"drv-121\",\"author_type\":\"driver\",\"authored_at\":\"2026-10-21T07:31:00Z\",\"body\":\"I am still in the queue with the car. I have not turned toward another terminal.\",\"channel\":\"support_chat\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x9d7829f6508ab7c0\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"visibility\":\"PUBLIC\"}",
+        "kind": "reported"
+      },
+      {
+        "id": "msg-x7074c5c677e14192",
+        "source": "dataset:msg-x7074c5c677e14192",
+        "at": "2026-10-21T08:43:00Z",
+        "text": "{\"author_id\":\"ops-travel\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T08:43:00Z\",\"body\":\"Carrier desk took our request to move this car to a later crossing, but has not confirmed a slot or fare. Keep the original booking active. Do not tell the driver to turn away or change the customer's delivery promise yet.\",\"channel\":\"internal_note\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x7074c5c677e14192\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-shift\",\"recipient_type\":\"operator\",\"visibility\":\"INTERNAL\"}",
+        "kind": "record"
+      },
+      {
+        "id": "res-x1082202e8d139d61",
+        "source": "dataset:res-x1082202e8d139d61",
+        "at": "2026-10-15T05:01:00Z",
+        "text": "{\"amendment_request\":{\"candidate_reservation_id\":null,\"requested_at\":\"2026-10-21T08:43:00Z\",\"requested_change\":\"LATER_VEHICLE_CROSSING\",\"source_message_id\":\"msg-x7074c5c677e14192\",\"status\":\"REQUESTED_NOT_CONFIRMED\"},\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"boarding_confirmation\":\"UNCONFIRMED\",\"booked_at\":\"2026-10-15T05:01:00Z\",\"booking_reference\":\"WBV-FERRY-00603\",\"check_in_confirmation\":\"UNCONFIRMED\",\"check_in_cutoff_at\":\"2026-10-21T12:00:00Z\",\"departure_at\":\"2026-10-21T14:00:00Z\",\"destination_terminal\":\"South Finland Vehicle Terminal\",\"destination_terminal_arrival_confirmation\":\"UNCONFIRMED\",\"destination_terminal_id\":\"terminal-south-finland\",\"expected_arrival_at\":\"2026-10-22T20:00:00Z\",\"id\":\"res-x1082202e8d139d61\",\"journey_state_basis\":{\"delivery_event_id\":null,\"note\":\"Check-in is still ahead; no terminal arrival or boarding evidence is recorded.\",\"reservation_id\":\"res-x1082202e8d139d61\",\"snapshot_at\":\"2026-10-21T09:00:00Z\"},\"kind\":\"FERRY\",\"order_id\":\"ord-00603\",\"origin_terminal\":\"West Baltic Vehicle Terminal\",\"origin_terminal_id\":\"terminal-west-baltic\",\"route_label\":\"DE to FI vehicle crossing\",\"schedule_basis\":{\"kind\":\"BOOKING_TIMETABLE\",\"note\":\"Booking timetable recorded at purchase; no live boarding or discharge feed is attached.\",\"recorded_at\":\"2026-10-15T05:01:00Z\",\"reservation_id\":\"res-x1082202e8d139d61\"},\"snapshot_journey_state\":\"BOOKED_BEFORE_CHECK_IN_CUTOFF\",\"status\":\"BOOKED\",\"terminal_road_estimate_id\":\"terminal-xadc1a0fcdfa902b9\",\"verified_milestones\":[{\"evidence_id\":\"res-x1082202e8d139d61\",\"evidence_type\":\"travel_reservation\",\"kind\":\"BOOKING_RECORDED\",\"occurred_at\":\"2026-10-15T05:01:00Z\"}]}",
+        "kind": "record"
+      },
+      {
+        "id": "sim-ferry-603-1",
+        "source": "simulated_service:sim-ferry-603-1",
+        "at": "2026-10-21T09:00:00Z",
+        "text": "{\"id\":\"sim-ferry-603-1\",\"order_id\":\"ord-00603\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"kind\":\"FERRY\",\"status\":\"AVAILABLE_QUOTE\",\"provider\":\"Fictional Demo Ferry Service\",\"data_origin\":\"SIMULATED_SERVICE\",\"checked_at\":\"2026-10-21T09:00:00Z\",\"check_in_cutoff_at\":\"2026-10-22T12:00:00Z\",\"departure_at\":\"2026-10-22T14:00:00Z\",\"arrival_at\":\"2026-10-23T20:00:00Z\",\"quote_cents\":38700,\"currency\":\"EUR\",\"capacity_note\":\"Fictional vehicle slot quote; unbooked. No real service contacted.\"}",
+        "kind": "record"
+      },
+      {
+        "id": "sim-ferry-603-2",
+        "source": "simulated_service:sim-ferry-603-2",
+        "at": "2026-10-21T09:00:00Z",
+        "text": "{\"id\":\"sim-ferry-603-2\",\"order_id\":\"ord-00603\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"kind\":\"FERRY\",\"status\":\"AVAILABLE_QUOTE\",\"provider\":\"Fictional Demo Ferry Service\",\"data_origin\":\"SIMULATED_SERVICE\",\"checked_at\":\"2026-10-21T09:00:00Z\",\"check_in_cutoff_at\":\"2026-10-23T12:00:00Z\",\"departure_at\":\"2026-10-23T14:00:00Z\",\"arrival_at\":\"2026-10-24T20:00:00Z\",\"quote_cents\":25600,\"currency\":\"EUR\",\"capacity_note\":\"Fictional vehicle slot quote; unbooked. No real service contacted.\"}",
+        "kind": "record"
+      },
+      {
+        "id": "driver:demo-ferry-603",
+        "source": "simulated_driver",
+        "at": "2026-10-21T09:00:00Z",
+        "text": "{\"status\":\"replied\",\"question\":\"What is your terminal ETA?\",\"terminalEta\":\"2026-10-21T13:00:00Z\",\"text\":\"Simulation: still in queue; terminal ETA 13:00 UTC.\",\"simulated\":true}",
+        "kind": "reported"
+      }
+    ],
+    "missing": [],
+    "contradictions": [],
+    "nextStep": "Human reviews this proposal version; approval permits simulated execution only",
+    "tasks": [
+      {
+        "tool": "get_order_context",
+        "args": {},
+        "result": {
+          "order": {
+            "active_plan_id": "plan-x0a80f47aafdae7f4",
+            "cancelled_at": null,
+            "created_at": "2026-10-14T09:37:00Z",
+            "customer_id": "cus-004",
+            "customer_reference": "PO-004-0603",
+            "delivery_address_id": "addr-00535",
+            "delivery_site_id": null,
+            "display_lane": "moving",
+            "id": "ord-00603",
+            "pickup_address_id": "addr-00534",
+            "pickup_site_id": null,
+            "readiness_status": "CONFIRMED",
+            "reference": "CD-420603",
+            "route_kind": "IMPORT",
+            "source": "WEB",
+            "status": "IN_TRANSIT",
+            "updated_at": "2026-10-21T08:43:00Z"
+          },
+          "alerts": [
+            {
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "alert-x5259ff7f2e03f0e6",
+              "order_id": "ord-00603",
+              "severity": "high",
+              "signal": "FERRY_CONNECTION_RISK",
+              "status": "OPEN",
+              "summary": "Review ferry cutoff for CD-420603; source is a conversation, not a verified outcome.",
+              "triggered_at": "2026-10-21T07:00:00Z"
+            }
+          ],
+          "messages": [
+            {
+              "author_id": "drv-121",
+              "author_type": "driver",
+              "authored_at": "2026-10-21T06:58:00Z",
+              "body": "The queue before the terminal has barely moved. The booked crossing for CD-420603 may close before I reach check-in.",
+              "channel": "support_chat",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-xf06d346a050b3e0a",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-support",
+              "recipient_type": "operator",
+              "visibility": "PUBLIC"
+            },
+            {
+              "author_id": "ops-support",
+              "author_type": "operator",
+              "authored_at": "2026-10-21T07:10:00Z",
+              "body": "I am checking the check-in deadline and next available sailing. Please send your latest ETA when it updates.",
+              "channel": "support_chat",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x6facdfad04774a58",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "drv-121",
+              "recipient_type": "driver",
+              "visibility": "PUBLIC"
+            },
+            {
+              "author_id": "ops-support",
+              "author_type": "operator",
+              "authored_at": "2026-10-21T07:14:00Z",
+              "body": "Do not cancel the current booking or promise another crossing until capacity and fare terms are confirmed.",
+              "channel": "internal_note",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x108ad4ae10c6ef5e",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-support",
+              "recipient_type": "operator",
+              "visibility": "INTERNAL"
+            },
+            {
+              "author_id": "drv-121",
+              "author_type": "driver",
+              "authored_at": "2026-10-21T07:31:00Z",
+              "body": "I am still in the queue with the car. I have not turned toward another terminal.",
+              "channel": "support_chat",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x9d7829f6508ab7c0",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-support",
+              "recipient_type": "operator",
+              "visibility": "PUBLIC"
+            },
+            {
+              "author_id": "ops-travel",
+              "author_type": "operator",
+              "authored_at": "2026-10-21T08:43:00Z",
+              "body": "Carrier desk took our request to move this car to a later crossing, but has not confirmed a slot or fare. Keep the original booking active. Do not tell the driver to turn away or change the customer's delivery promise yet.",
+              "channel": "internal_note",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x7074c5c677e14192",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-shift",
+              "recipient_type": "operator",
+              "visibility": "INTERNAL"
+            }
+          ],
+          "reservations": [
+            {
+              "amendment_request": {
+                "candidate_reservation_id": null,
+                "requested_at": "2026-10-21T08:43:00Z",
+                "requested_change": "LATER_VEHICLE_CROSSING",
+                "source_message_id": "msg-x7074c5c677e14192",
+                "status": "REQUESTED_NOT_CONFIRMED"
+              },
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "boarding_confirmation": "UNCONFIRMED",
+              "booked_at": "2026-10-15T05:01:00Z",
+              "booking_reference": "WBV-FERRY-00603",
+              "check_in_confirmation": "UNCONFIRMED",
+              "check_in_cutoff_at": "2026-10-21T12:00:00Z",
+              "departure_at": "2026-10-21T14:00:00Z",
+              "destination_terminal": "South Finland Vehicle Terminal",
+              "destination_terminal_arrival_confirmation": "UNCONFIRMED",
+              "destination_terminal_id": "terminal-south-finland",
+              "expected_arrival_at": "2026-10-22T20:00:00Z",
+              "id": "res-x1082202e8d139d61",
+              "journey_state_basis": {
+                "delivery_event_id": null,
+                "note": "Check-in is still ahead; no terminal arrival or boarding evidence is recorded.",
+                "reservation_id": "res-x1082202e8d139d61",
+                "snapshot_at": "2026-10-21T09:00:00Z"
+              },
+              "kind": "FERRY",
+              "order_id": "ord-00603",
+              "origin_terminal": "West Baltic Vehicle Terminal",
+              "origin_terminal_id": "terminal-west-baltic",
+              "route_label": "DE to FI vehicle crossing",
+              "schedule_basis": {
+                "kind": "BOOKING_TIMETABLE",
+                "note": "Booking timetable recorded at purchase; no live boarding or discharge feed is attached.",
+                "recorded_at": "2026-10-15T05:01:00Z",
+                "reservation_id": "res-x1082202e8d139d61"
+              },
+              "snapshot_journey_state": "BOOKED_BEFORE_CHECK_IN_CUTOFF",
+              "status": "BOOKED",
+              "terminal_road_estimate_id": "terminal-xadc1a0fcdfa902b9",
+              "verified_milestones": [
+                {
+                  "evidence_id": "res-x1082202e8d139d61",
+                  "evidence_type": "travel_reservation",
+                  "kind": "BOOKING_RECORDED",
+                  "occurred_at": "2026-10-15T05:01:00Z"
+                }
+              ]
+            }
+          ],
+          "options": [
+            {
+              "id": "sim-ferry-603-1",
+              "order_id": "ord-00603",
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "kind": "FERRY",
+              "status": "AVAILABLE_QUOTE",
+              "provider": "Fictional Demo Ferry Service",
+              "data_origin": "SIMULATED_SERVICE",
+              "checked_at": "2026-10-21T09:00:00Z",
+              "check_in_cutoff_at": "2026-10-22T12:00:00Z",
+              "departure_at": "2026-10-22T14:00:00Z",
+              "arrival_at": "2026-10-23T20:00:00Z",
+              "quote_cents": 38700,
+              "currency": "EUR",
+              "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+            },
+            {
+              "id": "sim-ferry-603-2",
+              "order_id": "ord-00603",
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "kind": "FERRY",
+              "status": "AVAILABLE_QUOTE",
+              "provider": "Fictional Demo Ferry Service",
+              "data_origin": "SIMULATED_SERVICE",
+              "checked_at": "2026-10-21T09:00:00Z",
+              "check_in_cutoff_at": "2026-10-23T12:00:00Z",
+              "departure_at": "2026-10-23T14:00:00Z",
+              "arrival_at": "2026-10-24T20:00:00Z",
+              "quote_cents": 25600,
+              "currency": "EUR",
+              "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+            }
+          ]
+        },
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "ask_driver",
+        "args": {
+          "question": "What is your terminal ETA?"
+        },
+        "result": {
+          "status": "replied",
+          "question": "What is your terminal ETA?",
+          "terminalEta": "2026-10-21T13:00:00Z",
+          "text": "Simulation: still in queue; terminal ETA 13:00 UTC.",
+          "simulated": true
+        },
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "search_travel_options",
+        "args": {},
+        "result": [
+          {
+            "id": "sim-ferry-603-1",
+            "order_id": "ord-00603",
+            "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+            "kind": "FERRY",
+            "status": "AVAILABLE_QUOTE",
+            "provider": "Fictional Demo Ferry Service",
+            "data_origin": "SIMULATED_SERVICE",
+            "checked_at": "2026-10-21T09:00:00Z",
+            "check_in_cutoff_at": "2026-10-22T12:00:00Z",
+            "departure_at": "2026-10-22T14:00:00Z",
+            "arrival_at": "2026-10-23T20:00:00Z",
+            "quote_cents": 38700,
+            "currency": "EUR",
+            "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+          },
+          {
+            "id": "sim-ferry-603-2",
+            "order_id": "ord-00603",
+            "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+            "kind": "FERRY",
+            "status": "AVAILABLE_QUOTE",
+            "provider": "Fictional Demo Ferry Service",
+            "data_origin": "SIMULATED_SERVICE",
+            "checked_at": "2026-10-21T09:00:00Z",
+            "check_in_cutoff_at": "2026-10-23T12:00:00Z",
+            "departure_at": "2026-10-23T14:00:00Z",
+            "arrival_at": "2026-10-24T20:00:00Z",
+            "quote_cents": 25600,
+            "currency": "EUR",
+            "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+          }
+        ],
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "check_option_constraints",
+        "args": {
+          "optionId": "sim-ferry-603-1"
+        },
+        "result": {
+          "optionId": "sim-ferry-603-1",
+          "feasible": true,
+          "terminalEta": "2026-10-21T13:00:00Z",
+          "cutoff": "2026-10-22T12:00:00Z",
+          "limitation": "Timing check uses a simulated driver report. Quote is fictional, not a booking or live capacity guarantee."
+        },
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "create_proposal",
+        "args": {
+          "optionId": "sim-ferry-603-1",
+          "reservationId": "res-x1082202e8d139d61",
+          "summary": "Mock: move the fictional ferry booking",
+          "consequences": "Simulated quote 38700 minor units EUR; departure 2026-10-22T14:00:00Z, arrival 2026-10-23T20:00:00Z. Customer promise unchanged. Quote is not live capacity.",
+          "evidenceIds": [
+            "sim-ferry-603-1",
+            "res-x1082202e8d139d61",
+            "driver:demo-ferry-603"
+          ]
+        },
+        "result": {
+          "version": 1,
+          "summary": "Mock: move the fictional ferry booking",
+          "consequences": "Simulated quote 38700 minor units EUR; departure 2026-10-22T14:00:00Z, arrival 2026-10-23T20:00:00Z. Customer promise unchanged. Quote is not live capacity.",
+          "evidenceIds": [
+            "sim-ferry-603-1",
+            "res-x1082202e8d139d61",
+            "driver:demo-ferry-603"
+          ],
+          "actions": [
+            {
+              "kind": "change_booking",
+              "reservationId": "res-x1082202e8d139d61",
+              "optionId": "sim-ferry-603-1",
+              "costCents": 38700,
+              "currency": "EUR",
+              "departureAt": "2026-10-22T14:00:00Z",
+              "arrivalAt": "2026-10-23T20:00:00Z"
+            }
+          ]
+        },
+        "at": "2026-10-21T09:00:00Z"
+      }
+    ],
+    "proposals": [
+      {
+        "version": 1,
+        "summary": "Mock: move the fictional ferry booking",
+        "consequences": "Simulated quote 38700 minor units EUR; departure 2026-10-22T14:00:00Z, arrival 2026-10-23T20:00:00Z. Customer promise unchanged. Quote is not live capacity.",
+        "evidenceIds": [
+          "sim-ferry-603-1",
+          "res-x1082202e8d139d61",
+          "driver:demo-ferry-603"
+        ],
+        "actions": [
+          {
+            "kind": "change_booking",
+            "reservationId": "res-x1082202e8d139d61",
+            "optionId": "sim-ferry-603-1",
+            "costCents": 38700,
+            "currency": "EUR",
+            "departureAt": "2026-10-22T14:00:00Z",
+            "arrivalAt": "2026-10-23T20:00:00Z"
+          }
+        ]
+      }
+    ],
+    "decisions": [],
+    "executions": [],
+    "conversation": [],
+    "timeline": [
+      {
+        "type": "created",
+        "text": "Fictional investigation opened; delivery status unchanged",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "get_order_context",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "ask_driver",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "search_travel_options",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "check_option_constraints",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "create_proposal",
+        "at": "2026-10-21T09:00:00Z"
+      }
+    ]
+  },
+  "executed": {
+    "id": "demo-ferry-603",
+    "orderId": "ord-00603",
+    "signalId": "alert-x5259ff7f2e03f0e6",
+    "scenario": "delay",
+    "simulationTime": "2026-10-21T09:00:00Z",
+    "state": "resolved",
+    "summary": "Mock: move the fictional ferry booking",
+    "evidence": [
+      {
+        "id": "alert-x5259ff7f2e03f0e6",
+        "source": "dataset:alert-x5259ff7f2e03f0e6",
+        "at": "2026-10-21T07:00:00Z",
+        "text": "{\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"alert-x5259ff7f2e03f0e6\",\"order_id\":\"ord-00603\",\"severity\":\"high\",\"signal\":\"FERRY_CONNECTION_RISK\",\"status\":\"OPEN\",\"summary\":\"Review ferry cutoff for CD-420603; source is a conversation, not a verified outcome.\",\"triggered_at\":\"2026-10-21T07:00:00Z\"}",
+        "kind": "record"
+      },
+      {
+        "id": "msg-xf06d346a050b3e0a",
+        "source": "dataset:msg-xf06d346a050b3e0a",
+        "at": "2026-10-21T06:58:00Z",
+        "text": "{\"author_id\":\"drv-121\",\"author_type\":\"driver\",\"authored_at\":\"2026-10-21T06:58:00Z\",\"body\":\"The queue before the terminal has barely moved. The booked crossing for CD-420603 may close before I reach check-in.\",\"channel\":\"support_chat\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-xf06d346a050b3e0a\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"visibility\":\"PUBLIC\"}",
+        "kind": "reported"
+      },
+      {
+        "id": "msg-x6facdfad04774a58",
+        "source": "dataset:msg-x6facdfad04774a58",
+        "at": "2026-10-21T07:10:00Z",
+        "text": "{\"author_id\":\"ops-support\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T07:10:00Z\",\"body\":\"I am checking the check-in deadline and next available sailing. Please send your latest ETA when it updates.\",\"channel\":\"support_chat\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x6facdfad04774a58\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"drv-121\",\"recipient_type\":\"driver\",\"visibility\":\"PUBLIC\"}",
+        "kind": "record"
+      },
+      {
+        "id": "msg-x108ad4ae10c6ef5e",
+        "source": "dataset:msg-x108ad4ae10c6ef5e",
+        "at": "2026-10-21T07:14:00Z",
+        "text": "{\"author_id\":\"ops-support\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T07:14:00Z\",\"body\":\"Do not cancel the current booking or promise another crossing until capacity and fare terms are confirmed.\",\"channel\":\"internal_note\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x108ad4ae10c6ef5e\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"visibility\":\"INTERNAL\"}",
+        "kind": "record"
+      },
+      {
+        "id": "msg-x9d7829f6508ab7c0",
+        "source": "dataset:msg-x9d7829f6508ab7c0",
+        "at": "2026-10-21T07:31:00Z",
+        "text": "{\"author_id\":\"drv-121\",\"author_type\":\"driver\",\"authored_at\":\"2026-10-21T07:31:00Z\",\"body\":\"I am still in the queue with the car. I have not turned toward another terminal.\",\"channel\":\"support_chat\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x9d7829f6508ab7c0\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"visibility\":\"PUBLIC\"}",
+        "kind": "reported"
+      },
+      {
+        "id": "msg-x7074c5c677e14192",
+        "source": "dataset:msg-x7074c5c677e14192",
+        "at": "2026-10-21T08:43:00Z",
+        "text": "{\"author_id\":\"ops-travel\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T08:43:00Z\",\"body\":\"Carrier desk took our request to move this car to a later crossing, but has not confirmed a slot or fare. Keep the original booking active. Do not tell the driver to turn away or change the customer's delivery promise yet.\",\"channel\":\"internal_note\",\"conversation_id\":\"conv-xdf71bc9a940be234\",\"id\":\"msg-x7074c5c677e14192\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"recipient_id\":\"ops-shift\",\"recipient_type\":\"operator\",\"visibility\":\"INTERNAL\"}",
+        "kind": "record"
+      },
+      {
+        "id": "res-x1082202e8d139d61",
+        "source": "dataset:res-x1082202e8d139d61",
+        "at": "2026-10-15T05:01:00Z",
+        "text": "{\"amendment_request\":{\"candidate_reservation_id\":null,\"requested_at\":\"2026-10-21T08:43:00Z\",\"requested_change\":\"LATER_VEHICLE_CROSSING\",\"source_message_id\":\"msg-x7074c5c677e14192\",\"status\":\"REQUESTED_NOT_CONFIRMED\"},\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"boarding_confirmation\":\"UNCONFIRMED\",\"booked_at\":\"2026-10-15T05:01:00Z\",\"booking_reference\":\"WBV-FERRY-00603\",\"check_in_confirmation\":\"UNCONFIRMED\",\"check_in_cutoff_at\":\"2026-10-21T12:00:00Z\",\"departure_at\":\"2026-10-21T14:00:00Z\",\"destination_terminal\":\"South Finland Vehicle Terminal\",\"destination_terminal_arrival_confirmation\":\"UNCONFIRMED\",\"destination_terminal_id\":\"terminal-south-finland\",\"expected_arrival_at\":\"2026-10-22T20:00:00Z\",\"id\":\"res-x1082202e8d139d61\",\"journey_state_basis\":{\"delivery_event_id\":null,\"note\":\"Check-in is still ahead; no terminal arrival or boarding evidence is recorded.\",\"reservation_id\":\"res-x1082202e8d139d61\",\"snapshot_at\":\"2026-10-21T09:00:00Z\"},\"kind\":\"FERRY\",\"order_id\":\"ord-00603\",\"origin_terminal\":\"West Baltic Vehicle Terminal\",\"origin_terminal_id\":\"terminal-west-baltic\",\"route_label\":\"DE to FI vehicle crossing\",\"schedule_basis\":{\"kind\":\"BOOKING_TIMETABLE\",\"note\":\"Booking timetable recorded at purchase; no live boarding or discharge feed is attached.\",\"recorded_at\":\"2026-10-15T05:01:00Z\",\"reservation_id\":\"res-x1082202e8d139d61\"},\"snapshot_journey_state\":\"BOOKED_BEFORE_CHECK_IN_CUTOFF\",\"status\":\"BOOKED\",\"terminal_road_estimate_id\":\"terminal-xadc1a0fcdfa902b9\",\"verified_milestones\":[{\"evidence_id\":\"res-x1082202e8d139d61\",\"evidence_type\":\"travel_reservation\",\"kind\":\"BOOKING_RECORDED\",\"occurred_at\":\"2026-10-15T05:01:00Z\"}]}",
+        "kind": "record"
+      },
+      {
+        "id": "sim-ferry-603-1",
+        "source": "simulated_service:sim-ferry-603-1",
+        "at": "2026-10-21T09:00:00Z",
+        "text": "{\"id\":\"sim-ferry-603-1\",\"order_id\":\"ord-00603\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"kind\":\"FERRY\",\"status\":\"AVAILABLE_QUOTE\",\"provider\":\"Fictional Demo Ferry Service\",\"data_origin\":\"SIMULATED_SERVICE\",\"checked_at\":\"2026-10-21T09:00:00Z\",\"check_in_cutoff_at\":\"2026-10-22T12:00:00Z\",\"departure_at\":\"2026-10-22T14:00:00Z\",\"arrival_at\":\"2026-10-23T20:00:00Z\",\"quote_cents\":38700,\"currency\":\"EUR\",\"capacity_note\":\"Fictional vehicle slot quote; unbooked. No real service contacted.\"}",
+        "kind": "record"
+      },
+      {
+        "id": "sim-ferry-603-2",
+        "source": "simulated_service:sim-ferry-603-2",
+        "at": "2026-10-21T09:00:00Z",
+        "text": "{\"id\":\"sim-ferry-603-2\",\"order_id\":\"ord-00603\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"kind\":\"FERRY\",\"status\":\"AVAILABLE_QUOTE\",\"provider\":\"Fictional Demo Ferry Service\",\"data_origin\":\"SIMULATED_SERVICE\",\"checked_at\":\"2026-10-21T09:00:00Z\",\"check_in_cutoff_at\":\"2026-10-23T12:00:00Z\",\"departure_at\":\"2026-10-23T14:00:00Z\",\"arrival_at\":\"2026-10-24T20:00:00Z\",\"quote_cents\":25600,\"currency\":\"EUR\",\"capacity_note\":\"Fictional vehicle slot quote; unbooked. No real service contacted.\"}",
+        "kind": "record"
+      },
+      {
+        "id": "driver:demo-ferry-603",
+        "source": "simulated_driver",
+        "at": "2026-10-21T09:00:00Z",
+        "text": "{\"status\":\"replied\",\"question\":\"What is your terminal ETA?\",\"terminalEta\":\"2026-10-21T13:00:00Z\",\"text\":\"Simulation: still in queue; terminal ETA 13:00 UTC.\",\"simulated\":true}",
+        "kind": "reported"
+      }
+    ],
+    "missing": [],
+    "contradictions": [],
+    "nextStep": "Monitor delivery; incident resolution does not prove delivery",
+    "tasks": [
+      {
+        "tool": "get_order_context",
+        "args": {},
+        "result": {
+          "order": {
+            "active_plan_id": "plan-x0a80f47aafdae7f4",
+            "cancelled_at": null,
+            "created_at": "2026-10-14T09:37:00Z",
+            "customer_id": "cus-004",
+            "customer_reference": "PO-004-0603",
+            "delivery_address_id": "addr-00535",
+            "delivery_site_id": null,
+            "display_lane": "moving",
+            "id": "ord-00603",
+            "pickup_address_id": "addr-00534",
+            "pickup_site_id": null,
+            "readiness_status": "CONFIRMED",
+            "reference": "CD-420603",
+            "route_kind": "IMPORT",
+            "source": "WEB",
+            "status": "IN_TRANSIT",
+            "updated_at": "2026-10-21T08:43:00Z"
+          },
+          "alerts": [
+            {
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "alert-x5259ff7f2e03f0e6",
+              "order_id": "ord-00603",
+              "severity": "high",
+              "signal": "FERRY_CONNECTION_RISK",
+              "status": "OPEN",
+              "summary": "Review ferry cutoff for CD-420603; source is a conversation, not a verified outcome.",
+              "triggered_at": "2026-10-21T07:00:00Z"
+            }
+          ],
+          "messages": [
+            {
+              "author_id": "drv-121",
+              "author_type": "driver",
+              "authored_at": "2026-10-21T06:58:00Z",
+              "body": "The queue before the terminal has barely moved. The booked crossing for CD-420603 may close before I reach check-in.",
+              "channel": "support_chat",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-xf06d346a050b3e0a",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-support",
+              "recipient_type": "operator",
+              "visibility": "PUBLIC"
+            },
+            {
+              "author_id": "ops-support",
+              "author_type": "operator",
+              "authored_at": "2026-10-21T07:10:00Z",
+              "body": "I am checking the check-in deadline and next available sailing. Please send your latest ETA when it updates.",
+              "channel": "support_chat",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x6facdfad04774a58",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "drv-121",
+              "recipient_type": "driver",
+              "visibility": "PUBLIC"
+            },
+            {
+              "author_id": "ops-support",
+              "author_type": "operator",
+              "authored_at": "2026-10-21T07:14:00Z",
+              "body": "Do not cancel the current booking or promise another crossing until capacity and fare terms are confirmed.",
+              "channel": "internal_note",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x108ad4ae10c6ef5e",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-support",
+              "recipient_type": "operator",
+              "visibility": "INTERNAL"
+            },
+            {
+              "author_id": "drv-121",
+              "author_type": "driver",
+              "authored_at": "2026-10-21T07:31:00Z",
+              "body": "I am still in the queue with the car. I have not turned toward another terminal.",
+              "channel": "support_chat",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x9d7829f6508ab7c0",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-support",
+              "recipient_type": "operator",
+              "visibility": "PUBLIC"
+            },
+            {
+              "author_id": "ops-travel",
+              "author_type": "operator",
+              "authored_at": "2026-10-21T08:43:00Z",
+              "body": "Carrier desk took our request to move this car to a later crossing, but has not confirmed a slot or fare. Keep the original booking active. Do not tell the driver to turn away or change the customer's delivery promise yet.",
+              "channel": "internal_note",
+              "conversation_id": "conv-xdf71bc9a940be234",
+              "id": "msg-x7074c5c677e14192",
+              "language": "en",
+              "order_id": "ord-00603",
+              "recipient_id": "ops-shift",
+              "recipient_type": "operator",
+              "visibility": "INTERNAL"
+            }
+          ],
+          "reservations": [
+            {
+              "amendment_request": {
+                "candidate_reservation_id": null,
+                "requested_at": "2026-10-21T08:43:00Z",
+                "requested_change": "LATER_VEHICLE_CROSSING",
+                "source_message_id": "msg-x7074c5c677e14192",
+                "status": "REQUESTED_NOT_CONFIRMED"
+              },
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "boarding_confirmation": "UNCONFIRMED",
+              "booked_at": "2026-10-15T05:01:00Z",
+              "booking_reference": "WBV-FERRY-00603",
+              "check_in_confirmation": "UNCONFIRMED",
+              "check_in_cutoff_at": "2026-10-21T12:00:00Z",
+              "departure_at": "2026-10-21T14:00:00Z",
+              "destination_terminal": "South Finland Vehicle Terminal",
+              "destination_terminal_arrival_confirmation": "UNCONFIRMED",
+              "destination_terminal_id": "terminal-south-finland",
+              "expected_arrival_at": "2026-10-22T20:00:00Z",
+              "id": "res-x1082202e8d139d61",
+              "journey_state_basis": {
+                "delivery_event_id": null,
+                "note": "Check-in is still ahead; no terminal arrival or boarding evidence is recorded.",
+                "reservation_id": "res-x1082202e8d139d61",
+                "snapshot_at": "2026-10-21T09:00:00Z"
+              },
+              "kind": "FERRY",
+              "order_id": "ord-00603",
+              "origin_terminal": "West Baltic Vehicle Terminal",
+              "origin_terminal_id": "terminal-west-baltic",
+              "route_label": "DE to FI vehicle crossing",
+              "schedule_basis": {
+                "kind": "BOOKING_TIMETABLE",
+                "note": "Booking timetable recorded at purchase; no live boarding or discharge feed is attached.",
+                "recorded_at": "2026-10-15T05:01:00Z",
+                "reservation_id": "res-x1082202e8d139d61"
+              },
+              "snapshot_journey_state": "BOOKED_BEFORE_CHECK_IN_CUTOFF",
+              "status": "BOOKED",
+              "terminal_road_estimate_id": "terminal-xadc1a0fcdfa902b9",
+              "verified_milestones": [
+                {
+                  "evidence_id": "res-x1082202e8d139d61",
+                  "evidence_type": "travel_reservation",
+                  "kind": "BOOKING_RECORDED",
+                  "occurred_at": "2026-10-15T05:01:00Z"
+                }
+              ]
+            }
+          ],
+          "options": [
+            {
+              "id": "sim-ferry-603-1",
+              "order_id": "ord-00603",
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "kind": "FERRY",
+              "status": "AVAILABLE_QUOTE",
+              "provider": "Fictional Demo Ferry Service",
+              "data_origin": "SIMULATED_SERVICE",
+              "checked_at": "2026-10-21T09:00:00Z",
+              "check_in_cutoff_at": "2026-10-22T12:00:00Z",
+              "departure_at": "2026-10-22T14:00:00Z",
+              "arrival_at": "2026-10-23T20:00:00Z",
+              "quote_cents": 38700,
+              "currency": "EUR",
+              "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+            },
+            {
+              "id": "sim-ferry-603-2",
+              "order_id": "ord-00603",
+              "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+              "kind": "FERRY",
+              "status": "AVAILABLE_QUOTE",
+              "provider": "Fictional Demo Ferry Service",
+              "data_origin": "SIMULATED_SERVICE",
+              "checked_at": "2026-10-21T09:00:00Z",
+              "check_in_cutoff_at": "2026-10-23T12:00:00Z",
+              "departure_at": "2026-10-23T14:00:00Z",
+              "arrival_at": "2026-10-24T20:00:00Z",
+              "quote_cents": 25600,
+              "currency": "EUR",
+              "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+            }
+          ]
+        },
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "ask_driver",
+        "args": {
+          "question": "What is your terminal ETA?"
+        },
+        "result": {
+          "status": "replied",
+          "question": "What is your terminal ETA?",
+          "terminalEta": "2026-10-21T13:00:00Z",
+          "text": "Simulation: still in queue; terminal ETA 13:00 UTC.",
+          "simulated": true
+        },
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "search_travel_options",
+        "args": {},
+        "result": [
+          {
+            "id": "sim-ferry-603-1",
+            "order_id": "ord-00603",
+            "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+            "kind": "FERRY",
+            "status": "AVAILABLE_QUOTE",
+            "provider": "Fictional Demo Ferry Service",
+            "data_origin": "SIMULATED_SERVICE",
+            "checked_at": "2026-10-21T09:00:00Z",
+            "check_in_cutoff_at": "2026-10-22T12:00:00Z",
+            "departure_at": "2026-10-22T14:00:00Z",
+            "arrival_at": "2026-10-23T20:00:00Z",
+            "quote_cents": 38700,
+            "currency": "EUR",
+            "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+          },
+          {
+            "id": "sim-ferry-603-2",
+            "order_id": "ord-00603",
+            "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+            "kind": "FERRY",
+            "status": "AVAILABLE_QUOTE",
+            "provider": "Fictional Demo Ferry Service",
+            "data_origin": "SIMULATED_SERVICE",
+            "checked_at": "2026-10-21T09:00:00Z",
+            "check_in_cutoff_at": "2026-10-23T12:00:00Z",
+            "departure_at": "2026-10-23T14:00:00Z",
+            "arrival_at": "2026-10-24T20:00:00Z",
+            "quote_cents": 25600,
+            "currency": "EUR",
+            "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted."
+          }
+        ],
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "check_option_constraints",
+        "args": {
+          "optionId": "sim-ferry-603-1"
+        },
+        "result": {
+          "optionId": "sim-ferry-603-1",
+          "feasible": true,
+          "terminalEta": "2026-10-21T13:00:00Z",
+          "cutoff": "2026-10-22T12:00:00Z",
+          "limitation": "Timing check uses a simulated driver report. Quote is fictional, not a booking or live capacity guarantee."
+        },
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "tool": "create_proposal",
+        "args": {
+          "optionId": "sim-ferry-603-1",
+          "reservationId": "res-x1082202e8d139d61",
+          "summary": "Mock: move the fictional ferry booking",
+          "consequences": "Simulated quote 38700 minor units EUR; departure 2026-10-22T14:00:00Z, arrival 2026-10-23T20:00:00Z. Customer promise unchanged. Quote is not live capacity.",
+          "evidenceIds": [
+            "sim-ferry-603-1",
+            "res-x1082202e8d139d61",
+            "driver:demo-ferry-603"
+          ]
+        },
+        "result": {
+          "version": 1,
+          "summary": "Mock: move the fictional ferry booking",
+          "consequences": "Simulated quote 38700 minor units EUR; departure 2026-10-22T14:00:00Z, arrival 2026-10-23T20:00:00Z. Customer promise unchanged. Quote is not live capacity.",
+          "evidenceIds": [
+            "sim-ferry-603-1",
+            "res-x1082202e8d139d61",
+            "driver:demo-ferry-603"
+          ],
+          "actions": [
+            {
+              "kind": "change_booking",
+              "reservationId": "res-x1082202e8d139d61",
+              "optionId": "sim-ferry-603-1",
+              "costCents": 38700,
+              "currency": "EUR",
+              "departureAt": "2026-10-22T14:00:00Z",
+              "arrivalAt": "2026-10-23T20:00:00Z"
+            }
+          ]
+        },
+        "at": "2026-10-21T09:00:00Z"
+      }
+    ],
+    "proposals": [
+      {
+        "version": 1,
+        "summary": "Mock: move the fictional ferry booking",
+        "consequences": "Simulated quote 38700 minor units EUR; departure 2026-10-22T14:00:00Z, arrival 2026-10-23T20:00:00Z. Customer promise unchanged. Quote is not live capacity.",
+        "evidenceIds": [
+          "sim-ferry-603-1",
+          "res-x1082202e8d139d61",
+          "driver:demo-ferry-603"
+        ],
+        "actions": [
+          {
+            "kind": "change_booking",
+            "reservationId": "res-x1082202e8d139d61",
+            "optionId": "sim-ferry-603-1",
+            "costCents": 38700,
+            "currency": "EUR",
+            "departureAt": "2026-10-22T14:00:00Z",
+            "arrivalAt": "2026-10-23T20:00:00Z"
+          }
+        ]
+      }
+    ],
+    "decisions": [
+      {
+        "version": 1,
+        "choice": "approve",
+        "operator": "demo-operator",
+        "comment": "Reviewed fictional cost and departure",
+        "at": "2026-10-21T09:00:00Z"
+      }
+    ],
+    "executions": [
+      {
+        "version": 1,
+        "status": "succeeded",
+        "at": "2026-10-21T09:00:00Z",
+        "effects": [
+          {
+            "kind": "change_booking",
+            "reservationId": "res-x1082202e8d139d61",
+            "optionId": "sim-ferry-603-1",
+            "costCents": 38700,
+            "currency": "EUR",
+            "departureAt": "2026-10-22T14:00:00Z",
+            "arrivalAt": "2026-10-23T20:00:00Z"
+          }
+        ],
+        "reason": "Fictional booking changed in incident overlay; source snapshot and delivery status unchanged"
+      }
+    ],
+    "conversation": [],
+    "timeline": [
+      {
+        "type": "created",
+        "text": "Fictional investigation opened; delivery status unchanged",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "get_order_context",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "ask_driver",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "search_travel_options",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "check_option_constraints",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "tool",
+        "text": "create_proposal",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "decision",
+        "text": "approve version 1: Reviewed fictional cost and departure",
+        "at": "2026-10-21T09:00:00Z"
+      },
+      {
+        "type": "execution",
+        "text": "Fictional booking changed in incident overlay; source snapshot and delivery status unchanged",
+        "at": "2026-10-21T09:00:00Z"
+      }
+    ]
+  }
+}

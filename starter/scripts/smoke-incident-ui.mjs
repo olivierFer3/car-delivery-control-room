@@ -1,0 +1,90 @@
+/** Run against a fresh local demo overlay. Does not reset or delete incident history. */
+import 'dotenv/config'
+import assert from 'node:assert/strict'
+import { mkdir } from 'node:fs/promises'
+import path from 'node:path'
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright')
+const base = process.env.APP_URL ?? 'http://127.0.0.1:3000'
+const token = process.env.INCIDENT_OPERATOR_TOKEN
+assert.ok(token, 'Set INCIDENT_OPERATOR_TOKEN in .env')
+const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}), args: ['--no-sandbox'] })
+const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+const errors = []
+page.on('pageerror', error => errors.push(error.message))
+const artifacts = path.resolve('../docs/verification')
+await mkdir(artifacts, { recursive: true })
+const request = async (url, body, authorized = true) => {
+  const response = await fetch(base + url, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', ...(authorized ? { Authorization: `Bearer ${token}` } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) })
+  return { status: response.status, body: await response.json() }
+}
+try {
+  const before = await request('/api/orders/ord-00603')
+  assert.equal(before.status, 200)
+  const initial = await request('/api/incidents')
+  assert.equal(initial.status, 200)
+  const existing = initial.body.incidents.find(i => i.orderId === 'ord-00603')
+  assert.ok(!existing || existing.tasks.length === 0, 'Demo already has history; use a fresh isolated database rather than deleting history')
+  await page.goto(base + '/incidents')
+  await page.getByRole('heading', { name: 'Your decisions' }).waitFor()
+  await page.getByRole('button', { name: 'Open ferry-delay demo' }).waitFor({ state: 'visible' })
+  await page.waitForFunction(() => ![...document.querySelectorAll('button')].find(b => b.textContent === 'Open ferry-delay demo')?.disabled)
+  await page.getByRole('button', { name: 'Open ferry-delay demo' }).click()
+  if (existing) {
+    await page.waitForURL(/\/incidents\/[^/]+$/)
+    await page.getByRole('button', { name: 'Prepare mock proposal', exact: true }).click()
+  }
+  await page.getByRole('alert').filter({ hasText: 'Unlock operator access' }).waitFor()
+  await page.getByLabel('Operator token', { exact: false }).fill('incorrect-demo-token')
+  await page.getByRole('button', { name: 'Unlock decisions' }).click()
+  await page.getByText('Incorrect operator token.').waitFor()
+  await page.getByLabel('Operator token', { exact: false }).fill(token)
+  await page.getByRole('button', { name: 'Unlock decisions' }).click()
+  await page.getByText('Operator access unlocked.').waitFor()
+  if (!existing) await page.getByRole('button', { name: 'Open ferry-delay demo' }).click()
+  await page.waitForURL(/\/incidents\/[^/]+$/)
+  const id = page.url().split('/').at(-1)
+  const endpoint = `/api/incidents/${id}`
+  await page.getByRole('button', { name: 'Prepare mock proposal', exact: true }).click()
+  await page.getByRole('button', { name: 'Approve version 1', exact: true }).waitFor()
+  await page.screenshot({ path: path.join(artifacts, 'incident-proposal.png'), fullPage: true })
+  assert.equal((await request(endpoint, { command: 'execute', version: 1 }, false)).status, 401)
+  assert.equal((await request(endpoint, { command: 'execute', version: 1 })).status, 409)
+  await page.getByLabel('Decision note').fill('Prefer another departure for the demo')
+  await page.getByRole('button', { name: 'Reject proposal', exact: true }).click()
+  await page.getByText('Rejected', { exact: true }).waitFor()
+  assert.equal(await page.getByRole('button', { name: 'Apply approved simulated change' }).count(), 0)
+  assert.equal((await request(endpoint, { command: 'execute', version: 1 })).status, 409)
+  await page.reload()
+  await page.getByText('Rejected', { exact: true }).waitFor()
+  await page.getByRole('button', { name: 'Prepare another mock proposal', exact: true }).click()
+  await page.getByRole('button', { name: 'Approve version 2', exact: true }).waitFor()
+  assert.equal((await request(endpoint, { command: 'decide', version: 1, choice: 'approve', operator: 'test', comment: '' })).status, 409)
+  await page.getByRole('button', { name: 'Approve version 2', exact: true }).click()
+  await page.getByText('Version 2 is approved. No change has been applied yet.').waitFor()
+  assert.equal((await request(endpoint)).body.executions.length, 0)
+  await page.screenshot({ path: path.join(artifacts, 'incident-approved.png'), fullPage: true })
+  await page.getByRole('button', { name: 'Apply approved simulated change', exact: true }).click()
+  await page.getByRole('heading', { name: 'Simulated booking change completed' }).waitFor()
+  await page.reload()
+  await page.getByRole('heading', { name: 'Simulated booking change completed' }).waitFor()
+  const duplicates = await Promise.all([request(endpoint, { command: 'execute', version: 2 }), request(endpoint, { command: 'execute', version: 2 })])
+  assert.ok(duplicates.every(r => r.status === 200 && r.body.executions.length === 1))
+  const final = (await request(endpoint)).body
+  assert.equal(final.decisions.length, 2); assert.equal(final.executions.length, 1); assert.equal(final.state, 'resolved')
+  const after = await request('/api/orders/ord-00603')
+  assert.deepEqual(after.body, before.body, 'Incident must not mutate source order')
+  await page.screenshot({ path: path.join(artifacts, 'incident-executed.png'), fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.screenshot({ path: path.join(artifacts, 'incident-mobile.png'), fullPage: true })
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'No horizontal mobile overflow')
+  await page.getByRole('link', { name: 'All incidents' }).click()
+  await page.getByRole('heading', { name: 'Resolved incidents' }).waitFor()
+  await page.getByRole('button', { name: 'Open ferry-delay demo' }).click()
+  await page.waitForURL(new RegExp(id))
+  assert.equal((await request('/api/incidents')).body.incidents.length, initial.body.incidents.length + (existing ? 0 : 1))
+  await page.getByRole('button', { name: 'Lock access' }).click()
+  await page.getByRole('button', { name: 'Unlock decisions' }).waitFor()
+  assert.deepEqual(errors, [])
+  console.log('PASS: browser unlock, open, propose, reject, reload, revise, approve, execute, persistence, concurrent duplicate protection, stale/unauthorized guards, unchanged source order, mobile layout and reopen.')
+  console.log(`Demo: ${base}/incidents/${id}`)
+} finally { await browser.close() }

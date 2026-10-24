@@ -11,7 +11,11 @@
     "db:seed": "tsx scripts/seed.ts",
     "attachments:seed": "tsx scripts/seed-attachments.ts",
     "attachments:smoke": "tsx scripts/smoke-attachments.ts",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "incidents:init": "node --import tsx scripts/init-incidents.ts",
+    "test:incidents": "node --import tsx scripts/tests/incidents.test.ts",
+    "smoke:incident-ui": "node scripts/smoke-incident-ui.mjs",
+    "incidents:examples": "node --import tsx scripts/example-incidents.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1155.0",
