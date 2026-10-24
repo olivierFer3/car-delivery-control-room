@@ -1,0 +1,10 @@
+{
+  "branch": "agent/overnight-validation",
+  "source_worktree": "/home/matrix/home/projects/car-delivery-control-room",
+  "database": {"container": "bahn-overnight-validation-db", "host": "127.0.0.1", "port": 15438, "name": "controlroom_overnight_validation", "user": "overnight"},
+  "app_port": 3107,
+  "limits": {"cycles": 8, "elapsed_seconds": 14400, "coding_sessions": 4, "coding_session_seconds": 900, "reported_coding_tokens": 200000, "task_retries": 2, "command_seconds": 180, "business_api_calls": 0, "max_provider_output_tokens": 2048},
+  "optional_iteration4": false,
+  "coding_enabled": true,
+  "live_verification_required_after_product_changes": true
+}

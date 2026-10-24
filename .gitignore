@@ -12,3 +12,6 @@ groq_api_key.txt
 
 # Python bytecode
 __pycache__/
+
+# Isolated validation runtime: credentials, SQLite state, logs, locks.
+.overnight/

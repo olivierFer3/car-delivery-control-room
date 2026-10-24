@@ -1,0 +1,4 @@
+[
+  {"id":"reuse-past-approval","scope":"Historical incident memory","proposed_rule":"A similar resolved incident's approval permits this incident's action.","counterexample":"Two incidents with different proposal IDs/versions may describe the same ferry but require separate human review.","reason":"Authorization is scoped to one current proposal; similarity is not permission.","evidence":["starter/scripts/tests/incidents.test.ts: stale and unapproved execution protections"],"related_tests":["holdout approval boundary"]},
+  {"id":"green-means-bug-free","scope":"Validation reports","proposed_rule":"Passing the test suite proves there are no remaining bugs.","counterexample":"The initial in-memory tests passed while the real database/browser later exposed double-encoded JSON.","reason":"Coverage and evaluated scenarios are bounded; reports must preserve limitations.","evidence":["docs/ITERATION-1.md"],"related_tests":[]}
+]

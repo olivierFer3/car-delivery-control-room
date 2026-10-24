@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["summary","changed_files","tests","blocked","blocker"],"properties":{"summary":{"type":"string"},"changed_files":{"type":"array","items":{"type":"string"}},"tests":{"type":"array","items":{"type":"string"}},"blocked":{"type":"boolean"},"blocker":{"type":"string"}}}
