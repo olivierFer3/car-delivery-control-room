@@ -1,0 +1,35 @@
+{
+  "task": "iteration2",
+  "base_head": "43bf562e26a5fba3a0afeeb8ca53679342517cc2",
+  "automated_gates": "passed",
+  "heldout": "passed",
+  "fresh_business_calls": 28,
+  "live_verification": {
+    "status": "live_verified",
+    "head": "43bf562e26a5fba3a0afeeb8ca53679342517cc2",
+    "changes": {
+      "runner/README.md": "332509b278b2024357f75e653b3d686f183a30b14a16f3470946162e33a468c4",
+      "runner/config.json": "d87e03c5c140cf26b1eb4bd3e4cef03a7f54dcb829c646a28cae493d6cb9e68d",
+      "runner/control.py": "37087aec14f1bcb7c5640f0be58bfdaca168bc4f8d0dfc737a2df473cedac619",
+      "runner/tests/test_control.py": "1e2ce8c13f89ea82517092c43ecfe5f066bf6ce2c10311a9b6e292c23c48a770",
+      "starter/lib/incidents/engine.ts": "0eb191b81965df7b86129418fd6dbd4d4aff85c2e51c7422fdfca9c40f83b795",
+      "starter/lib/incidents/store.ts": "30e3d73c3e471c264b32bdccbd36972480c11b3791b3ea836ab533861d9a1f34",
+      "docs/overnight/database-bounds.md": "d39152ba078887da2af82928c68fb8f72f13f90255ee5747e1ab9a7718db1e7a",
+      "docs/overnight/final-acceptance-demo.md": "90e90a4b426a7a4c86bc026604e38564445e6b30582a65805686c1fdcfeed979",
+      "docs/overnight/no-response-live-run-4.md": "018eb06f3bf542146fb1d1416404569c9cde398be6d2f2c78dc97bd52ab74196",
+      "docs/overnight/proposal-contract-fix.md": "ab2731c37fb9243dc3bd94858410684309a256738e64c1ee0611d45e1899ac67",
+      "docs/overnight/resume-state-audit.md": "89075a97066eb89dcc2eff41cfbd25467266f947c38f34902bddb90fc68efbd9",
+      "docs/overnight/waiting-resume-fix.md": "34c515ccca60cca12c4ee00c0d3767730dd10bec71d9eb224c0d9e581c883f75",
+      "starter/scripts/tests/overnight-db-bounds.test.ts": "410f50e36ee60266a5bb4e9cb7cf8b453a7a78639d269d7a30e612ab35374062",
+      "starter/scripts/tests/overnight-wait-resume.test.ts": "1f7326a4dec9d014bf517d6d0928827992288e0983449509597119bfd554021e"
+    },
+    "run": 5,
+    "scenario": "disproved",
+    "provider": "gemini",
+    "requests": 4,
+    "config_sha256": "d87e03c5c140cf26b1eb4bd3e4cef03a7f54dcb829c646a28cae493d6cb9e68d",
+    "provider_config_sha256": "78431ee3794e3e26b90a67733cf4bc233f02719dab695c814578e66d943bca37"
+  },
+  "limitations": "Bounded tests are not proof of bug-freedom",
+  "commit_after_checks": true
+}

@@ -1,11 +1,12 @@
 [
   {
     "id": "approval-current-version",
-    "status": "candidate",
+    "status": "validated",
     "scope": "Incident proposal/execution",
     "rationale": "Only the reviewed current version grants permission for its exact fictional actions.",
     "evidence": [
-      "runner/evidence/iteration2-cycle-1.json"
+      "runner/evidence/iteration2-cycle-1.json",
+      "runner/evidence/iteration2-cycle-4.json"
     ],
     "tests": [
       "existing incident approval/version tests",
@@ -19,11 +20,12 @@
   },
   {
     "id": "one-execution-receipt",
-    "status": "candidate",
+    "status": "validated",
     "scope": "Concurrent duplicate execution",
     "rationale": "Retries return the one persisted receipt rather than performing another action.",
     "evidence": [
-      "runner/evidence/iteration2-cycle-1.json"
+      "runner/evidence/iteration2-cycle-1.json",
+      "runner/evidence/iteration2-cycle-4.json"
     ],
     "tests": [
       "isolated PostgreSQL duplicate execution"

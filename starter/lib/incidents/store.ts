@@ -4,7 +4,16 @@ import type { Incident } from "./contracts"
 import type { Context, RecordRow, ToolsData } from "./engine"
 import { WorkflowError } from "./engine"
 let connection: ReturnType<typeof postgres> | undefined
-function sql() { if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL required"); return connection ??= postgres(process.env.DATABASE_URL, { max: 5 }) }
+function sql() {
+  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL required")
+  return connection ??= postgres(process.env.DATABASE_URL, {
+    max: 5,
+    connect_timeout: 3,
+    // Server-side cancellation also releases locks and aborts failed transactions.
+    // A caller-side Promise race would leave the database operation running.
+    connection: { lock_timeout: 1500, statement_timeout: 3000 },
+  })
+}
 export async function initializeStore() {
   await sql()`CREATE TABLE IF NOT EXISTS control_room_incidents (id text PRIMARY KEY, body jsonb NOT NULL)`
   // Repair earlier double-encoded JSON while preserving every incident history.
