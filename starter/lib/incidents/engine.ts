@@ -1,5 +1,6 @@
 import { bookingConstraints, latestDriver } from "./booking-check"
 import { ProviderFailure } from "./providers"
+import { proposalArgsSchema } from "./proposal-contract"
 import { randomUUID } from "node:crypto"
 import { SIMULATION_TIME, type Incident, type Scenario, type ToolCall, type Provider, type Proposal, type Command, type DriverReply, type ModelTurn } from "./contracts"
 
@@ -77,7 +78,7 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     }
     case "find_similar_incidents": argsOnly(a, ["query"]); result = { warning: "Past resolution is a reference only, not current evidence or authorization", cases: await data.similar(text(a, "query"), i.id) }; break
     case "create_proposal": {
-      argsOnly(a, ["optionId", "reservationId", "summary", "consequences", "evidenceIds"])
+      argsOnly(a, Object.keys(proposalArgsSchema.properties))
       requireThat(!i.contradictions.length, "Resolve contradictions before changing a booking")
       const c = await data.context(i.orderId); requireThat(c, "Order not found")
       const optionId = text(a, "optionId"), reservationId = text(a, "reservationId")
