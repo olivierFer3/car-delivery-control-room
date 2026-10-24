@@ -1,0 +1,655 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "problem.schema.json",
+  "title": "Car delivery operational problem",
+  "description": "One problem in car delivery operations, with where it came from, what was done and how it ended. Version 1.1. One JSON object per line in problems.jsonl.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema_version",
+    "source",
+    "order",
+    "related_order_ids",
+    "problem_type",
+    "domain",
+    "phase",
+    "severity",
+    "status",
+    "opened_at",
+    "resolved_at",
+    "summary",
+    "owners",
+    "waiting_on",
+    "next_actions",
+    "agent_work",
+    "human_decisions",
+    "resolution",
+    "timeline",
+    "evidence_refs",
+    "solution"
+  ],
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "id"
+      ],
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "instant": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "ISO 8601 UTC, e.g. 2026-10-21T08:07:00Z"
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique and stable. Prefix with the origin, e.g. bahn-…, manual-…"
+    },
+    "schema_version": {
+      "const": "1.1"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "snapshot_at",
+        "records",
+        "grouping"
+      ],
+      "properties": {
+        "origin": {
+          "type": "string",
+          "description": "Where the problem comes from: bahn_packet, interview, manual, …"
+        },
+        "snapshot_at": {
+          "$ref": "#/$defs/instant"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ref"
+          },
+          "description": "The source records grouped into this problem. Empty for problems written by hand."
+        },
+        "grouping": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to",
+              "basis"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "basis": {
+                "enum": [
+                  "explicit_reference",
+                  "same_assignment_within_2h",
+                  "manual"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "order": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "reference",
+        "status",
+        "route_kind",
+        "vehicle"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "route_kind": {
+          "type": "string"
+        },
+        "vehicle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "related_order_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "problem_type": {
+      "type": "string",
+      "pattern": "^[A-Z0-9_]+$",
+      "description": "Upper snake case code, e.g. VEHICLE_WARNING, FERRY_SOLD_OUT"
+    },
+    "domain": {
+      "enum": [
+        "on_the_road",
+        "driver_travel",
+        "dispatch",
+        "pickup_readiness",
+        "delivery_handover",
+        "evidence_documents",
+        "costs",
+        "order_data",
+        "support",
+        "other"
+      ]
+    },
+    "phase": {
+      "enum": [
+        "intake",
+        "before_pickup",
+        "in_transit",
+        "after_delivery",
+        "cancelled",
+        "no_order_link",
+        "unknown"
+      ]
+    },
+    "severity": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical",
+        null
+      ]
+    },
+    "status": {
+      "enum": [
+        "open",
+        "resolved",
+        "scenario"
+      ],
+      "description": "scenario: an invented test case, neither open nor resolved."
+    },
+    "opened_at": {
+      "$ref": "#/$defs/instant"
+    },
+    "resolved_at": {
+      "$ref": "#/$defs/instant"
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "waiting_on": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "description": "Next steps as written by whoever recorded them. An interpretation, not proof anything happened.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "source"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/$defs/ref"
+          }
+        }
+      }
+    },
+    "agent_work": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "proposal_id",
+          "agent_id",
+          "command",
+          "summary",
+          "rationale",
+          "status",
+          "proposed_payload"
+        ],
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "agent_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "command": {
+            "type": "string"
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rationale": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "proposed_payload": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "human_decisions": {
+      "type": "array",
+      "description": "What a person decided on an agent proposal. EDITED means accepted with changes (see final_payload).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "proposal_id",
+          "decision",
+          "note",
+          "by",
+          "at",
+          "final_payload"
+        ],
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "APPROVED",
+              "EDITED",
+              "REJECTED"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "at": {
+            "$ref": "#/$defs/instant"
+          },
+          "final_payload": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "resolution": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "at",
+          "source"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "at": {
+            "$ref": "#/$defs/instant"
+          },
+          "source": {
+            "$ref": "#/$defs/ref"
+          }
+        }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "description": "Messages about the problem, oldest first. Each keeps its speaker, recipient, channel and visibility.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message_id",
+          "at",
+          "from_type",
+          "from_id",
+          "to_type",
+          "to_id",
+          "channel",
+          "visibility",
+          "language",
+          "text"
+        ],
+        "properties": {
+          "message_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "at": {
+            "$ref": "#/$defs/instant"
+          },
+          "from_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "driver, operator, customer, agent, site_contact, handoff_contact, …"
+          },
+          "from_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "channel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "visibility": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "language": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      },
+      "description": "Other records cited by the problem's records (tracking, events, offers, …)."
+    },
+    "solution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "text",
+        "sources"
+      ],
+      "description": "The solution of the problem. applied: resolved, and this is what was done. planned: open, and this is the recorded next step. none: nothing recorded says how to solve it. expected: the reference answer of an invented test case, never something that happened.",
+      "properties": {
+        "status": {
+          "enum": [
+            "applied",
+            "planned",
+            "expected",
+            "none"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ref"
+          }
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "given",
+        "simulated",
+        "expected"
+      ],
+      "description": "Optional. Present on invented test cases: what the agent sees, how simulated people answer, what must happen.",
+      "properties": {
+        "given": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "now",
+            "order",
+            "facts"
+          ],
+          "properties": {
+            "now": {
+              "$ref": "#/$defs/instant"
+            },
+            "order": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "reference",
+                "vehicle",
+                "from",
+                "to",
+                "customer",
+                "driver",
+                "pickup_local",
+                "delivery_local"
+              ],
+              "properties": {
+                "reference": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "vehicle": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "from": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "to": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "customer": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "driver": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "pickup_local": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "delivery_local": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "facts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "fact",
+                  "source"
+                ],
+                "properties": {
+                  "fact": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "simulated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "driver",
+            "site"
+          ],
+          "description": "Instructions for the simulated people: what they know and say when asked.",
+          "properties": {
+            "driver": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "site": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "handoff",
+            "must",
+            "must_not"
+          ],
+          "properties": {
+            "handoff": {
+              "enum": [
+                "agent_alone",
+                "person_decides",
+                "person_only"
+              ],
+              "description": "agent_alone: the agent finishes without a person. person_decides: the agent prepares one decision. person_only: only a person may act (e.g. it needs the customer)."
+            },
+            "must": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "must_not": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
