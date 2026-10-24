@@ -1,7 +1,7 @@
 [
   {
     "id": "approval-current-version",
-    "status": "validated",
+    "status": "candidate",
     "scope": "Incident proposal/execution",
     "rationale": "Only the reviewed current version grants permission for its exact fictional actions.",
     "evidence": [
@@ -10,11 +10,16 @@
     "tests": [
       "existing incident approval/version tests",
       "holdout approval boundary"
-    ]
+    ],
+    "validation_review": {
+      "status": "requires_revalidation",
+      "reason": "Iteration 2 receipt has zero fresh provider calls and no configuration/code-bound live acceptance. Historical automated evidence retained.",
+      "audit": "docs/overnight/resume-state-audit.md"
+    }
   },
   {
     "id": "one-execution-receipt",
-    "status": "validated",
+    "status": "candidate",
     "scope": "Concurrent duplicate execution",
     "rationale": "Retries return the one persisted receipt rather than performing another action.",
     "evidence": [
@@ -22,7 +27,12 @@
     ],
     "tests": [
       "isolated PostgreSQL duplicate execution"
-    ]
+    ],
+    "validation_review": {
+      "status": "requires_revalidation",
+      "reason": "Iteration 2 receipt has zero fresh provider calls and no configuration/code-bound live acceptance. Historical automated evidence retained.",
+      "audit": "docs/overnight/resume-state-audit.md"
+    }
   },
   {
     "id": "technical-not-business",
