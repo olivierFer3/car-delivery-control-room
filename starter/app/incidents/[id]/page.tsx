@@ -64,7 +64,7 @@ export default function IncidentPage() {
     void act({ command: "decide", version: proposal.version, choice, operator: "demo-operator", comment }, choice === "approve" ? "Saving approval…" : choice === "reject" ? "Saving rejection…" : "Requesting alternative…")
   }
   return <AppFrame section="incidents" snapshotAt={incident?.simulationTime ?? SIMULATION_TIME}><main className={styles.page}>
-    <Link className={styles.back} href="/incidents">← All incidents</Link>
+    <Link className={styles.back} href="/incidents?view=workspace">← All incidents</Link>
     <OperatorAccess />
     {error && <div className={styles.error} role="alert">{error}<button disabled={!!busy} className={styles.secondary} onClick={() => setRefresh(n => n + 1)}>Refresh incident</button></div>}
     {!incident && !error && <p className={styles.panel} role="status" aria-busy="true">Loading incident…</p>}

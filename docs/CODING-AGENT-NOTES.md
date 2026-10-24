@@ -43,3 +43,15 @@ Actual validation: 15 unit/contract tests, TypeScript, production build, and a r
 - Kept the source alert and added an explicit `demoRunId` isolation key rather than resetting an existing incident. Updated the uniqueness index and normal reopen conflict target; no source dataset or UI files changed.
 - Added `incidents:fresh-demo`: generates a version-1 mock proposal, inserts a new replay, and compares every prior incident body before/after. No approval or execution occurs.
 - Actual creation confirmed one prior incident unchanged, with the new incident awaiting a human decision. Token value was never printed. Typecheck and all 15 existing named backend tests passed.
+
+### New problem dataset integrated into Incidents (2026-10-24)
+
+- Prompt: « on a un nouveau dataset d'incident … utilisable pleinement dans incidents le dashboard ».
+- Inspected the new problem schema 1.1, builder/validation documentation, four datasets, existing Python agent and evaluation reports before implementation. Actual counts: 74 Bahn problems, 31 hand-written tests, 22 generated tests and 3850 variants.
+- Preserved source files and old Postgres incident histories. Added a direct file-reading catalog, filters/pagination, complete sourced details, evaluation references and a separate persisted investigation/review workspace.
+- Rejected treating `solution.status=expected` as a resolved incident or executable plan. Reference answers and expected checks are explicitly stripped from agent input; a regression test covers all scenario records.
+- Preserved original Python agent; a thin bounded bridge reuses it. Review does not execute generic bookings, payments or customer messages. Prohibited tool attempts are blocked by the existing agent and make the new run unreviewable.
+- Caught and fixed an incorrect working-directory prefix during file creation before verification. Typecheck initially detected the misplaced imports. No user files were removed.
+- Initial browser launch used a Playwright browser revision not installed here; switched to the existing Chromium executable. Restricted browser launch required approved execution outside the sandbox.
+- Browser check detected no configured Groq key. One attempted launch saved a technical failure with zero tool steps; did not describe it as a successful model run. Added an explicit configuration state and disabled launch until a local key exists.
+- Validated all 3977 rows against the existing schema. Nine new named tests and 15 existing backend tests passed, along with TypeScript, production build and browser checks. The browser compares all pre-existing incident histories before/after and found them unchanged.

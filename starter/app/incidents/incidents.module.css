@@ -78,3 +78,27 @@
 .accessForm label { color: var(--brown); font-weight: 500; }
 .accessInput { padding: 10px 12px; border: 1px solid var(--sand); border-radius: 8px; background: var(--birch); min-height: 42px; max-width: 100%; color: var(--ink); }
 @media (max-width: 600px) { .situationFacts { grid-template-columns: 1fr; } .access { padding: 16px; } .accessInput { min-width: 0; width: 100%; } }
+
+.datasetTabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.datasetTabs [aria-pressed="true"] { background: var(--ink); color: var(--birch); border-color: var(--ink); }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+.metrics > div { display: grid; gap: 7px; border: 1px solid var(--hair); padding: 18px; border-radius: 10px; background: var(--birch); }
+.metrics strong { font-size: 26px; font-variant-numeric: tabular-nums; }
+.metrics span { font-size: 11px; color: var(--muted); }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; align-items: end; }
+.filters label { display: grid; gap: 7px; font-size: 11px; color: var(--muted); flex: 1 1 140px; min-width: 0; }
+.filters label.searchFilter { flex: 2 1 280px; }
+.filters input, .filters select { width: 100%; min-width: 0; background: var(--birch); color: var(--ink); border: 1px solid var(--sand); border-radius: 8px; min-height: 42px; padding: 10px; font: inherit; font-size: 12px; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--muted); }
+.tags span { border: 1px solid var(--hair); padding: 4px 8px; border-radius: 6px; }
+.tags [data-severity="critical"], .tags [data-severity="high"] { background: var(--red-bg); color: var(--red-ink); border-color: var(--red); }
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 24px; font-size: 12px; }
+.prose { font-size: 13px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.raw { margin-top: 16px; font-size: 11px; }
+.raw summary { cursor: pointer; color: var(--muted); }
+.raw pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow: auto; padding: 16px; background: var(--tray); border-radius: 8px; margin-top: 10px; }
+.run { border-top: 1px solid var(--hair); padding-top: 20px; margin-top: 20px; }
+.run > p { margin: 10px 0; }
+.run textarea { width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--sand); border-radius: 8px; background: var(--birch); color: var(--ink); font: inherit; }
+.page :is(button, a, input, select, textarea, summary):focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+@media (max-width: 700px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metrics > div { padding: 14px; } .filters label { flex-basis: calc(50% - 12px); } .datasetTabs button { flex: 1 1 150px; } }

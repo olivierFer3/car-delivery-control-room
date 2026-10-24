@@ -24,7 +24,7 @@ try {
   assert.equal(initial.status, 200)
   const existing = initial.body.incidents.find(i => i.orderId === 'ord-00603')
   assert.ok(!existing || existing.tasks.length === 0, 'Demo already has history; use a fresh isolated database rather than deleting history')
-  await page.goto(base + '/incidents')
+  await page.goto(base + '/incidents?view=workspace')
   await page.getByRole('heading', { name: 'Your decisions' }).waitFor()
   await page.getByRole('button', { name: 'Open ferry-delay demo' }).waitFor({ state: 'visible' })
   await page.waitForFunction(() => ![...document.querySelectorAll('button')].find(b => b.textContent === 'Open ferry-delay demo')?.disabled)
