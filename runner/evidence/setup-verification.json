@@ -1,0 +1,134 @@
+{
+  "baseline": "ab2e0424af4e647fe6b4fa38fab38592b19ccc7d",
+  "runner_setup_commit": "485802d",
+  "smoke_commit": "b99b75f",
+  "source_checkout_and_sampled_db_hashes_unchanged": true,
+  "source_before": {
+    "database": "controlroom",
+    "orders": 100,
+    "incident_history_hash": "f723f37d9dec9ef589462b147ec2be79",
+    "order_hash": "7e7c2ebaaa1abbcf4ef81b4b8ac3ebff",
+    "source_head": "ab2e0424af4e647fe6b4fa38fab38592b19ccc7d",
+    "source_git_status": ""
+  },
+  "source_after": {
+    "database": "controlroom",
+    "orders": 100,
+    "incident_history_hash": "f723f37d9dec9ef589462b147ec2be79",
+    "order_hash": "7e7c2ebaaa1abbcf4ef81b4b8ac3ebff",
+    "source_head": "ab2e0424af4e647fe6b4fa38fab38592b19ccc7d",
+    "source_git_status": ""
+  },
+  "isolated_database": {
+    "name": "controlroom_overnight_validation",
+    "port": 15438,
+    "container_label": "bahn.validation=overnight"
+  },
+  "application": {
+    "port": 3107,
+    "stopped_after_smoke": true
+  },
+  "smoke": {
+    "status": "completed",
+    "cycles": 1,
+    "coding_sessions": 1,
+    "coding_tokens": 250755,
+    "business_api_calls": 0,
+    "elapsed": 54.98
+  },
+  "finished_commands": [
+    {
+      "label": "incidents",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "dataset",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "iteration2",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "typecheck",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "development_gate",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "coding_session",
+      "exit_code": 0,
+      "reported_coding_tokens": 250755
+    },
+    {
+      "label": "incidents",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "dataset",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "iteration2",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "typecheck",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "development_gate",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "heldout",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "build",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "stage",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    },
+    {
+      "label": "commit",
+      "exit_code": 0,
+      "reported_coding_tokens": null
+    }
+  ],
+  "controller_unit_tests": {
+    "count": 13,
+    "result": "passed",
+    "scope": "Real subprocess timeout/stop, SQLite reopen/resume, exclusive lock, protected changes, redaction, regression discovery; scripted CLI events and mocked HTTP transport for budget tests"
+  },
+  "live_verification": "Actual Codex CLI session; zero fresh Groq/Gemini requests. Product live-provider artifacts are historical only.",
+  "token_limit": "Post-turn reported ceiling exceeded by one session: 250755 including cached input. Further sessions blocked; not a strict cost/token cap.",
+  "after_smoke_corrections": [
+    "New regression discovery and freezing of verified tests",
+    "Staging failure blocks before committing",
+    "Worker used HOME=/tmp for tests; future prompts explicitly prohibit repurposing system environment variables. No product/credential changes resulted."
+  ],
+  "overnight_started": false,
+  "limitations": [
+    "Passing gates do not prove bug-freedom",
+    "Full unattended defect-fix progression has not been run",
+    "Product changes require explicit business API budget and fresh verification"
+  ]
+}

@@ -228,6 +228,9 @@ class Controller:
         raise Blocked('Isolated app startup timeout')
     def suite(self,gate):
         checks=[('incidents',['node','--import','tsx','scripts/tests/incidents.test.ts']),('dataset',['node','--import','tsx','scripts/tests/dataset.test.ts']),('iteration2',['node','--import','tsx','scripts/tests/iteration2.test.ts']),('typecheck',['node','node_modules/typescript/bin/tsc','--noEmit'])]
+        # Every new regression participates in subsequent cycles, not only the baseline suites.
+        for test in sorted((ROOT/'starter/scripts/tests').glob('overnight-*.test.ts')):
+            checks.append(('regression-'+test.stem,['node','--import','tsx',str(test.relative_to(ROOT/'starter'))]))
         failures=[]
         for label,argv in checks:
             code,out=self.command(label,argv,cwd=ROOT/'starter')
@@ -250,7 +253,7 @@ class Controller:
 Task: {task['scope']}
 Acceptance: {json.dumps(task['acceptance'])}
 Development failures: {scrub(json.dumps(failures))[:16000]}
-Preserve all prior work. Never reset/stash, merge, push, deploy, access the source checkout or shared DB, read .env/provider credentials or the external controller state directory, contact business parties, or implement NEXT-DAY-IDEAS.md. Do not modify runner/controller/config/queue/holdout or any existing test, package manifest, lockfile or policy file. Never weaken approval/version/idempotency/evidence requirements. Do not inspect held-out evaluation scenarios. Use normal workspace sandbox/approval review; if permission or account limits block you, report blocked rather than bypassing them. Do not change Git history; controller commits only after regression gates pass.
+Preserve all prior work. Never reset/stash, merge, push, deploy, access the source checkout or shared DB, read .env/provider credentials or the external controller state directory, contact business parties, or implement NEXT-DAY-IDEAS.md. Do not modify runner/controller/config/queue/holdout or any existing test, package manifest, lockfile or policy file. Never weaken approval/version/idempotency/evidence requirements. Do not inspect held-out evaluation scenarios. Use normal workspace sandbox/approval review; if permission or account limits block you, report blocked rather than bypassing them. Do not change Git history; controller commits only after regression gates pass. Never repurpose HOME, CODEX_HOME or other system environment variables.
 Allowed edits: {'only runner/evidence/smoke-review.md' if self.smoke else 'starter/lib/incidents, starter/app/api/incidents, new starter/scripts/tests/overnight-*.test.ts, docs/overnight; no Person A UI edits'}.
 {'All development checks passed. Make no speculative product change. Write a concise review to '+str(report)+' stating inspected files, tests actually run by you, remaining risks and no claim of bug-freedom.' if self.smoke else 'Diagnose the observed development gap and make the smallest justified fix. If the feature already works, record evidence instead of rewriting it. New tests must expose a meaningful failure.'}
 Return the requested final JSON schema. Do not include secrets or private chain-of-thought.'''
@@ -335,10 +338,13 @@ Return the requested final JSON schema. Do not include secrets or private chain-
                     write_json(registry_path,registry);changes['runner/rules/registry.json']=sha(registry_path)
                 if changes:
                     # No shell interpolation; do not stage ignored runtime, secrets, or unrelated paths.
-                    self.command('stage',['git','add','--',*sorted(changes)])
+                    code,_=self.command('stage',['git','add','--',*sorted(changes)])
+                    if code:raise Blocked('Staging failed; changes preserved')
                     code,_=self.command('commit',['git','-c','user.name=Sarahdhbr','-c','user.email=156202682+Sarahdhbr@users.noreply.github.com','commit','-m',f"Validate {task['id']} with regression evidence"])
                     if code:raise Blocked('Commit failed; staged work preserved')
                     self.s.put('owned_changes',{})
+                    # New verified tests are legitimate tests too; freeze them before the next worker.
+                    frozen.update(protected());self.s.put('protected',frozen)
                 self.s.event('cycle_validated',task=task['id'],head=git('rev-parse','HEAD'),limitations='Bounded scenarios passed; not proof of no bugs',model_verification='no fresh calls in smoke' if self.smoke else 'see live_verification event')
                 self.s.task_status(task['id'],'completed')
                 if self.smoke:self.s.put('status','completed');return

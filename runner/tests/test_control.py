@@ -55,6 +55,13 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaises(c.Blocked):ctl.coding(task,[])
         self.s.put('coding_sessions',0);self.s.put('coding_tokens',100)
         with self.assertRaises(c.Blocked):ctl.coding(task,[])
+    def test_new_regressions_are_executed(self):
+        tests=self.root/'starter/scripts/tests';tests.mkdir(parents=True)
+        (tests/'overnight-new.test.ts').write_text('assertion')
+        ctl=c.Controller(self.s,self.cfg);seen=[]
+        def command(label,argv,**kwargs):seen.append((label,argv));return 0,''
+        with patch.object(ctl,'command',side_effect=command):self.assertEqual(ctl.suite('iteration2'),[])
+        self.assertTrue(any('scripts/tests/overnight-new.test.ts' in argv for _,argv in seen))
     def test_redacts_runtime_credentials_and_api_patterns(self):
         text=self.env['DATABASE_URL']+' '+self.env['INCIDENT_OPERATOR_TOKEN']+' gsk_'+('A'*30)
         result=c.scrub(text);self.assertNotIn('private-test',result);self.assertNotIn('gsk_',result)
