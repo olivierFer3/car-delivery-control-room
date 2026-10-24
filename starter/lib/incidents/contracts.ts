@@ -8,6 +8,8 @@ export type Proposal = { version: number; summary: string; consequences: string;
 export type Decision = { version: number; choice: "approve" | "reject" | "alternative"; operator: string; comment: string; at: string }
 export type Execution = { version: number; status: "succeeded" | "failed"; at: string; effects: Action[]; reason: string }
 export type Incident = {
+  /** Explicitly isolated fictional demo replay; normal incidents omit this. */
+  demoRunId?: string
   id: string; orderId: string; signalId: string; scenario: Scenario; simulationTime: string; state: IncidentState
   summary: string; evidence: Evidence[]; missing: string[]; contradictions: string[]; nextStep: string
   tasks: { tool: string; args: Record<string, unknown>; result: unknown; at: string }[]

@@ -9,13 +9,16 @@ export async function initializeStore() {
   await sql()`CREATE TABLE IF NOT EXISTS control_room_incidents (id text PRIMARY KEY, body jsonb NOT NULL)`
   // Repair earlier double-encoded JSON while preserving every incident history.
   await sql()`UPDATE control_room_incidents SET body = (body #>> '{}')::jsonb WHERE jsonb_typeof(body) = 'string'`
-  await sql()`CREATE UNIQUE INDEX IF NOT EXISTS control_room_incident_signal ON control_room_incidents ((body->>'orderId'), (body->>'signalId'))`
+  // Isolate explicit demo replays while retaining one normal incident per signal.
+  // Index migration preserves every stored incident and its audit history.
+  await sql()`CREATE UNIQUE INDEX IF NOT EXISTS control_room_incident_episode ON control_room_incidents ((body->>'orderId'), (body->>'signalId'), (COALESCE(body->>'demoRunId', '')))`
+  await sql()`DROP INDEX IF EXISTS control_room_incident_signal`
 }
 export async function insertIncident(i: Incident) { await sql()`INSERT INTO control_room_incidents (id, body) VALUES (${i.id}, ${sql().json(JSON.parse(JSON.stringify(i)))})` }
 /** Reopening the demo returns its history, including under concurrent create clicks. */
 export async function insertOrGetIncident(i: Incident): Promise<Incident> {
   const [row] = await sql()`INSERT INTO control_room_incidents (id, body) VALUES (${i.id}, ${sql().json(JSON.parse(JSON.stringify(i)))})
-    ON CONFLICT ((body->>'orderId'), (body->>'signalId')) DO UPDATE SET body = control_room_incidents.body
+    ON CONFLICT ((body->>'orderId'), (body->>'signalId'), (COALESCE(body->>'demoRunId', ''))) DO UPDATE SET body = control_room_incidents.body
     RETURNING body`
   return row.body as Incident
 }

@@ -33,7 +33,7 @@ The initializer also repairs earlier double-encoded incident JSON while preservi
 
 The verified environment has a fresh `bahn-iteration1-db` Docker container, a seeded local database, and ignored `starter/.env` with a randomly generated private operator token. Docker Compose is absent here, so the local Postgres container was started directly. The app is running at `http://127.0.0.1:3001` because port 3000 was already occupied. No attachments store is required for this workflow.
 
-The demonstrated incident is already resolved and remains available for review; opening the demo deliberately preserves it. Use a fresh isolated database for a new full test rather than deleting audit history.
+The demonstrated incident is already resolved and remains available for review; opening the demo deliberately preserves it. For a fresh replay in the same database, run `npm run incidents:fresh-demo` from `starter`. It adds an explicitly isolated demo run for the same source alert, prepares version 1, and verifies earlier incident histories are unchanged. It never approves or executes the proposal. The command prints the new URL; set `APP_URL` if the local app uses another port. Normal demo reopening still retains its existing history.
 
 ## Verification actually performed
 
@@ -59,3 +59,9 @@ APP_URL=http://127.0.0.1:3000 npm run smoke:incident-ui
 ## What remains
 
 Iteration 1's requested open/review/approve-or-reject/execute/result path works. This is a single seeded ferry scenario with a mock proposal, not live LLM verification. It has no automatic fresh-demo reset, multi-user identity/roles, deployment setup, or action failures triggered from the UI. Those are outside this minimal flow. Further incident types and real-agent conversation should build on the existing contracts in subsequent iterations. Operator user testing with the actual team remains to be done.
+
+## Unlock decisions locally
+
+Open the ignored private `starter/.env` locally and copy the value of `INCIDENT_OPERATOR_TOKEN` into the **Operator token** password field on the incident page, then click **Unlock decisions**. Do not paste the value into chat or commit it. The configured value is already present in this environment; no rotation is needed. Unlocking creates a signed HttpOnly session for eight hours. If you change the environment token, restart the app and unlock again.
+
+Fresh-demo replays use an optional `demoRunId` to separate their audit histories while keeping the original dataset alert reference. A unique index covers order, signal and demo run; ordinary incidents continue to have one history per signal.

@@ -15,7 +15,8 @@
     "incidents:init": "node --import tsx scripts/init-incidents.ts",
     "test:incidents": "node --import tsx scripts/tests/incidents.test.ts",
     "smoke:incident-ui": "node scripts/smoke-incident-ui.mjs",
-    "incidents:examples": "node --import tsx scripts/example-incidents.ts"
+    "incidents:examples": "node --import tsx scripts/example-incidents.ts",
+    "incidents:fresh-demo": "node --import tsx scripts/fresh-demo-incident.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1155.0",

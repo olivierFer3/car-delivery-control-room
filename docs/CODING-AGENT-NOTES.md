@@ -36,3 +36,10 @@ Browser/Postgres integration uncovered a pre-existing persistence error: stringi
 Next.js development logging exposed the unlock Server Function argument in local logs. Disabled Server Function logging and rotated the local demo token before successful verification. One check was mistakenly invoked from the repository root where no package.json exists; reissued from starter. Docker Compose was unavailable; started a new local Postgres container directly with approval. Read access and socket/Chrome execution required sandbox escalation.
 
 Actual validation: 15 unit/contract tests, TypeScript, production build, and a real Playwright browser flow passed. No live model was called. Screenshots and reproducible smoke steps are in ITERATION-1.md. Browser tests confirmed an unchanged source order, stale/unapproved/unauthenticated guards, one execution receipt under concurrent duplicate requests, persisted rejection and success, mobile layout, and reopening without a duplicate incident.
+
+### Fresh iteration-1 replay (2026-10-24)
+
+- User request: create a fresh demo incident without deleting existing history; provide its URL and local unlock instructions without disclosing the token.
+- Kept the source alert and added an explicit `demoRunId` isolation key rather than resetting an existing incident. Updated the uniqueness index and normal reopen conflict target; no source dataset or UI files changed.
+- Added `incidents:fresh-demo`: generates a version-1 mock proposal, inserts a new replay, and compares every prior incident body before/after. No approval or execution occurs.
+- Actual creation confirmed one prior incident unchanged, with the new incident awaiting a human decision. Token value was never printed. Typecheck and all 15 existing named backend tests passed.
