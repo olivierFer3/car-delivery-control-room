@@ -35,6 +35,7 @@ export async function mutateIncident(id: string, mutate: (i: Incident) => Promis
     const [row] = await tx`SELECT body FROM control_room_incidents WHERE id = ${id} FOR UPDATE`
     if (!row) throw new WorkflowError("Incident not found")
     const i = row.body as Incident
+    if (i.activeRun && Date.parse(i.activeRun.expiresAt) > Date.now()) throw new WorkflowError("An agent request is already running; refresh before retrying")
     await mutate(i)
     await tx`UPDATE control_room_incidents SET body = ${tx.json(JSON.parse(JSON.stringify(i)))} WHERE id = ${id}`
     return i
@@ -54,4 +55,10 @@ export const toolsData: ToolsData = {
     return { order: order.details, alerts: alerts.map(r => r.details), messages: messages.map(r => r.details), reservations: records("travel_reservations"), options: [...records("travel_options"), ...simulatedTravelOptions(orderId)], related: Object.fromEntries([...new Set(related.map(r => r.collection))].map(name => [name, records(name)])) } as Context
   },
   async similar(query, exceptId) { return (await listIncidents(query)).filter(i => i.id !== exceptId).slice(0, 5).map(i => ({ id: i.id, orderId: i.orderId, summary: i.summary, state: i.state, nextStep: i.nextStep })) },
+}
+
+/** Fencing prevents an expired/crashed worker overwriting a newer investigation. */
+export async function saveAgentCheckpoint(i: Incident, leaseId: string) {
+  const rows = await sql()`UPDATE control_room_incidents SET body = ${sql().json(JSON.parse(JSON.stringify(i)))} WHERE id = ${i.id} AND body->'activeRun'->>'id' = ${leaseId} RETURNING id`
+  if (!rows.length) throw new WorkflowError("Agent lease expired or replaced; refresh the incident")
 }

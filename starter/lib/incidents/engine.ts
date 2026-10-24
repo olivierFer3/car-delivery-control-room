@@ -1,6 +1,7 @@
+import { bookingConstraints, latestDriver } from "./booking-check"
 import { ProviderFailure } from "./providers"
 import { randomUUID } from "node:crypto"
-import { SIMULATION_TIME, type Incident, type Scenario, type ToolCall, type Provider, type Proposal, type Command } from "./contracts"
+import { SIMULATION_TIME, type Incident, type Scenario, type ToolCall, type Provider, type Proposal, type Command, type DriverReply, type ModelTurn } from "./contracts"
 
 export class WorkflowError extends Error {}
 function requireThat(ok: unknown, message: string): asserts ok { if (!ok) throw new WorkflowError(message) }
@@ -20,12 +21,12 @@ function editable(i: Incident) { requireThat(!i.executions.length && i.state !==
 export function checkOption(i: Incident, c: Context, optionId: string) {
   const o = c.options.find(x => x.id === optionId)
   requireThat(o && o.kind === "FERRY", "Unknown ferry option for this order")
-  const driver = i.tasks.find(t => t.tool === "ask_driver")?.result as { terminalEta?: string } | undefined
+  const driver = latestDriver(i)
   const eta = driver?.terminalEta
   const cutoff = typeof o.check_in_cutoff_at === "string" ? o.check_in_cutoff_at : ""
   const times = [eta, cutoff, o.departure_at, o.arrival_at].map(x => typeof x === "string" ? Date.parse(x) : NaN)
   const feasible = times.every(Number.isFinite) && times[0] >= Date.parse(i.simulationTime) && times[0] <= times[1] && times[1] < times[2] && times[2] < times[3] && o.status === "AVAILABLE_QUOTE" && Number.isInteger(o.quote_cents) && Number(o.quote_cents) >= 0 && typeof o.currency === "string"
-  return { optionId, feasible, terminalEta: eta ?? null, cutoff, limitation: "Timing check uses a simulated driver report. Quote is fictional, not a booking or live capacity guarantee." }
+  return { optionId, feasible, driverEvidenceId: driver?.id ?? null, terminalEta: eta ?? null, cutoff, limitation: "Timing check uses a simulated driver report. Quote is fictional, not a booking or live capacity guarantee." }
 }
 export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Promise<unknown> {
   editable(i)
@@ -46,13 +47,27 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     case "ask_driver": {
       argsOnly(a, ["question"]); const question = text(a, "question")
       requireThat(i.tasks.some(t => t.tool === "get_order_context"), "Read context first")
+      const reply = latestDriver(i)
+      if (reply) return {status:"replied", ...reply, simulated:true}
       const prior = i.tasks.find(t => t.tool === "ask_driver")
       if (prior) return prior.result // A provider switch or retry does not send again.
       result = i.scenario === "no_response" ? { status: "no_response", question } : { status: "replied", question, terminalEta: i.scenario === "disproved" ? "2026-10-21T10:00:00Z" : "2026-10-21T13:00:00Z", text: i.scenario === "disproved" ? "Simulation: queue cleared; terminal ETA 10:00 UTC." : "Simulation: still in queue; terminal ETA 13:00 UTC.", simulated: true }
+      if (i.scenario !== "no_response") {
+        const r = result as {terminalEta:string; text:string}
+        i.driverReplies = [...(i.driverReplies ?? []), {id:`driver:${i.id}`,terminalEta:r.terminalEta,safe:true,blockers:[],text:r.text,at:stamp(i)}]
+        result = {...r,status:"replied",...i.driverReplies.at(-1),simulated:true}
+      }
       i.evidence.push({ id: `driver:${i.id}`, source: "simulated_driver", at: stamp(i), text: JSON.stringify(result), kind: "reported" })
-      if (i.scenario === "no_response") { i.state = "waiting"; i.missing = ["Current driver ETA"]; i.nextStep = "Await simulated driver response; operator can resume explicitly" }
+      if (i.scenario === "no_response" && i.mode !== "llm") { i.state = "waiting"; i.missing = ["Current driver ETA"]; i.nextStep = "Await simulated driver response; operator can resume explicitly" }
       if (i.scenario === "contradiction") { i.contradictions = ["Simulated driver ETA 13:00 conflicts with simulated terminal desk ETA 10:00; neither is verified"]; i.evidence.push({ id: `desk:${i.id}`, source: "simulated_terminal_desk", at: stamp(i), text: "Simulation: desk reports ETA 10:00 UTC", kind: "reported" }) }
       break
+    }
+    case "check_booking_constraints": {
+      argsOnly(a,["reservationId"])
+      const c=await data.context(i.orderId); requireThat(c,"Order not found")
+      const reservationId=text(a,"reservationId")
+      requireThat(c.reservations.some(r=>r.id===reservationId && r.kind==="FERRY" && r.status==="BOOKED"),"Current booked ferry required")
+      result=bookingConstraints(i,c,reservationId); break
     }
     case "search_travel_options": {
       argsOnly(a, []); const c = await data.context(i.orderId); requireThat(c, "Order not found"); result = c.options; break
@@ -70,21 +85,30 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
       requireThat(checked && checkOption(i, c, optionId).feasible, "Feasible deterministic check required")
       const o = c.options.find(x => x.id === optionId)!, r = c.reservations.find(x => x.id === reservationId)
       requireThat(r && r.kind === "FERRY" && r.status === "BOOKED" && r.assignment_id === o.assignment_id, "Booked ferry and option must have same assignment")
-      const evidenceIds = strings(a, "evidenceIds")
-      requireThat(evidenceIds.includes(optionId) && evidenceIds.includes(reservationId) && evidenceIds.includes(`driver:${i.id}`) && evidenceIds.every(id => i.evidence.some(e => e.id === id)), "Current source references required")
+      const evidenceIds = strings(a,"evidenceIds"), driver=latestDriver(i)
+      if (i.mode === "llm") {
+        requireThat(i.tasks.some(t=>t.tool==="check_booking_constraints" && (t.result as {reservationId:string}).reservationId===reservationId && (t.result as {driverEvidenceId?:string}).driverEvidenceId===driver?.id) && bookingConstraints(i,c,reservationId).missesCutoff===true,"Check the original booking first; a change requires an established cutoff risk")
+        const previous=i.proposals.at(-1), decision=i.decisions.at(-1)
+        requireThat(!previous || !decision || decision.choice==="approve" || !previous.actions.some(action=>action.optionId===optionId),"Select a different option after rejection or alternative request")
+      }
+      requireThat(evidenceIds.includes(optionId) && evidenceIds.includes(reservationId) && driver && evidenceIds.includes(driver.id) && evidenceIds.every(id => i.evidence.some(e => e.id === id)), "Current source references required")
       const p: Proposal = { version: i.proposals.length + 1, summary: text(a, "summary"), consequences: text(a, "consequences"), evidenceIds, actions: [{ kind: "change_booking", reservationId, optionId, costCents: Number(o.quote_cents), currency: String(o.currency), departureAt: String(o.departure_at), arrivalAt: String(o.arrival_at) }] }
       i.proposals.push(p); i.summary = p.summary; i.state = "needs_decision"; i.nextStep = "Human reviews this proposal version; approval permits simulated execution only"; result = p; break
     }
     case "wait": {
-      argsOnly(a, ["reason", "missing", "contradictions"]); i.summary = text(a, "reason"); i.missing = strings(a, "missing"); i.contradictions = [...new Set([...i.contradictions, ...strings(a, "contradictions")])]; i.state = "waiting"; i.nextStep = i.summary; result = { waiting: true }; break
+      argsOnly(a,["reason","missing","contradictions"])
+      const reason=text(a,"reason"), missing=strings(a,"missing"), contradictions=[...new Set([...i.contradictions,...strings(a,"contradictions")])]
+      requireThat(missing.length>0 || contradictions.length>0,"Waiting requires concrete missing information or a contradiction")
+      requireThat(!/approv/i.test([reason,...missing].join(" ")),"Approval is requested by create_proposal, not wait. The operator asked for a new version; the old version is not pending approval.")
+      i.summary=reason; i.missing=missing; i.contradictions=contradictions; i.state="waiting"; i.nextStep=reason; result={waiting:true}; break
     }
     case "close_disproved_alert": {
       argsOnly(a, ["reason"])
-      requireThat(i.scenario === "disproved" && i.tasks.some(t => t.tool === "ask_driver"), "Supporting investigation required")
-      requireThat(!i.contradictions.length && !i.missing.length, "Unresolved evidence prevents closure")
-      const c = await data.context(i.orderId)
-      const reply = i.tasks.find(t => t.tool === "ask_driver")?.result as { terminalEta?: string } | undefined
-      requireThat(c && reply?.terminalEta && c.reservations.some(r => r.kind === "FERRY" && r.status === "BOOKED" && typeof r.check_in_cutoff_at === "string" && Date.parse(reply.terminalEta!) <= Date.parse(r.check_in_cutoff_at) && Date.parse(reply.terminalEta!) >= Date.parse(i.simulationTime)), "Driver ETA must meet booked ferry cutoff")
+      requireThat(!i.contradictions.length && !i.missing.length,"Unresolved evidence prevents closure")
+      const c=await data.context(i.orderId); requireThat(c,"Order not found")
+      const checked=i.tasks.some(t=>t.tool==="check_booking_constraints" && (t.result as {canRetain?:boolean;driverEvidenceId?:string}).canRetain === true && (t.result as {driverEvidenceId?:string}).driverEvidenceId === latestDriver(i)?.id && bookingConstraints(i,c,String(t.args.reservationId)).canRetain)
+      const legacy=i.mode!=="llm" && i.scenario==="disproved" && c.reservations.some(r=>bookingConstraints(i,c,r.id).canRetain)
+      requireThat(checked || legacy,"A current booking check, safe driver and no blockers are required to retain the booking")
       i.summary = text(a, "reason"); i.state = "resolved"; i.nextStep = "Alert investigation resolved in simulation; car delivery remains unchanged"; result = { resolved: true, delivered: false }; break
     }
     default: throw new WorkflowError("Tool not permitted")
@@ -93,7 +117,8 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
   return result
 }
 export function decide(i: Incident, command: Extract<Command, { command: "decide" }>) {
-  requireThat(i.state === "needs_decision", "No decision pending")
+  const revisedAlternative=command.choice === "alternative" && ["waiting","investigating","technical_error"].includes(i.state) && i.proposals.length > 0 && !i.executions.length && i.decisions.at(-1)?.choice !== "approve"
+  requireThat(i.state === "needs_decision" || revisedAlternative,"No decision pending")
   const p = current(i); requireThat(command.version === p.version, "Stale proposal version")
   requireThat(["approve", "reject", "alternative"].includes(command.choice), "Invalid decision")
   requireThat(typeof command.operator === "string" && command.operator.trim().length > 0 && command.operator.length <= 100, "Operator required")
@@ -110,23 +135,82 @@ export function executeApproved(i: Incident, version: number, fail = false) {
   const result = { version, status: fail ? "failed" as const : "succeeded" as const, at: stamp(i), effects: fail ? [] : structuredClone(p.actions), reason: fail ? "Simulated booking service failed; no booking change" : "Fictional booking changed in incident overlay; source snapshot and delivery status unchanged" }
   i.executions.push(result); i.state = fail ? "technical_error" : "resolved"; i.nextStep = fail ? "Operator reviews execution failure; approval remains recorded" : "Monitor delivery; incident resolution does not prove delivery"; event(i, "execution", result.reason); return result
 }
-export async function runAgent(i: Incident, data: ToolsData, providers: Provider[]) {
+export function receiveDriverReply(i: Incident, input: Extract<Command,{command:"receive_driver_reply"}>) {
+  requireThat(i.mode === "llm" && i.state === "waiting" && i.tasks.some(t => t.tool === "ask_driver") && !i.proposals.length && !i.executions.length, "No pending simulated driver question")
+  requireThat(typeof input.terminalEta === "string" && /Z$/.test(input.terminalEta) && Number.isFinite(Date.parse(input.terminalEta)) && Date.parse(input.terminalEta) >= Date.parse(i.simulationTime), "A valid simulation-time ETA in UTC is required")
+  requireThat(typeof input.safe === "boolean" && Array.isArray(input.blockers) && input.blockers.length <= 20 && input.blockers.every(b => typeof b === "string" && b.length <= 500) && typeof input.text === "string" && input.text.length > 0 && input.text.length <= 4000, "Invalid simulated reply")
+  requireThat(!i.driverReplies?.length, "Driver reply already received")
+  const reply: DriverReply = {id:`driver:${i.id}:reply`, terminalEta:input.terminalEta, safe:input.safe, blockers:input.blockers, text:input.text, at:stamp(i)}
+  i.driverReplies = [reply]; i.evidence.push({id:reply.id, source:"simulated_driver_reply", at:reply.at, kind:"reported", text:JSON.stringify(reply)})
+  i.tasks.push({tool:"receive_driver_reply", args:{}, result:reply, at:stamp(i)})
+  i.missing = i.missing.filter(m => !/driver|ETA|reply|response|safety/i.test(m)); i.state = "investigating"; i.nextStep = "Simulated driver reply received; resume investigation against this evidence"; i.stopReason = undefined
+  event(i,"driver_reply","A new fictional driver reply arrived; previous question and waiting history retained")
+}
+export async function runAgent(i: Incident, data: ToolsData, providers: Provider[], checkpoint: () => Promise<void> = async () => {}) {
   requireThat(["investigating", "waiting", "technical_error"].includes(i.state) && !i.executions.length, "Agent cannot run in this state")
   const deadline = AbortSignal.timeout(90_000)
-  i.state = "investigating"
+  i.state = "investigating"; i.lastAgentError = undefined; i.stopReason = undefined
+  let corrections = 0
   try {
     requireThat(providers.length > 0, "No configured provider")
     for (let iteration = 0; iteration < 10; iteration++) {
-      let call: ToolCall | undefined
+      let call: ToolCall | undefined, turn: ModelTurn | undefined
       for (const provider of providers.slice(0, 2)) {
-        try { call = await provider.choose(structuredClone(i), AbortSignal.any([deadline, AbortSignal.timeout(25_000)])); i.technical.push({ provider: provider.name, model: provider.model }); break }
-        catch (error) { i.technical.push({ provider: provider.name, model: provider.model, error: "Provider request failed; no business conclusion inferred" }); if (deadline.aborted) throw new Error("Execution time limit"); if (error instanceof ProviderFailure && !error.retryable) throw error }
+        for (let attempt = 0; attempt < 2; attempt++) {
+          turn = {id:randomUUID(),provider:provider.name,model:provider.model,purpose:"investigate",at:new Date().toISOString()}
+          ;(i.modelTurns ??= []).push(turn)
+          try {
+            call = await provider.choose(structuredClone(i), AbortSignal.any([deadline, AbortSignal.timeout(25_000)]), "investigate")
+            turn.selected = {tool:call.tool,args:call.args}; Object.assign(turn,call.metadata)
+            i.technical.push({provider:provider.name,model:provider.model}); await checkpoint(); break
+          } catch (error) {
+            if (call) throw error // A failed persistence checkpoint must not repeat a successful provider call.
+            turn.error = error instanceof ProviderFailure ? error.message : "Provider request failed or timed out"
+            i.technical.push({provider:provider.name,model:provider.model,error:turn.error}); await checkpoint()
+            if (deadline.aborted || (error instanceof ProviderFailure && !error.retryable)) throw error
+            if (attempt === 1 && providers.length === 1) throw new Error(turn.error)
+            if (attempt === 0 && error instanceof ProviderFailure && error.retryable && error.retryAfterMs > 0) {
+              await new Promise<void>((resolve,reject)=>{const timer=setTimeout(resolve,error.retryAfterMs);deadline.addEventListener("abort",()=>{clearTimeout(timer);reject(new Error("Execution time limit"))},{once:true})})
+            }
+          }
+        }
+        if (call) break
       }
-      requireThat(call, "All configured providers failed")
+      requireThat(call && turn, "All configured providers failed")
       deadline.throwIfAborted()
-      await useTool(i, call, data)
-      if (String(i.state) !== "investigating") return
+      const before = i.tasks.length
+      try { turn.result = await useTool(i,call,data) }
+      catch (error) {
+        if (!(error instanceof WorkflowError)) throw error
+        turn.result = {error:error.message}; i.tasks.push({tool:call.tool,args:call.args,result:turn.result,at:stamp(i)})
+        if (++corrections >= 3) throw new WorkflowError(`Tool validation failed: ${error.message}`)
+      }
+      if (i.tasks.length === before) event(i,"tool_reused",`${call.tool}: reused persisted result; no repeated simulated outreach`)
+      await checkpoint()
+      if (String(i.state) !== "investigating") {
+        i.stopReason = String(i.state) === "needs_decision" ? "Awaiting human approval of the current proposal version" : String(i.state) === "resolved" ? i.summary : i.nextStep
+        event(i,"agent_stopped",i.stopReason); await checkpoint(); return
+      }
     }
     throw new Error("Iteration limit reached")
-  } catch (error) { i.state = "technical_error"; i.nextStep = "Technical failure; review and explicitly resume"; event(i, "technical_error", error instanceof WorkflowError ? error.message : "Agent execution failed or exceeded limits") }
+  } catch (error) {
+    i.state = "technical_error"; i.lastAgentError = error instanceof WorkflowError || error instanceof ProviderFailure ? error.message : error instanceof Error && /limit|HTTP/.test(error.message) ? error.message : "Agent execution failed or exceeded limits"
+    i.stopReason = i.lastAgentError; i.nextStep = "Technical failure; review the diagnostic record and explicitly resume. No business conclusion or booking change was made."
+    event(i,"technical_error",i.lastAgentError); await checkpoint()
+  }
+}
+export async function explainIncident(i: Incident, question: string, providers: Provider[]) {
+  requireThat(typeof question === "string" && question.trim().length > 0 && question.length <= 4000,"Invalid message")
+  i.conversation.push({role:"operator",text:question,at:stamp(i)}); i.lastAgentError = undefined
+  const p = providers[0], turn: ModelTurn = {id:randomUUID(),provider:p?.name ?? "unconfigured",model:p?.model ?? "unconfigured",purpose:"explain",at:new Date().toISOString()}
+  ;(i.modelTurns ??= []).push(turn)
+  try {
+    requireThat(p,"No configured provider")
+    const call = await p.choose(structuredClone(i),AbortSignal.timeout(25_000),"explain")
+    turn.selected = {tool:call.tool,args:call.args}; Object.assign(turn,call.metadata)
+    requireThat(call.tool === "answer_operator","Explanation may not change the incident")
+    argsOnly(call.args,["answer","evidenceIds"])
+    const ids = strings(call.args,"evidenceIds"); requireThat(ids.every(id => i.evidence.some(e => e.id === id)),"Explanation cites unknown evidence")
+    const answer = text(call.args,"answer"); i.conversation.push({role:"agent",text:answer,at:stamp(i)}); turn.result = {answer,evidenceIds:ids}
+  } catch(error) { turn.error = error instanceof WorkflowError || error instanceof ProviderFailure ? error.message : "Explanation provider failed"; i.lastAgentError = turn.error; event(i,"explanation_error",turn.error) }
 }

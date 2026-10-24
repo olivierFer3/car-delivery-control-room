@@ -7,11 +7,12 @@ import { AppFrame } from "../../components/app-frame"
 import { SIMULATION_TIME, type PublicIncident, type Command, type Evidence } from "@/lib/incidents/contracts"
 import { fmtDateTime, fmtMoney } from "@/lib/present/time"
 import { commandIncident } from "../actions"
+import { LiveAgentControls } from "../live-agent-controls"
 import { OperatorAccess } from "../operator-access"
 import styles from "../incidents.module.css"
 
 const stateLabels: Record<PublicIncident["state"], string> = { investigating: "Investigating", waiting: "Waiting", needs_decision: "Needs your decision", approved: "Approved · ready to apply", resolved: "Resolved incident", technical_error: "Technical review needed" }
-const toolLabels: Record<string, string> = { get_order_context: "Read the order and linked records", ask_driver: "Asked the simulated driver for an ETA", search_travel_options: "Compared fictional ferry alternatives", check_option_constraints: "Checked ferry timing and constraints", create_proposal: "Prepared a proposal for review", wait: "Paused for missing information", close_disproved_alert: "Closed the disproved alert" }
+const toolLabels: Record<string, string> = { get_order_context: "Read the order and linked records", ask_driver: "Asked the simulated driver for an ETA", search_travel_options: "Compared fictional ferry alternatives", check_option_constraints: "Checked ferry timing and constraints", check_booking_constraints: "Checked original booking against driver ETA, safety and blockers", receive_driver_reply: "Received a new simulated driver reply", create_proposal: "Prepared a proposal for review", wait: "Paused for missing information", close_disproved_alert: "Closed the disproved alert" }
 function evidenceText(e: Evidence) {
   try {
     const row = JSON.parse(e.text)
@@ -40,6 +41,11 @@ export default function IncidentPage() {
     }).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Could not load incident") })
     return () => controller.abort()
   }, [id, refresh])
+  useEffect(()=>{
+    if (incident?.mode !== "llm" || (!busy && !incident.activeRun)) return
+    const timer=setInterval(()=>setRefresh(n=>n+1),2500)
+    return ()=>clearInterval(timer)
+  },[busy,incident?.mode,incident?.activeRun])
   async function act(command: Command, label: string) {
     setBusy(label); setError("")
     try {
@@ -54,11 +60,11 @@ export default function IncidentPage() {
   const signalSource = records.find(item => item.evidence.id === incident?.signalId)
   const bookedFerry = records.find(item => item.row?.kind === "FERRY" && item.row?.status === "BOOKED" && (!proposal || proposal.actions.some(action => action.reservationId === item.evidence.id)))
   const cutoff = typeof bookedFerry?.row?.check_in_cutoff_at === "string" ? bookedFerry.row.check_in_cutoff_at : null
-  const driverResult = incident?.tasks.find(task => task.tool === "ask_driver")?.result as { terminalEta?: unknown } | undefined
+  const driverResult = incident?.driverReplies?.at(-1) ?? incident?.tasks.find(task => task.tool === "ask_driver")?.result as { terminalEta?: unknown } | undefined
   const driverEta = typeof driverResult?.terminalEta === "string" ? driverResult.terminalEta : null
   const missesCutoff = cutoff && driverEta && Number.isFinite(Date.parse(cutoff)) && Number.isFinite(Date.parse(driverEta)) ? Date.parse(driverEta) > Date.parse(cutoff) : null
   const latestDecision = incident?.decisions.at(-1)
-  const canPrepare = incident && ["investigating", "waiting", "technical_error"].includes(incident.state) && !incident.executions.length
+  const canPrepare = incident && incident.mode !== "llm" && ["investigating", "waiting", "technical_error"].includes(incident.state) && !incident.executions.length
   function decide(choice: "approve" | "reject" | "alternative") {
     if (!proposal) return
     void act({ command: "decide", version: proposal.version, choice, operator: "demo-operator", comment }, choice === "approve" ? "Saving approval…" : choice === "reject" ? "Saving rejection…" : "Requesting alternative…")
@@ -69,19 +75,20 @@ export default function IncidentPage() {
     {error && <div className={styles.error} role="alert">{error}<button disabled={!!busy} className={styles.secondary} onClick={() => setRefresh(n => n + 1)}>Refresh incident</button></div>}
     {!incident && !error && <p className={styles.panel} role="status" aria-busy="true">Loading incident…</p>}
     {incident && <>
-      <header className={styles.header}><div><p className={styles.eyebrow}>Driver delay · mock investigation</p><h1>{incident.orderId === "ord-00603" ? "CD-420603" : incident.orderId}</h1><p>{incident.summary}</p></div><span className={styles.badge}>{stateLabels[incident.state]}</span></header>
+      <header className={styles.header}><div><p className={styles.eyebrow}>Driver delay · {incident.mode === "llm" ? "real LLM investigation" : "mock investigation"}</p><h1>{incident.orderId === "ord-00603" ? "CD-420603" : incident.orderId}</h1><p>{incident.summary}</p></div><span className={styles.badge}>{stateLabels[incident.state]}</span></header>
       <div className={styles.notice}><strong>Fictional actions only</strong><span>Incident decisions do not change the recorded delivery status.</span><Link href={`/orders/${incident.orderId}`}>Open original order →</Link></div>
       <section className={`${styles.panel} ${styles.situation}`} aria-label="What happened"><h2>What happened</h2><p>A driver-delay signal raised a possible missed ferry connection. The alert is a reason to investigate; it does not confirm that the ferry was missed.</p>
         {signalSource?.row && typeof signalSource.row.summary === "string" && <p className={styles.consequences}>{signalSource.row.summary}</p>}
-        <dl className={styles.situationFacts}><div><dt>Booked ferry check-in cutoff</dt><dd>{cutoff ? <a href={`#evidence-${bookedFerry!.evidence.id}`}>{fmtDateTime(cutoff)}</a> : "Not checked yet"}</dd></div><div><dt>Simulated driver terminal ETA</dt><dd>{driverEta ? <a href={`#evidence-driver:${incident.id}`}>{fmtDateTime(driverEta)} · driver report</a> : incident.tasks.some(task => task.tool === "ask_driver") ? "No ETA received" : "Not checked yet"}</dd></div></dl>
+        <dl className={styles.situationFacts}><div><dt>Booked ferry check-in cutoff</dt><dd>{cutoff ? <a href={`#evidence-${bookedFerry!.evidence.id}`}>{fmtDateTime(cutoff)}</a> : "Not checked yet"}</dd></div><div><dt>Simulated driver terminal ETA</dt><dd>{driverEta ? <a href={`#evidence-${incident.driverReplies?.at(-1)?.id ?? `driver:${incident.id}`}`}>{fmtDateTime(driverEta)} · driver report</a> : incident.tasks.some(task => task.tool === "ask_driver") ? "No ETA received" : "Not checked yet"}</dd></div></dl>
         {missesCutoff !== null && <p className={styles.footnote}>{missesCutoff ? "The simulated driver ETA is after the booked cutoff. A later ferry alternative needs review before any booking change." : "The simulated driver ETA meets the booked cutoff. This report alone does not prove check-in or boarding."}</p>}
       </section>
       <div aria-live="polite" className={styles.next}><p className={styles.eyebrow}>What happens next</p><p>{incident.nextStep}</p>{busy && <p role="status">{busy}</p>}
         {canPrepare && <button disabled={!!busy} className={styles.primary} onClick={() => act({ command: "mock_proposal" }, "Preparing mock proposal…")}>{proposal ? "Prepare another mock proposal" : "Prepare mock proposal"}</button>}
       </div>
+      {incident.mode === "llm" && <LiveAgentControls incident={incident} busy={!!busy} act={act} />}
       <div className={styles.columns}><div className={styles.stack}>
         <section className={styles.panel}><div className={styles.sectionHead}><h2>Proposed decision {proposal && <span className={styles.count}>Version {proposal.version}</span>}</h2></div>
-          {!proposal ? <p className={styles.empty}>No proposal yet. Prepare the mock investigation to see the checked alternative.</p> : <><h3>{proposal.summary}</h3><p className={styles.consequences}>{proposal.consequences}</p>
+          {!proposal ? <p className={styles.empty}>No proposal yet. Investigate the incident to check whether a change is needed.</p> : <><h3>{proposal.summary}</h3><p className={styles.consequences}>{proposal.consequences}</p>
           {proposal.actions.map((action, index) => <div className={styles.action} key={index}><h3>Change the fictional ferry booking</h3><dl className={styles.facts}><div><dt>Quoted booking cost</dt><dd>{fmtMoney(action.costCents, action.currency)}</dd></div><div><dt>Departure</dt><dd>{fmtDateTime(action.departureAt)}</dd></div><div><dt>Arrival</dt><dd>{fmtDateTime(action.arrivalAt)}</dd></div><div><dt>Reservation</dt><dd className={styles.identifier}>{action.reservationId}</dd></div><div><dt>Proposed option</dt><dd className={styles.identifier}>{action.optionId}</dd></div></dl><p className={styles.footnote}>Quote only; fictional availability. Approval applies to these actions in version {proposal.version}.</p></div>)}
           {incident.state === "needs_decision" && <div className={styles.review}><label htmlFor="decision-comment">Decision note <span>(optional)</span></label><textarea id="decision-comment" value={comment} maxLength={4000} disabled={!!busy} onChange={event => setComment(event.target.value)} placeholder="Add context for the decision" /><div className={styles.buttons}><button className={styles.primary} disabled={!!busy} onClick={() => decide("approve")}>Approve version {proposal.version}</button><button className={styles.secondary} disabled={!!busy} onClick={() => decide("reject")}>Reject proposal</button><button className={styles.secondary} disabled={!!busy} onClick={() => decide("alternative")}>Request alternative</button></div><p className={styles.footnote}>Approval is saved first. You then explicitly apply the simulated change.</p></div>}
           {incident.state === "approved" && <div className={styles.review}><p>Version {proposal.version} is approved. No change has been applied yet.</p><button className={styles.primary} disabled={!!busy} onClick={() => act({ command: "execute", version: proposal.version }, "Applying simulated change…")}>Apply approved simulated change</button></div>}

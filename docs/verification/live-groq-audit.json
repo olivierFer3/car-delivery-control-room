@@ -1,0 +1,425 @@
+{
+  "provider": "Groq",
+  "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+  "case_id": "test-0010",
+  "calls": [
+    {
+      "endpoint": "https://api.groq.com/openai/v1/models",
+      "model_count": 11
+    },
+    {
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "model": "openai/gpt-oss-120b",
+      "tool_choice": "auto",
+      "available_tools": [
+        "get_case",
+        "get_messages",
+        "ask_driver",
+        "ask_site",
+        "look_up",
+        "message_customer",
+        "book_or_pay",
+        "change_delivery_promise",
+        "resolve_alone",
+        "hand_to_person"
+      ],
+      "tool_results_in_input": [],
+      "response_id": "chatcmpl-0db42669-736b-4e0b-bcd3-9dfcf274f681",
+      "actual_model": "openai/gpt-oss-120b",
+      "model_response": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "fc_cd0fc9ab-4b7f-4b21-8b4d-6a1a5a31f15b",
+            "type": "function",
+            "function": {
+              "name": "get_case",
+              "arguments": "{}"
+            }
+          }
+        ]
+      },
+      "usage": {
+        "queue_time": 0.29621046,
+        "prompt_tokens": 919,
+        "prompt_time": 0.037988707,
+        "completion_tokens": 46,
+        "completion_time": 0.095614867,
+        "total_tokens": 965,
+        "total_time": 0.133603574,
+        "completion_tokens_details": {
+          "reasoning_tokens": 27
+        }
+      }
+    },
+    {
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "model": "openai/gpt-oss-120b",
+      "tool_choice": "auto",
+      "available_tools": [
+        "get_case",
+        "get_messages",
+        "ask_driver",
+        "ask_site",
+        "look_up",
+        "message_customer",
+        "book_or_pay",
+        "change_delivery_promise",
+        "resolve_alone",
+        "hand_to_person"
+      ],
+      "tool_results_in_input": [
+        {
+          "role": "tool",
+          "tool_call_id": "fc_cd0fc9ab-4b7f-4b21-8b4d-6a1a5a31f15b",
+          "content": "{\"now_utc\": \"2026-11-13T09:00:00Z\", \"order\": {\"reference\": \"T-1010\", \"vehicle\": \"Porsche Cayenne 2019\", \"from\": \"Leipzig, DE\", \"to\": \"Rovaniemi, FI\", \"customer\": \"Lapin Autokeskus Oy (fictional)\", \"driver\": null, \"pickup_local\": \"Sun 15 Nov 10:00–14:00 Europe/Berlin\", \"delivery_local\": null}, \"facts\": [{\"fact\": \"Offer fee EUR 520, published Tue 10 Nov.\", \"source\": \"offer\"}, {\"fact\": \"Similar Germany–Lapland jobs this month were taken at EUR 580–640.\", \"source\": \"offer history\"}, {\"fact\": \"Three drivers opened the offer, none accepted.\", \"source\": \"app statistics\"}], \"summary_from_intake\": \"An offer has been published for three days with no driver; pickup is in two days.\"}"
+        }
+      ],
+      "response_id": "chatcmpl-269199ff-3be6-4646-a826-3b024f5f5b5a",
+      "actual_model": "openai/gpt-oss-120b",
+      "model_response": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "fc_582dd7f1-bf3c-4a27-ae3f-c59a0c907771",
+            "type": "function",
+            "function": {
+              "name": "get_messages",
+              "arguments": "{}"
+            }
+          }
+        ]
+      },
+      "usage": {
+        "queue_time": 0.048643643,
+        "prompt_tokens": 1150,
+        "prompt_time": 0.048178905,
+        "completion_tokens": 72,
+        "completion_time": 0.150763203,
+        "total_tokens": 1222,
+        "total_time": 0.198942108,
+        "completion_tokens_details": {
+          "reasoning_tokens": 58
+        }
+      }
+    },
+    {
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "model": "openai/gpt-oss-120b",
+      "tool_choice": "auto",
+      "available_tools": [
+        "get_case",
+        "get_messages",
+        "ask_driver",
+        "ask_site",
+        "look_up",
+        "message_customer",
+        "book_or_pay",
+        "change_delivery_promise",
+        "resolve_alone",
+        "hand_to_person"
+      ],
+      "tool_results_in_input": [
+        {
+          "role": "tool",
+          "tool_call_id": "fc_cd0fc9ab-4b7f-4b21-8b4d-6a1a5a31f15b",
+          "content": "{\"now_utc\": \"2026-11-13T09:00:00Z\", \"order\": {\"reference\": \"T-1010\", \"vehicle\": \"Porsche Cayenne 2019\", \"from\": \"Leipzig, DE\", \"to\": \"Rovaniemi, FI\", \"customer\": \"Lapin Autokeskus Oy (fictional)\", \"driver\": null, \"pickup_local\": \"Sun 15 Nov 10:00–14:00 Europe/Berlin\", \"delivery_local\": null}, \"facts\": [{\"fact\": \"Offer fee EUR 520, published Tue 10 Nov.\", \"source\": \"offer\"}, {\"fact\": \"Similar Germany–Lapland jobs this month were taken at EUR 580–640.\", \"source\": \"offer history\"}, {\"fact\": \"Three drivers opened the offer, none accepted.\", \"source\": \"app statistics\"}], \"summary_from_intake\": \"An offer has been published for three days with no driver; pickup is in two days.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_582dd7f1-bf3c-4a27-ae3f-c59a0c907771",
+          "content": "{\"note\": \"No messages yet.\"}"
+        }
+      ],
+      "error_type": "HTTPError",
+      "http_status": 400
+    },
+    {
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "model": "openai/gpt-oss-120b",
+      "tool_choice": "auto",
+      "available_tools": [
+        "get_case",
+        "get_messages",
+        "ask_driver",
+        "ask_site",
+        "look_up",
+        "message_customer",
+        "book_or_pay",
+        "change_delivery_promise",
+        "resolve_alone",
+        "hand_to_person"
+      ],
+      "tool_results_in_input": [
+        {
+          "role": "tool",
+          "tool_call_id": "fc_cd0fc9ab-4b7f-4b21-8b4d-6a1a5a31f15b",
+          "content": "{\"now_utc\": \"2026-11-13T09:00:00Z\", \"order\": {\"reference\": \"T-1010\", \"vehicle\": \"Porsche Cayenne 2019\", \"from\": \"Leipzig, DE\", \"to\": \"Rovaniemi, FI\", \"customer\": \"Lapin Autokeskus Oy (fictional)\", \"driver\": null, \"pickup_local\": \"Sun 15 Nov 10:00–14:00 Europe/Berlin\", \"delivery_local\": null}, \"facts\": [{\"fact\": \"Offer fee EUR 520, published Tue 10 Nov.\", \"source\": \"offer\"}, {\"fact\": \"Similar Germany–Lapland jobs this month were taken at EUR 580–640.\", \"source\": \"offer history\"}, {\"fact\": \"Three drivers opened the offer, none accepted.\", \"source\": \"app statistics\"}], \"summary_from_intake\": \"An offer has been published for three days with no driver; pickup is in two days.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_582dd7f1-bf3c-4a27-ae3f-c59a0c907771",
+          "content": "{\"note\": \"No messages yet.\"}"
+        }
+      ],
+      "response_id": "chatcmpl-e4271e54-51de-47c8-910d-ddbe936c91cd",
+      "actual_model": "openai/gpt-oss-120b",
+      "model_response": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "fc_ed5e6e95-337b-45c2-b4fe-3bb9b3c71b98",
+            "type": "function",
+            "function": {
+              "name": "ask_site",
+              "arguments": "{\"question\":\"Do you have any driver currently available for a pickup in Leipzig on Sun 15 Nov between 10:00-14:00 CET for a delivery to Rovaniemi, Finland?\"}"
+            }
+          }
+        ]
+      },
+      "usage": {
+        "queue_time": 0.294678994,
+        "prompt_tokens": 1179,
+        "prompt_time": 0.051755177,
+        "completion_tokens": 348,
+        "completion_time": 0.720420045,
+        "total_tokens": 1527,
+        "total_time": 0.772175222,
+        "completion_tokens_details": {
+          "reasoning_tokens": 286
+        }
+      }
+    },
+    {
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "model": "openai/gpt-oss-120b",
+      "tool_choice": "auto",
+      "available_tools": [
+        "get_case",
+        "get_messages",
+        "ask_driver",
+        "ask_site",
+        "look_up",
+        "message_customer",
+        "book_or_pay",
+        "change_delivery_promise",
+        "resolve_alone",
+        "hand_to_person"
+      ],
+      "tool_results_in_input": [
+        {
+          "role": "tool",
+          "tool_call_id": "fc_cd0fc9ab-4b7f-4b21-8b4d-6a1a5a31f15b",
+          "content": "{\"now_utc\": \"2026-11-13T09:00:00Z\", \"order\": {\"reference\": \"T-1010\", \"vehicle\": \"Porsche Cayenne 2019\", \"from\": \"Leipzig, DE\", \"to\": \"Rovaniemi, FI\", \"customer\": \"Lapin Autokeskus Oy (fictional)\", \"driver\": null, \"pickup_local\": \"Sun 15 Nov 10:00–14:00 Europe/Berlin\", \"delivery_local\": null}, \"facts\": [{\"fact\": \"Offer fee EUR 520, published Tue 10 Nov.\", \"source\": \"offer\"}, {\"fact\": \"Similar Germany–Lapland jobs this month were taken at EUR 580–640.\", \"source\": \"offer history\"}, {\"fact\": \"Three drivers opened the offer, none accepted.\", \"source\": \"app statistics\"}], \"summary_from_intake\": \"An offer has been published for three days with no driver; pickup is in two days.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_582dd7f1-bf3c-4a27-ae3f-c59a0c907771",
+          "content": "{\"note\": \"No messages yet.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_ed5e6e95-337b-45c2-b4fe-3bb9b3c71b98",
+          "content": "{\"reply\": null, \"note\": \"No reply from the site.\"}"
+        }
+      ],
+      "response_id": "chatcmpl-782312eb-2ffc-4e53-a97e-e523ef247776",
+      "actual_model": "openai/gpt-oss-120b",
+      "model_response": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "fc_b4058daa-9cc3-4efd-bc1f-656ce9005291",
+            "type": "function",
+            "function": {
+              "name": "ask_driver",
+              "arguments": "{\"question\":\"Do you have any driver available for a pickup in Leipzig on Sun 15 Nov between 10:00-14:00 CET for a delivery to Rovaniemi, Finland?\"}"
+            }
+          }
+        ]
+      },
+      "usage": {
+        "queue_time": 0.207072527,
+        "prompt_tokens": 1256,
+        "prompt_time": 0.051065006,
+        "completion_tokens": 176,
+        "completion_time": 0.370409794,
+        "total_tokens": 1432,
+        "total_time": 0.4214748,
+        "completion_tokens_details": {
+          "reasoning_tokens": 122
+        }
+      }
+    },
+    {
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "model": "openai/gpt-oss-120b",
+      "tool_choice": "auto",
+      "available_tools": [
+        "get_case",
+        "get_messages",
+        "ask_driver",
+        "ask_site",
+        "look_up",
+        "message_customer",
+        "book_or_pay",
+        "change_delivery_promise",
+        "resolve_alone",
+        "hand_to_person"
+      ],
+      "tool_results_in_input": [
+        {
+          "role": "tool",
+          "tool_call_id": "fc_cd0fc9ab-4b7f-4b21-8b4d-6a1a5a31f15b",
+          "content": "{\"now_utc\": \"2026-11-13T09:00:00Z\", \"order\": {\"reference\": \"T-1010\", \"vehicle\": \"Porsche Cayenne 2019\", \"from\": \"Leipzig, DE\", \"to\": \"Rovaniemi, FI\", \"customer\": \"Lapin Autokeskus Oy (fictional)\", \"driver\": null, \"pickup_local\": \"Sun 15 Nov 10:00–14:00 Europe/Berlin\", \"delivery_local\": null}, \"facts\": [{\"fact\": \"Offer fee EUR 520, published Tue 10 Nov.\", \"source\": \"offer\"}, {\"fact\": \"Similar Germany–Lapland jobs this month were taken at EUR 580–640.\", \"source\": \"offer history\"}, {\"fact\": \"Three drivers opened the offer, none accepted.\", \"source\": \"app statistics\"}], \"summary_from_intake\": \"An offer has been published for three days with no driver; pickup is in two days.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_582dd7f1-bf3c-4a27-ae3f-c59a0c907771",
+          "content": "{\"note\": \"No messages yet.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_ed5e6e95-337b-45c2-b4fe-3bb9b3c71b98",
+          "content": "{\"reply\": null, \"note\": \"No reply from the site.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_b4058daa-9cc3-4efd-bc1f-656ce9005291",
+          "content": "{\"reply\": null, \"note\": \"No reply from the driver.\"}"
+        }
+      ],
+      "error_type": "HTTPError",
+      "http_status": 400
+    },
+    {
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "model": "openai/gpt-oss-120b",
+      "tool_choice": "auto",
+      "available_tools": [
+        "get_case",
+        "get_messages",
+        "ask_driver",
+        "ask_site",
+        "look_up",
+        "message_customer",
+        "book_or_pay",
+        "change_delivery_promise",
+        "resolve_alone",
+        "hand_to_person"
+      ],
+      "tool_results_in_input": [
+        {
+          "role": "tool",
+          "tool_call_id": "fc_cd0fc9ab-4b7f-4b21-8b4d-6a1a5a31f15b",
+          "content": "{\"now_utc\": \"2026-11-13T09:00:00Z\", \"order\": {\"reference\": \"T-1010\", \"vehicle\": \"Porsche Cayenne 2019\", \"from\": \"Leipzig, DE\", \"to\": \"Rovaniemi, FI\", \"customer\": \"Lapin Autokeskus Oy (fictional)\", \"driver\": null, \"pickup_local\": \"Sun 15 Nov 10:00–14:00 Europe/Berlin\", \"delivery_local\": null}, \"facts\": [{\"fact\": \"Offer fee EUR 520, published Tue 10 Nov.\", \"source\": \"offer\"}, {\"fact\": \"Similar Germany–Lapland jobs this month were taken at EUR 580–640.\", \"source\": \"offer history\"}, {\"fact\": \"Three drivers opened the offer, none accepted.\", \"source\": \"app statistics\"}], \"summary_from_intake\": \"An offer has been published for three days with no driver; pickup is in two days.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_582dd7f1-bf3c-4a27-ae3f-c59a0c907771",
+          "content": "{\"note\": \"No messages yet.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_ed5e6e95-337b-45c2-b4fe-3bb9b3c71b98",
+          "content": "{\"reply\": null, \"note\": \"No reply from the site.\"}"
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fc_b4058daa-9cc3-4efd-bc1f-656ce9005291",
+          "content": "{\"reply\": null, \"note\": \"No reply from the driver.\"}"
+        }
+      ],
+      "error_type": "HTTPError",
+      "http_status": 429
+    }
+  ],
+  "trace": {
+    "case_id": "test-0010",
+    "model": "openai/gpt-oss-120b",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "get_case",
+        "args": {},
+        "result": {
+          "now_utc": "2026-11-13T09:00:00Z",
+          "order": {
+            "reference": "T-1010",
+            "vehicle": "Porsche Cayenne 2019",
+            "from": "Leipzig, DE",
+            "to": "Rovaniemi, FI",
+            "customer": "Lapin Autokeskus Oy (fictional)",
+            "driver": null,
+            "pickup_local": "Sun 15 Nov 10:00–14:00 Europe/Berlin",
+            "delivery_local": null
+          },
+          "facts": [
+            {
+              "fact": "Offer fee EUR 520, published Tue 10 Nov.",
+              "source": "offer"
+            },
+            {
+              "fact": "Similar Germany–Lapland jobs this month were taken at EUR 580–640.",
+              "source": "offer history"
+            },
+            {
+              "fact": "Three drivers opened the offer, none accepted.",
+              "source": "app statistics"
+            }
+          ],
+          "summary_from_intake": "An offer has been published for three days with no driver; pickup is in two days."
+        },
+        "seconds": 0
+      },
+      {
+        "step": 2,
+        "tool": "get_messages",
+        "args": {},
+        "result": {
+          "note": "No messages yet."
+        },
+        "seconds": 0
+      },
+      {
+        "step": 3,
+        "tool": "ask_site",
+        "args": {
+          "question": "Do you have any driver currently available for a pickup in Leipzig on Sun 15 Nov between 10:00-14:00 CET for a delivery to Rovaniemi, Finland?"
+        },
+        "result": {
+          "reply": null,
+          "note": "No reply from the site."
+        },
+        "seconds": 0
+      },
+      {
+        "step": 4,
+        "tool": "ask_driver",
+        "args": {
+          "question": "Do you have any driver available for a pickup in Leipzig on Sun 15 Nov between 10:00-14:00 CET for a delivery to Rovaniemi, Finland?"
+        },
+        "result": {
+          "reply": null,
+          "note": "No reply from the driver."
+        },
+        "seconds": 0
+      }
+    ],
+    "finish": null,
+    "violations": [],
+    "error": "Groq kept refusing the request.",
+    "timing": {
+      "seconds": 5.3,
+      "llm_seconds": 2.7,
+      "llm_calls": 4,
+      "simulation_seconds": 0,
+      "tool_calls": 4
+    },
+    "models": {
+      "openai/gpt-oss-120b": 4
+    }
+  },
+  "selected_model": "openai/gpt-oss-120b",
+  "attemptedAt": "2026-10-24T14:47:06.502Z"
+}

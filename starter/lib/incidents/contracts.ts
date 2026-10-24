@@ -7,7 +7,16 @@ export type Action = { kind: "change_booking"; reservationId: string; optionId: 
 export type Proposal = { version: number; summary: string; consequences: string; evidenceIds: string[]; actions: Action[] }
 export type Decision = { version: number; choice: "approve" | "reject" | "alternative"; operator: string; comment: string; at: string }
 export type Execution = { version: number; status: "succeeded" | "failed"; at: string; effects: Action[]; reason: string }
+export type DriverReply = { id: string; terminalEta: string; safe: boolean; blockers: string[]; text: string; at: string }
+export type ModelTurn = { id: string; provider: string; model: string; responseId?: string; actualModel?: string; endpoint?: string; purpose: "investigate" | "explain"; at: string; selected?: ToolCall; result?: unknown; error?: string }
 export type Incident = {
+  mode?: "llm" | "mock"
+  preferredProvider?: "groq" | "gemini"
+  driverReplies?: DriverReply[]
+  activeRun?: { id: string; expiresAt: string }
+  modelTurns?: ModelTurn[]
+  stopReason?: string
+  lastAgentError?: string
   /** Explicitly isolated fictional demo replay; normal incidents omit this. */
   demoRunId?: string
   id: string; orderId: string; signalId: string; scenario: Scenario; simulationTime: string; state: IncidentState
@@ -24,7 +33,8 @@ export type Command =
   | { command: "decide"; version: number; choice: Decision["choice"]; operator: string; comment: string }
   | { command: "execute"; version: number }
   | { command: "message"; text: string }
-export type ToolCall = { tool: string; args: Record<string, unknown> }
-export interface Provider { name: string; model: string; choose(incident: Incident, signal: AbortSignal): Promise<ToolCall> }
+  | { command: "receive_driver_reply"; terminalEta: string; safe: boolean; blockers: string[]; text: string }
+export type ToolCall = { tool: string; args: Record<string, unknown>; metadata?: { responseId?: string; actualModel?: string; endpoint?: string } }
+export interface Provider { name: string; model: string; choose(incident: Incident, signal: AbortSignal, purpose?: "investigate" | "explain"): Promise<ToolCall> }
 
 export type PublicIncident = Omit<Incident, "technical">

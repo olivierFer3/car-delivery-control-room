@@ -1,0 +1,1633 @@
+{
+  "verifiedAt": "2026-10-24T15:15:15.462Z",
+  "provider": "gemini",
+  "cases": [
+    {
+      "id": "f235a0d7-8b1d-4d21-b044-eb5cf23a89c4",
+      "mode": "llm",
+      "state": "resolved",
+      "tasks": [
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "args": {},
+          "tool": "get_order_context",
+          "result": {
+            "order": {
+              "id": "ord-00603",
+              "source": "WEB",
+              "status": "IN_TRANSIT",
+              "reference": "CD-420603",
+              "created_at": "2026-10-14T09:37:00Z",
+              "route_kind": "IMPORT",
+              "updated_at": "2026-10-21T08:43:00Z",
+              "customer_id": "cus-004",
+              "cancelled_at": null,
+              "display_lane": "moving",
+              "active_plan_id": "plan-x0a80f47aafdae7f4",
+              "pickup_site_id": null,
+              "delivery_site_id": null,
+              "readiness_status": "CONFIRMED",
+              "pickup_address_id": "addr-00534",
+              "customer_reference": "PO-004-0603",
+              "delivery_address_id": "addr-00535"
+            },
+            "alerts": [
+              {
+                "id": "alert-x5259ff7f2e03f0e6",
+                "signal": "FERRY_CONNECTION_RISK",
+                "status": "OPEN",
+                "summary": "Review ferry cutoff for CD-420603; source is a conversation, not a verified outcome.",
+                "order_id": "ord-00603",
+                "severity": "high",
+                "triggered_at": "2026-10-21T07:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              }
+            ],
+            "options": [
+              {
+                "id": "sim-ferry-603-1",
+                "kind": "FERRY",
+                "status": "AVAILABLE_QUOTE",
+                "currency": "EUR",
+                "order_id": "ord-00603",
+                "provider": "Fictional Demo Ferry Service",
+                "arrival_at": "2026-10-23T20:00:00Z",
+                "checked_at": "2026-10-21T09:00:00Z",
+                "data_origin": "SIMULATED_SERVICE",
+                "quote_cents": 38700,
+                "departure_at": "2026-10-22T14:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted.",
+                "check_in_cutoff_at": "2026-10-22T12:00:00Z"
+              },
+              {
+                "id": "sim-ferry-603-2",
+                "kind": "FERRY",
+                "status": "AVAILABLE_QUOTE",
+                "currency": "EUR",
+                "order_id": "ord-00603",
+                "provider": "Fictional Demo Ferry Service",
+                "arrival_at": "2026-10-24T20:00:00Z",
+                "checked_at": "2026-10-21T09:00:00Z",
+                "data_origin": "SIMULATED_SERVICE",
+                "quote_cents": 25600,
+                "departure_at": "2026-10-23T14:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted.",
+                "check_in_cutoff_at": "2026-10-23T12:00:00Z"
+              }
+            ],
+            "related": {
+              "proofs": [
+                {
+                  "id": "proof-xd5b8f231e707d39f",
+                  "kind": "PICKUP_PHOTOS",
+                  "status": "SUBMITTED",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "required": true,
+                  "file_count": 4,
+                  "reviewed_at": null,
+                  "submitted_at": "2026-10-20T14:07:00Z"
+                }
+              ],
+              "documents": [
+                {
+                  "id": "doc-cmr-00603",
+                  "kind": "CMR",
+                  "medium": "DIGITAL",
+                  "status": "SIGNED",
+                  "order_id": "ord-00603",
+                  "required": true,
+                  "file_count": 1,
+                  "updated_at": "2026-10-20T14:15:00Z",
+                  "signature_scope": "COLLECTION_ONLY"
+                }
+              ],
+              "time_windows": [
+                {
+                  "id": "win-x6cede35008ff87cc",
+                  "end_at": "2026-10-20T15:00:00Z",
+                  "source": "CUSTOMER",
+                  "purpose": "PICKUP_AVAILABILITY",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "start_at": "2026-10-20T07:00:00Z",
+                  "timezone": "Europe/Berlin",
+                  "is_selected": false
+                },
+                {
+                  "id": "win-x32f08790f92ed287",
+                  "end_at": "2026-10-20T15:00:00Z",
+                  "source": "OPS",
+                  "purpose": "SELECTED_PICKUP_SLOT",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "start_at": "2026-10-20T14:00:00Z",
+                  "timezone": "Europe/Berlin",
+                  "is_selected": true
+                },
+                {
+                  "id": "win-xd8ea7b8e35089ee5",
+                  "end_at": "2026-10-23T12:00:00Z",
+                  "source": "CUSTOMER",
+                  "purpose": "CUSTOMER_DELIVERY_PROMISE",
+                  "order_id": "ord-00603",
+                  "point_id": "point-x91bf9f320a714b91",
+                  "start_at": "2026-10-23T10:00:00Z",
+                  "timezone": "Europe/Helsinki",
+                  "is_selected": true
+                }
+              ],
+              "market_offers": [
+                {
+                  "id": "offer-x4292c4a7f37abb02",
+                  "type": "REGULAR",
+                  "status": "ACCEPTED",
+                  "currency": "EUR",
+                  "order_id": "ord-00603",
+                  "fee_cents": 169500,
+                  "expires_at": "2026-10-17T19:54:00Z",
+                  "visibility": "OPEN",
+                  "accepted_at": "2026-10-15T03:05:00Z",
+                  "segment_ids": [
+                    "seg-xc6daf45b0e8ecfdd"
+                  ],
+                  "published_at": "2026-10-14T19:54:00Z"
+                }
+              ],
+              "agent_proposals": [
+                {
+                  "id": "agent-x1c721af5508e707a",
+                  "review": {
+                    "decision": "APPROVED",
+                    "reviewed_at": "2026-10-21T07:59:00Z",
+                    "reviewer_id": "ops-travel",
+                    "decision_note": "Check capacity and driver rest first. Return for a separate booking decision.",
+                    "final_payload": {
+                      "buy_ticket": false,
+                      "change_promise": false,
+                      "refresh_capacity": true
+                    }
+                  },
+                  "status": "APPROVED_AWAITING_EXECUTION",
+                  "command": "travel.refresh_crossing",
+                  "summary": "Refresh vehicle-space availability and show the effect on the delivery window.",
+                  "alert_id": "alert-x5259ff7f2e03f0e6",
+                  "order_id": "ord-00603",
+                  "execution": null,
+                  "rationale": "The terminal arrival is slipping; a historical quoted crossing is not confirmed capacity.",
+                  "target_id": "alert-x5259ff7f2e03f0e6",
+                  "created_at": "2026-10-21T07:57:00Z",
+                  "dependency": {
+                    "checked_at": "2026-10-21T07:57:00Z",
+                    "basis_event_id": "evt-x0fcd6f0287a8b183",
+                    "execution_policy": "RECHECK_CURRENT_STATE_BEFORE_WRITE"
+                  },
+                  "target_type": "alert",
+                  "evidence_refs": [
+                    {
+                      "id": "alert-x5259ff7f2e03f0e6",
+                      "table": "alerts"
+                    },
+                    {
+                      "id": "msg-x9d7829f6508ab7c0",
+                      "table": "messages"
+                    },
+                    {
+                      "id": "msg-x108ad4ae10c6ef5e",
+                      "table": "messages"
+                    },
+                    {
+                      "id": "res-x1082202e8d139d61",
+                      "table": "travel_reservations"
+                    }
+                  ],
+                  "superseded_at": null,
+                  "proposed_payload": {
+                    "buy_ticket": false,
+                    "change_promise": false,
+                    "refresh_capacity": true
+                  },
+                  "proposed_by_agent_id": "travel-agent",
+                  "superseded_by_proposal_id": null
+                }
+              ],
+              "transport_plans": [
+                {
+                  "id": "plan-x0a80f47aafdae7f4",
+                  "source": "OPS",
+                  "status": "ACTIVE",
+                  "version": 1,
+                  "order_id": "ord-00603",
+                  "created_at": "2026-10-14T10:05:00Z",
+                  "activated_at": "2026-10-14T12:42:00Z"
+                }
+              ],
+              "assignment_steps": [
+                {
+                  "id": "step-x66a1f843fafae399",
+                  "kind": "VEHICLE_PICKUP",
+                  "note": "Pickup slot from OPS; physical collection recorded by driver app. Handover instruction: Arrange a named seller handover at the door; no unattended key collection is agreed.",
+                  "title": "Collect Volkswagen Golf at Private handoff, Munich",
+                  "status": "COMPLETED",
+                  "to_city": null,
+                  "order_id": "ord-00603",
+                  "sequence": 1,
+                  "from_city": null,
+                  "evidence_id": "evt-x7162144336689bd9",
+                  "cancelled_at": null,
+                  "completed_at": "2026-10-20T14:00:00Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "evidence_type": "operational_event",
+                  "reservation_id": null,
+                  "scheduled_end_at": "2026-10-20T15:00:00Z",
+                  "source_option_id": null,
+                  "scheduled_start_at": "2026-10-20T14:00:00Z",
+                  "transport_point_id": "point-xa0ec1aa1fc999154"
+                },
+                {
+                  "id": "step-x24c3ddd1e53cb20f",
+                  "kind": "VEHICLE_FERRY",
+                  "note": "Vehicle place booked; terminal check-in, boarding and destination arrival are separate evidence.",
+                  "title": "Vehicle crossing from West Baltic Vehicle Terminal toward South Finland Vehicle Terminal",
+                  "status": "PLANNED",
+                  "to_city": null,
+                  "order_id": "ord-00603",
+                  "sequence": 2,
+                  "from_city": null,
+                  "evidence_id": null,
+                  "cancelled_at": null,
+                  "completed_at": null,
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "evidence_type": null,
+                  "reservation_id": "res-x1082202e8d139d61",
+                  "scheduled_end_at": "2026-10-22T20:00:00Z",
+                  "source_option_id": null,
+                  "scheduled_start_at": "2026-10-21T14:00:00Z",
+                  "transport_point_id": null
+                },
+                {
+                  "id": "step-x7e73417dcbd40a74",
+                  "kind": "VEHICLE_DELIVERY",
+                  "note": "Selected delivery target from CUSTOMER (CUSTOMER_DELIVERY_PROMISE). Handover instruction: A named receiver must accept the car and keys; there is no agreed unattended drop.",
+                  "title": "Hand over Volkswagen Golf at Private handoff, Lahti",
+                  "status": "PLANNED",
+                  "to_city": null,
+                  "order_id": "ord-00603",
+                  "sequence": 3,
+                  "from_city": null,
+                  "evidence_id": null,
+                  "cancelled_at": null,
+                  "completed_at": null,
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "evidence_type": null,
+                  "reservation_id": null,
+                  "scheduled_end_at": "2026-10-23T12:00:00Z",
+                  "source_option_id": null,
+                  "scheduled_start_at": "2026-10-23T10:00:00Z",
+                  "transport_point_id": "point-x91bf9f320a714b91"
+                }
+              ],
+              "transport_points": [
+                {
+                  "id": "point-xa0ec1aa1fc999154",
+                  "role": "PICKUP",
+                  "plan_id": "plan-x0a80f47aafdae7f4",
+                  "site_id": null,
+                  "sequence": 1,
+                  "address_id": "addr-00534",
+                  "order_boundary": "PICKUP"
+                },
+                {
+                  "id": "point-x91bf9f320a714b91",
+                  "role": "DELIVERY",
+                  "plan_id": "plan-x0a80f47aafdae7f4",
+                  "site_id": null,
+                  "sequence": 2,
+                  "address_id": "addr-00535",
+                  "order_boundary": "DELIVERY"
+                }
+              ],
+              "work_assignments": [
+                {
+                  "id": "asg-x3bfd2d7c41a7a3d5",
+                  "status": "IN_PROGRESS",
+                  "currency": "EUR",
+                  "order_id": "ord-00603",
+                  "driver_id": "drv-121",
+                  "fee_cents": 169500,
+                  "started_at": "2026-10-20T13:03:00Z",
+                  "accepted_at": "2026-10-15T03:05:00Z",
+                  "segment_ids": [
+                    "seg-xc6daf45b0e8ecfdd"
+                  ],
+                  "cancelled_at": null,
+                  "completed_at": null,
+                  "source_offer_id": "offer-x4292c4a7f37abb02"
+                }
+              ],
+              "transport_segments": [
+                {
+                  "id": "seg-xc6daf45b0e8ecfdd",
+                  "status": "IN_PROGRESS",
+                  "plan_id": "plan-x0a80f47aafdae7f4",
+                  "sequence": 1,
+                  "distance_km": 2391,
+                  "to_point_id": "point-x91bf9f320a714b91",
+                  "from_point_id": "point-xa0ec1aa1fc999154",
+                  "order_item_id": "item-xdab5a4d660a0e437",
+                  "transport_mode": "DRIVE_WITH_FERRY"
+                }
+              ],
+              "travel_reservations": [
+                {
+                  "id": "res-x1082202e8d139d61",
+                  "kind": "FERRY",
+                  "status": "BOOKED",
+                  "order_id": "ord-00603",
+                  "booked_at": "2026-10-15T05:01:00Z",
+                  "route_label": "DE to FI vehicle crossing",
+                  "departure_at": "2026-10-21T14:00:00Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "schedule_basis": {
+                    "kind": "BOOKING_TIMETABLE",
+                    "note": "Booking timetable recorded at purchase; no live boarding or discharge feed is attached.",
+                    "recorded_at": "2026-10-15T05:01:00Z",
+                    "reservation_id": "res-x1082202e8d139d61"
+                  },
+                  "origin_terminal": "West Baltic Vehicle Terminal",
+                  "amendment_request": {
+                    "status": "REQUESTED_NOT_CONFIRMED",
+                    "requested_at": "2026-10-21T08:43:00Z",
+                    "requested_change": "LATER_VEHICLE_CROSSING",
+                    "source_message_id": "msg-x7074c5c677e14192",
+                    "candidate_reservation_id": null
+                  },
+                  "booking_reference": "WBV-FERRY-00603",
+                  "check_in_cutoff_at": "2026-10-21T12:00:00Z",
+                  "origin_terminal_id": "terminal-west-baltic",
+                  "expected_arrival_at": "2026-10-22T20:00:00Z",
+                  "journey_state_basis": {
+                    "note": "Check-in is still ahead; no terminal arrival or boarding evidence is recorded.",
+                    "snapshot_at": "2026-10-21T09:00:00Z",
+                    "reservation_id": "res-x1082202e8d139d61",
+                    "delivery_event_id": null
+                  },
+                  "verified_milestones": [
+                    {
+                      "kind": "BOOKING_RECORDED",
+                      "evidence_id": "res-x1082202e8d139d61",
+                      "occurred_at": "2026-10-15T05:01:00Z",
+                      "evidence_type": "travel_reservation"
+                    }
+                  ],
+                  "destination_terminal": "South Finland Vehicle Terminal",
+                  "boarding_confirmation": "UNCONFIRMED",
+                  "check_in_confirmation": "UNCONFIRMED",
+                  "snapshot_journey_state": "BOOKED_BEFORE_CHECK_IN_CUTOFF",
+                  "destination_terminal_id": "terminal-south-finland",
+                  "terminal_road_estimate_id": "terminal-xadc1a0fcdfa902b9",
+                  "destination_terminal_arrival_confirmation": "UNCONFIRMED"
+                }
+              ],
+              "tracking_observations": [
+                {
+                  "id": "track-xf58a393f58ab242b",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T15:43:06.066838Z",
+                  "received_at": "2026-10-20T15:50:06.066838Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.024,
+                  "distance_remaining_km": 2334,
+                  "estimated_delivery_at": "2026-10-23T11:15:00Z"
+                },
+                {
+                  "id": "track-x5d6ee35972dda879",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T17:16:34.476281Z",
+                  "received_at": "2026-10-20T17:18:34.476281Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.068,
+                  "distance_remaining_km": 2228,
+                  "estimated_delivery_at": "2026-10-23T09:23:00Z"
+                },
+                {
+                  "id": "track-xf531521c783be127",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T18:49:47.043823Z",
+                  "received_at": "2026-10-20T18:55:47.043823Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.115,
+                  "distance_remaining_km": 2116,
+                  "estimated_delivery_at": "2026-10-23T11:23:00Z"
+                },
+                {
+                  "id": "track-x30c05e7219374c9d",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T20:34:11.702738Z",
+                  "received_at": "2026-10-20T20:40:11.702738Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.143,
+                  "distance_remaining_km": 2049,
+                  "estimated_delivery_at": "2026-10-23T11:55:00Z"
+                },
+                {
+                  "id": "track-x5a60924e681137e6",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T22:35:21.152031Z",
+                  "received_at": "2026-10-20T22:42:21.152031Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.168,
+                  "distance_remaining_km": 1989,
+                  "estimated_delivery_at": "2026-10-23T09:09:00Z"
+                },
+                {
+                  "id": "track-x3ef159a5f5fcfc03",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-21T00:37:50.456397Z",
+                  "received_at": "2026-10-21T00:44:50.456397Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.196,
+                  "distance_remaining_km": 1922,
+                  "estimated_delivery_at": "2026-10-23T10:57:00Z"
+                },
+                {
+                  "id": "track-xe1f773572a2e7f21",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-21T01:55:54.795189Z",
+                  "received_at": "2026-10-21T02:02:54.795189Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.242,
+                  "distance_remaining_km": 1812,
+                  "estimated_delivery_at": "2026-10-23T12:36:00Z"
+                },
+                {
+                  "id": "track-x3fe486c5847cfc53",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-21T08:06:00Z",
+                  "received_at": "2026-10-21T08:13:00Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.259,
+                  "distance_remaining_km": 1772,
+                  "estimated_delivery_at": "2026-10-23T09:24:00Z"
+                }
+              ],
+              "order_endpoint_details": [
+                {
+                  "id": "ep-x5e8c6222c01643cd",
+                  "site_id": null,
+                  "boundary": "PICKUP",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "stated_at": "2026-10-14T09:37:00Z",
+                  "stated_by": "CUSTOMER_ORDER_INPUT",
+                  "address_id": "addr-00534",
+                  "contact_name": "Oscar Marlbrook",
+                  "contact_role": "handoff contact",
+                  "access_status": "NEEDS_VERIFICATION",
+                  "contact_handle": "handoff-00603-pickup@example.test",
+                  "contact_status": "UNCONFIRMED",
+                  "last_confirmed_at": null,
+                  "access_instruction": "Arrange a named seller handover at the door; no unattended key collection is agreed.",
+                  "last_confirmed_source": null
+                },
+                {
+                  "id": "ep-x1e15471c2568a009",
+                  "site_id": null,
+                  "boundary": "DELIVERY",
+                  "order_id": "ord-00603",
+                  "point_id": "point-x91bf9f320a714b91",
+                  "stated_at": "2026-10-14T09:37:00Z",
+                  "stated_by": "CUSTOMER_ORDER_INPUT",
+                  "address_id": "addr-00535",
+                  "contact_name": "Phoebe Marlbrook",
+                  "contact_role": "handoff contact",
+                  "access_status": "NEEDS_VERIFICATION",
+                  "contact_handle": "handoff-00603-delivery@example.test",
+                  "contact_status": "UNCONFIRMED",
+                  "last_confirmed_at": null,
+                  "access_instruction": "A named receiver must accept the car and keys; there is no agreed unattended drop.",
+                  "last_confirmed_source": null
+                }
+              ]
+            },
+            "messages": [
+              {
+                "id": "msg-xf06d346a050b3e0a",
+                "body": "The queue before the terminal has barely moved. The booked crossing for CD-420603 may close before I reach check-in.",
+                "channel": "support_chat",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "drv-121",
+                "visibility": "PUBLIC",
+                "author_type": "driver",
+                "authored_at": "2026-10-21T06:58:00Z",
+                "recipient_id": "ops-support",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x6facdfad04774a58",
+                "body": "I am checking the check-in deadline and next available sailing. Please send your latest ETA when it updates.",
+                "channel": "support_chat",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "ops-support",
+                "visibility": "PUBLIC",
+                "author_type": "operator",
+                "authored_at": "2026-10-21T07:10:00Z",
+                "recipient_id": "drv-121",
+                "recipient_type": "driver",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x108ad4ae10c6ef5e",
+                "body": "Do not cancel the current booking or promise another crossing until capacity and fare terms are confirmed.",
+                "channel": "internal_note",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "ops-support",
+                "visibility": "INTERNAL",
+                "author_type": "operator",
+                "authored_at": "2026-10-21T07:14:00Z",
+                "recipient_id": "ops-support",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x9d7829f6508ab7c0",
+                "body": "I am still in the queue with the car. I have not turned toward another terminal.",
+                "channel": "support_chat",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "drv-121",
+                "visibility": "PUBLIC",
+                "author_type": "driver",
+                "authored_at": "2026-10-21T07:31:00Z",
+                "recipient_id": "ops-support",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x7074c5c677e14192",
+                "body": "Carrier desk took our request to move this car to a later crossing, but has not confirmed a slot or fare. Keep the original booking active. Do not tell the driver to turn away or change the customer's delivery promise yet.",
+                "channel": "internal_note",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "ops-travel",
+                "visibility": "INTERNAL",
+                "author_type": "operator",
+                "authored_at": "2026-10-21T08:43:00Z",
+                "recipient_id": "ops-shift",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              }
+            ],
+            "reservations": [
+              {
+                "id": "res-x1082202e8d139d61",
+                "kind": "FERRY",
+                "status": "BOOKED",
+                "order_id": "ord-00603",
+                "booked_at": "2026-10-15T05:01:00Z",
+                "route_label": "DE to FI vehicle crossing",
+                "departure_at": "2026-10-21T14:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "schedule_basis": {
+                  "kind": "BOOKING_TIMETABLE",
+                  "note": "Booking timetable recorded at purchase; no live boarding or discharge feed is attached.",
+                  "recorded_at": "2026-10-15T05:01:00Z",
+                  "reservation_id": "res-x1082202e8d139d61"
+                },
+                "origin_terminal": "West Baltic Vehicle Terminal",
+                "amendment_request": {
+                  "status": "REQUESTED_NOT_CONFIRMED",
+                  "requested_at": "2026-10-21T08:43:00Z",
+                  "requested_change": "LATER_VEHICLE_CROSSING",
+                  "source_message_id": "msg-x7074c5c677e14192",
+                  "candidate_reservation_id": null
+                },
+                "booking_reference": "WBV-FERRY-00603",
+                "check_in_cutoff_at": "2026-10-21T12:00:00Z",
+                "origin_terminal_id": "terminal-west-baltic",
+                "expected_arrival_at": "2026-10-22T20:00:00Z",
+                "journey_state_basis": {
+                  "note": "Check-in is still ahead; no terminal arrival or boarding evidence is recorded.",
+                  "snapshot_at": "2026-10-21T09:00:00Z",
+                  "reservation_id": "res-x1082202e8d139d61",
+                  "delivery_event_id": null
+                },
+                "verified_milestones": [
+                  {
+                    "kind": "BOOKING_RECORDED",
+                    "evidence_id": "res-x1082202e8d139d61",
+                    "occurred_at": "2026-10-15T05:01:00Z",
+                    "evidence_type": "travel_reservation"
+                  }
+                ],
+                "destination_terminal": "South Finland Vehicle Terminal",
+                "boarding_confirmation": "UNCONFIRMED",
+                "check_in_confirmation": "UNCONFIRMED",
+                "snapshot_journey_state": "BOOKED_BEFORE_CHECK_IN_CUTOFF",
+                "destination_terminal_id": "terminal-south-finland",
+                "terminal_road_estimate_id": "terminal-xadc1a0fcdfa902b9",
+                "destination_terminal_arrival_confirmation": "UNCONFIRMED"
+              }
+            ]
+          }
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "args": {
+            "question": "What is your current terminal ETA, and do you have any safety or mechanical blockers?"
+          },
+          "tool": "ask_driver",
+          "result": {
+            "at": "2026-10-21T09:00:00Z",
+            "id": "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4",
+            "safe": true,
+            "text": "Simulation: queue cleared; terminal ETA 10:00 UTC.",
+            "status": "replied",
+            "blockers": [],
+            "question": "What is your current terminal ETA, and do you have any safety or mechanical blockers?",
+            "simulated": true,
+            "terminalEta": "2026-10-21T10:00:00Z"
+          }
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "args": {
+            "reservationId": "res-x1082202e8d139d61"
+          },
+          "tool": "check_booking_constraints",
+          "result": {
+            "missing": [],
+            "blockers": [],
+            "canRetain": true,
+            "limitation": "Deterministic planning check using a simulated driver report; no gate scan or boarding confirmation is asserted.",
+            "sourceRefs": [
+              "res-x1082202e8d139d61",
+              "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4"
+            ],
+            "terminalEta": "2026-10-21T10:00:00Z",
+            "missesCutoff": false,
+            "checkInCutoff": "2026-10-21T12:00:00Z",
+            "reservationId": "res-x1082202e8d139d61",
+            "driverEvidenceId": "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4"
+          }
+        },
+        {
+          "tool": "close_disproved_alert",
+          "args": {
+            "reason": "Deterministic booking check confirms that the driver's terminal ETA (10:00 UTC) is well before the check-in cutoff (12:00 UTC), with no safety issues or blockers reported (source IDs: res-x1082202e8d139d61, driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4)."
+          },
+          "result": {
+            "resolved": true,
+            "delivered": false
+          },
+          "at": "2026-10-21T09:00:00Z"
+        }
+      ],
+      "missing": [],
+      "orderId": "ord-00603",
+      "summary": "Deterministic booking check confirms that the driver's terminal ETA (10:00 UTC) is well before the check-in cutoff (12:00 UTC), with no safety issues or blockers reported (source IDs: res-x1082202e8d139d61, driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4).",
+      "evidence": [
+        {
+          "at": "2026-10-21T07:00:00Z",
+          "id": "alert-x5259ff7f2e03f0e6",
+          "kind": "record",
+          "text": "{\"id\":\"alert-x5259ff7f2e03f0e6\",\"signal\":\"FERRY_CONNECTION_RISK\",\"status\":\"OPEN\",\"summary\":\"Review ferry cutoff for CD-420603; source is a conversation, not a verified outcome.\",\"order_id\":\"ord-00603\",\"severity\":\"high\",\"triggered_at\":\"2026-10-21T07:00:00Z\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"conversation_id\":\"conv-xdf71bc9a940be234\"}",
+          "source": "dataset:alert-x5259ff7f2e03f0e6"
+        },
+        {
+          "at": "2026-10-21T06:58:00Z",
+          "id": "msg-xf06d346a050b3e0a",
+          "kind": "reported",
+          "text": "{\"id\":\"msg-xf06d346a050b3e0a\",\"body\":\"The queue before the terminal has barely moved. The booked crossing for CD-420603 may close before I reach check-in.\",\"channel\":\"support_chat\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"author_id\":\"drv-121\",\"visibility\":\"PUBLIC\",\"author_type\":\"driver\",\"authored_at\":\"2026-10-21T06:58:00Z\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"conversation_id\":\"conv-xdf71bc9a940be234\"}",
+          "source": "dataset:msg-xf06d346a050b3e0a"
+        },
+        {
+          "at": "2026-10-21T07:10:00Z",
+          "id": "msg-x6facdfad04774a58",
+          "kind": "record",
+          "text": "{\"id\":\"msg-x6facdfad04774a58\",\"body\":\"I am checking the check-in deadline and next available sailing. Please send your latest ETA when it updates.\",\"channel\":\"support_chat\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"author_id\":\"ops-support\",\"visibility\":\"PUBLIC\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T07:10:00Z\",\"recipient_id\":\"drv-121\",\"recipient_type\":\"driver\",\"conversation_id\":\"conv-xdf71bc9a940be234\"}",
+          "source": "dataset:msg-x6facdfad04774a58"
+        },
+        {
+          "at": "2026-10-21T07:14:00Z",
+          "id": "msg-x108ad4ae10c6ef5e",
+          "kind": "record",
+          "text": "{\"id\":\"msg-x108ad4ae10c6ef5e\",\"body\":\"Do not cancel the current booking or promise another crossing until capacity and fare terms are confirmed.\",\"channel\":\"internal_note\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"author_id\":\"ops-support\",\"visibility\":\"INTERNAL\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T07:14:00Z\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"conversation_id\":\"conv-xdf71bc9a940be234\"}",
+          "source": "dataset:msg-x108ad4ae10c6ef5e"
+        },
+        {
+          "at": "2026-10-21T07:31:00Z",
+          "id": "msg-x9d7829f6508ab7c0",
+          "kind": "reported",
+          "text": "{\"id\":\"msg-x9d7829f6508ab7c0\",\"body\":\"I am still in the queue with the car. I have not turned toward another terminal.\",\"channel\":\"support_chat\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"author_id\":\"drv-121\",\"visibility\":\"PUBLIC\",\"author_type\":\"driver\",\"authored_at\":\"2026-10-21T07:31:00Z\",\"recipient_id\":\"ops-support\",\"recipient_type\":\"operator\",\"conversation_id\":\"conv-xdf71bc9a940be234\"}",
+          "source": "dataset:msg-x9d7829f6508ab7c0"
+        },
+        {
+          "at": "2026-10-21T08:43:00Z",
+          "id": "msg-x7074c5c677e14192",
+          "kind": "record",
+          "text": "{\"id\":\"msg-x7074c5c677e14192\",\"body\":\"Carrier desk took our request to move this car to a later crossing, but has not confirmed a slot or fare. Keep the original booking active. Do not tell the driver to turn away or change the customer's delivery promise yet.\",\"channel\":\"internal_note\",\"language\":\"en\",\"order_id\":\"ord-00603\",\"author_id\":\"ops-travel\",\"visibility\":\"INTERNAL\",\"author_type\":\"operator\",\"authored_at\":\"2026-10-21T08:43:00Z\",\"recipient_id\":\"ops-shift\",\"recipient_type\":\"operator\",\"conversation_id\":\"conv-xdf71bc9a940be234\"}",
+          "source": "dataset:msg-x7074c5c677e14192"
+        },
+        {
+          "at": "2026-10-15T05:01:00Z",
+          "id": "res-x1082202e8d139d61",
+          "kind": "record",
+          "text": "{\"id\":\"res-x1082202e8d139d61\",\"kind\":\"FERRY\",\"status\":\"BOOKED\",\"order_id\":\"ord-00603\",\"booked_at\":\"2026-10-15T05:01:00Z\",\"route_label\":\"DE to FI vehicle crossing\",\"departure_at\":\"2026-10-21T14:00:00Z\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"schedule_basis\":{\"kind\":\"BOOKING_TIMETABLE\",\"note\":\"Booking timetable recorded at purchase; no live boarding or discharge feed is attached.\",\"recorded_at\":\"2026-10-15T05:01:00Z\",\"reservation_id\":\"res-x1082202e8d139d61\"},\"origin_terminal\":\"West Baltic Vehicle Terminal\",\"amendment_request\":{\"status\":\"REQUESTED_NOT_CONFIRMED\",\"requested_at\":\"2026-10-21T08:43:00Z\",\"requested_change\":\"LATER_VEHICLE_CROSSING\",\"source_message_id\":\"msg-x7074c5c677e14192\",\"candidate_reservation_id\":null},\"booking_reference\":\"WBV-FERRY-00603\",\"check_in_cutoff_at\":\"2026-10-21T12:00:00Z\",\"origin_terminal_id\":\"terminal-west-baltic\",\"expected_arrival_at\":\"2026-10-22T20:00:00Z\",\"journey_state_basis\":{\"note\":\"Check-in is still ahead; no terminal arrival or boarding evidence is recorded.\",\"snapshot_at\":\"2026-10-21T09:00:00Z\",\"reservation_id\":\"res-x1082202e8d139d61\",\"delivery_event_id\":null},\"verified_milestones\":[{\"kind\":\"BOOKING_RECORDED\",\"evidence_id\":\"res-x1082202e8d139d61\",\"occurred_at\":\"2026-10-15T05:01:00Z\",\"evidence_type\":\"travel_reservation\"}],\"destination_terminal\":\"South Finland Vehicle Terminal\",\"boarding_confirmation\":\"UNCONFIRMED\",\"check_in_confirmation\":\"UNCONFIRMED\",\"snapshot_journey_state\":\"BOOKED_BEFORE_CHECK_IN_CUTOFF\",\"destination_terminal_id\":\"terminal-south-finland\",\"terminal_road_estimate_id\":\"terminal-xadc1a0fcdfa902b9\",\"destination_terminal_arrival_confirmation\":\"UNCONFIRMED\"}",
+          "source": "dataset:res-x1082202e8d139d61"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "id": "sim-ferry-603-1",
+          "kind": "record",
+          "text": "{\"id\":\"sim-ferry-603-1\",\"order_id\":\"ord-00603\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"kind\":\"FERRY\",\"status\":\"AVAILABLE_QUOTE\",\"provider\":\"Fictional Demo Ferry Service\",\"data_origin\":\"SIMULATED_SERVICE\",\"checked_at\":\"2026-10-21T09:00:00Z\",\"check_in_cutoff_at\":\"2026-10-22T12:00:00Z\",\"departure_at\":\"2026-10-22T14:00:00Z\",\"arrival_at\":\"2026-10-23T20:00:00Z\",\"quote_cents\":38700,\"currency\":\"EUR\",\"capacity_note\":\"Fictional vehicle slot quote; unbooked. No real service contacted.\"}",
+          "source": "simulated_service:sim-ferry-603-1"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "id": "sim-ferry-603-2",
+          "kind": "record",
+          "text": "{\"id\":\"sim-ferry-603-2\",\"order_id\":\"ord-00603\",\"assignment_id\":\"asg-x3bfd2d7c41a7a3d5\",\"kind\":\"FERRY\",\"status\":\"AVAILABLE_QUOTE\",\"provider\":\"Fictional Demo Ferry Service\",\"data_origin\":\"SIMULATED_SERVICE\",\"checked_at\":\"2026-10-21T09:00:00Z\",\"check_in_cutoff_at\":\"2026-10-23T12:00:00Z\",\"departure_at\":\"2026-10-23T14:00:00Z\",\"arrival_at\":\"2026-10-24T20:00:00Z\",\"quote_cents\":25600,\"currency\":\"EUR\",\"capacity_note\":\"Fictional vehicle slot quote; unbooked. No real service contacted.\"}",
+          "source": "simulated_service:sim-ferry-603-2"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "id": "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4",
+          "kind": "reported",
+          "text": "{\"status\":\"replied\",\"question\":\"What is your current terminal ETA, and do you have any safety or mechanical blockers?\",\"terminalEta\":\"2026-10-21T10:00:00Z\",\"text\":\"Simulation: queue cleared; terminal ETA 10:00 UTC.\",\"simulated\":true,\"id\":\"driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4\",\"safe\":true,\"blockers\":[],\"at\":\"2026-10-21T09:00:00Z\"}",
+          "source": "simulated_driver"
+        }
+      ],
+      "nextStep": "Alert investigation resolved in simulation; car delivery remains unchanged",
+      "scenario": "disproved",
+      "signalId": "alert-x5259ff7f2e03f0e6",
+      "timeline": [
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "text": "Fictional investigation opened; delivery status unchanged",
+          "type": "created"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "text": "Real model investigation; driver and ferry services are explicitly fictional. Original snapshot and earlier incidents retained.",
+          "type": "simulation"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "text": "get_order_context",
+          "type": "tool"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "text": "ask_driver",
+          "type": "tool"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "text": "check_booking_constraints",
+          "type": "tool"
+        },
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "text": "Invalid provider call",
+          "type": "technical_error"
+        },
+        {
+          "type": "tool",
+          "text": "close_disproved_alert",
+          "at": "2026-10-21T09:00:00Z"
+        },
+        {
+          "type": "agent_stopped",
+          "text": "Deterministic booking check confirms that the driver's terminal ETA (10:00 UTC) is well before the check-in cutoff (12:00 UTC), with no safety issues or blockers reported (source IDs: res-x1082202e8d139d61, driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4).",
+          "at": "2026-10-21T09:00:00Z"
+        }
+      ],
+      "decisions": [],
+      "demoRunId": "f235a0d7-8b1d-4d21-b044-eb5cf23a89c4",
+      "proposals": [],
+      "technical": [
+        {
+          "model": "gemini-3.5-flash-lite",
+          "provider": "gemini"
+        },
+        {
+          "model": "gemini-3.5-flash-lite",
+          "provider": "gemini"
+        },
+        {
+          "model": "gemini-3.5-flash-lite",
+          "provider": "gemini"
+        },
+        {
+          "error": "Invalid provider call",
+          "model": "gemini-3.5-flash-lite",
+          "provider": "gemini"
+        },
+        {
+          "provider": "gemini",
+          "model": "gemini-3.5-flash-lite"
+        }
+      ],
+      "executions": [],
+      "modelTurns": [
+        {
+          "at": "2026-10-24T15:12:34.166Z",
+          "id": "5d9a0901-c19b-4768-a813-3e00252bf1ce",
+          "model": "gemini-3.5-flash-lite",
+          "result": {
+            "order": {
+              "id": "ord-00603",
+              "source": "WEB",
+              "status": "IN_TRANSIT",
+              "reference": "CD-420603",
+              "created_at": "2026-10-14T09:37:00Z",
+              "route_kind": "IMPORT",
+              "updated_at": "2026-10-21T08:43:00Z",
+              "customer_id": "cus-004",
+              "cancelled_at": null,
+              "display_lane": "moving",
+              "active_plan_id": "plan-x0a80f47aafdae7f4",
+              "pickup_site_id": null,
+              "delivery_site_id": null,
+              "readiness_status": "CONFIRMED",
+              "pickup_address_id": "addr-00534",
+              "customer_reference": "PO-004-0603",
+              "delivery_address_id": "addr-00535"
+            },
+            "alerts": [
+              {
+                "id": "alert-x5259ff7f2e03f0e6",
+                "signal": "FERRY_CONNECTION_RISK",
+                "status": "OPEN",
+                "summary": "Review ferry cutoff for CD-420603; source is a conversation, not a verified outcome.",
+                "order_id": "ord-00603",
+                "severity": "high",
+                "triggered_at": "2026-10-21T07:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              }
+            ],
+            "options": [
+              {
+                "id": "sim-ferry-603-1",
+                "kind": "FERRY",
+                "status": "AVAILABLE_QUOTE",
+                "currency": "EUR",
+                "order_id": "ord-00603",
+                "provider": "Fictional Demo Ferry Service",
+                "arrival_at": "2026-10-23T20:00:00Z",
+                "checked_at": "2026-10-21T09:00:00Z",
+                "data_origin": "SIMULATED_SERVICE",
+                "quote_cents": 38700,
+                "departure_at": "2026-10-22T14:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted.",
+                "check_in_cutoff_at": "2026-10-22T12:00:00Z"
+              },
+              {
+                "id": "sim-ferry-603-2",
+                "kind": "FERRY",
+                "status": "AVAILABLE_QUOTE",
+                "currency": "EUR",
+                "order_id": "ord-00603",
+                "provider": "Fictional Demo Ferry Service",
+                "arrival_at": "2026-10-24T20:00:00Z",
+                "checked_at": "2026-10-21T09:00:00Z",
+                "data_origin": "SIMULATED_SERVICE",
+                "quote_cents": 25600,
+                "departure_at": "2026-10-23T14:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "capacity_note": "Fictional vehicle slot quote; unbooked. No real service contacted.",
+                "check_in_cutoff_at": "2026-10-23T12:00:00Z"
+              }
+            ],
+            "related": {
+              "proofs": [
+                {
+                  "id": "proof-xd5b8f231e707d39f",
+                  "kind": "PICKUP_PHOTOS",
+                  "status": "SUBMITTED",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "required": true,
+                  "file_count": 4,
+                  "reviewed_at": null,
+                  "submitted_at": "2026-10-20T14:07:00Z"
+                }
+              ],
+              "documents": [
+                {
+                  "id": "doc-cmr-00603",
+                  "kind": "CMR",
+                  "medium": "DIGITAL",
+                  "status": "SIGNED",
+                  "order_id": "ord-00603",
+                  "required": true,
+                  "file_count": 1,
+                  "updated_at": "2026-10-20T14:15:00Z",
+                  "signature_scope": "COLLECTION_ONLY"
+                }
+              ],
+              "time_windows": [
+                {
+                  "id": "win-x6cede35008ff87cc",
+                  "end_at": "2026-10-20T15:00:00Z",
+                  "source": "CUSTOMER",
+                  "purpose": "PICKUP_AVAILABILITY",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "start_at": "2026-10-20T07:00:00Z",
+                  "timezone": "Europe/Berlin",
+                  "is_selected": false
+                },
+                {
+                  "id": "win-x32f08790f92ed287",
+                  "end_at": "2026-10-20T15:00:00Z",
+                  "source": "OPS",
+                  "purpose": "SELECTED_PICKUP_SLOT",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "start_at": "2026-10-20T14:00:00Z",
+                  "timezone": "Europe/Berlin",
+                  "is_selected": true
+                },
+                {
+                  "id": "win-xd8ea7b8e35089ee5",
+                  "end_at": "2026-10-23T12:00:00Z",
+                  "source": "CUSTOMER",
+                  "purpose": "CUSTOMER_DELIVERY_PROMISE",
+                  "order_id": "ord-00603",
+                  "point_id": "point-x91bf9f320a714b91",
+                  "start_at": "2026-10-23T10:00:00Z",
+                  "timezone": "Europe/Helsinki",
+                  "is_selected": true
+                }
+              ],
+              "market_offers": [
+                {
+                  "id": "offer-x4292c4a7f37abb02",
+                  "type": "REGULAR",
+                  "status": "ACCEPTED",
+                  "currency": "EUR",
+                  "order_id": "ord-00603",
+                  "fee_cents": 169500,
+                  "expires_at": "2026-10-17T19:54:00Z",
+                  "visibility": "OPEN",
+                  "accepted_at": "2026-10-15T03:05:00Z",
+                  "segment_ids": [
+                    "seg-xc6daf45b0e8ecfdd"
+                  ],
+                  "published_at": "2026-10-14T19:54:00Z"
+                }
+              ],
+              "agent_proposals": [
+                {
+                  "id": "agent-x1c721af5508e707a",
+                  "review": {
+                    "decision": "APPROVED",
+                    "reviewed_at": "2026-10-21T07:59:00Z",
+                    "reviewer_id": "ops-travel",
+                    "decision_note": "Check capacity and driver rest first. Return for a separate booking decision.",
+                    "final_payload": {
+                      "buy_ticket": false,
+                      "change_promise": false,
+                      "refresh_capacity": true
+                    }
+                  },
+                  "status": "APPROVED_AWAITING_EXECUTION",
+                  "command": "travel.refresh_crossing",
+                  "summary": "Refresh vehicle-space availability and show the effect on the delivery window.",
+                  "alert_id": "alert-x5259ff7f2e03f0e6",
+                  "order_id": "ord-00603",
+                  "execution": null,
+                  "rationale": "The terminal arrival is slipping; a historical quoted crossing is not confirmed capacity.",
+                  "target_id": "alert-x5259ff7f2e03f0e6",
+                  "created_at": "2026-10-21T07:57:00Z",
+                  "dependency": {
+                    "checked_at": "2026-10-21T07:57:00Z",
+                    "basis_event_id": "evt-x0fcd6f0287a8b183",
+                    "execution_policy": "RECHECK_CURRENT_STATE_BEFORE_WRITE"
+                  },
+                  "target_type": "alert",
+                  "evidence_refs": [
+                    {
+                      "id": "alert-x5259ff7f2e03f0e6",
+                      "table": "alerts"
+                    },
+                    {
+                      "id": "msg-x9d7829f6508ab7c0",
+                      "table": "messages"
+                    },
+                    {
+                      "id": "msg-x108ad4ae10c6ef5e",
+                      "table": "messages"
+                    },
+                    {
+                      "id": "res-x1082202e8d139d61",
+                      "table": "travel_reservations"
+                    }
+                  ],
+                  "superseded_at": null,
+                  "proposed_payload": {
+                    "buy_ticket": false,
+                    "change_promise": false,
+                    "refresh_capacity": true
+                  },
+                  "proposed_by_agent_id": "travel-agent",
+                  "superseded_by_proposal_id": null
+                }
+              ],
+              "transport_plans": [
+                {
+                  "id": "plan-x0a80f47aafdae7f4",
+                  "source": "OPS",
+                  "status": "ACTIVE",
+                  "version": 1,
+                  "order_id": "ord-00603",
+                  "created_at": "2026-10-14T10:05:00Z",
+                  "activated_at": "2026-10-14T12:42:00Z"
+                }
+              ],
+              "assignment_steps": [
+                {
+                  "id": "step-x66a1f843fafae399",
+                  "kind": "VEHICLE_PICKUP",
+                  "note": "Pickup slot from OPS; physical collection recorded by driver app. Handover instruction: Arrange a named seller handover at the door; no unattended key collection is agreed.",
+                  "title": "Collect Volkswagen Golf at Private handoff, Munich",
+                  "status": "COMPLETED",
+                  "to_city": null,
+                  "order_id": "ord-00603",
+                  "sequence": 1,
+                  "from_city": null,
+                  "evidence_id": "evt-x7162144336689bd9",
+                  "cancelled_at": null,
+                  "completed_at": "2026-10-20T14:00:00Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "evidence_type": "operational_event",
+                  "reservation_id": null,
+                  "scheduled_end_at": "2026-10-20T15:00:00Z",
+                  "source_option_id": null,
+                  "scheduled_start_at": "2026-10-20T14:00:00Z",
+                  "transport_point_id": "point-xa0ec1aa1fc999154"
+                },
+                {
+                  "id": "step-x24c3ddd1e53cb20f",
+                  "kind": "VEHICLE_FERRY",
+                  "note": "Vehicle place booked; terminal check-in, boarding and destination arrival are separate evidence.",
+                  "title": "Vehicle crossing from West Baltic Vehicle Terminal toward South Finland Vehicle Terminal",
+                  "status": "PLANNED",
+                  "to_city": null,
+                  "order_id": "ord-00603",
+                  "sequence": 2,
+                  "from_city": null,
+                  "evidence_id": null,
+                  "cancelled_at": null,
+                  "completed_at": null,
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "evidence_type": null,
+                  "reservation_id": "res-x1082202e8d139d61",
+                  "scheduled_end_at": "2026-10-22T20:00:00Z",
+                  "source_option_id": null,
+                  "scheduled_start_at": "2026-10-21T14:00:00Z",
+                  "transport_point_id": null
+                },
+                {
+                  "id": "step-x7e73417dcbd40a74",
+                  "kind": "VEHICLE_DELIVERY",
+                  "note": "Selected delivery target from CUSTOMER (CUSTOMER_DELIVERY_PROMISE). Handover instruction: A named receiver must accept the car and keys; there is no agreed unattended drop.",
+                  "title": "Hand over Volkswagen Golf at Private handoff, Lahti",
+                  "status": "PLANNED",
+                  "to_city": null,
+                  "order_id": "ord-00603",
+                  "sequence": 3,
+                  "from_city": null,
+                  "evidence_id": null,
+                  "cancelled_at": null,
+                  "completed_at": null,
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "evidence_type": null,
+                  "reservation_id": null,
+                  "scheduled_end_at": "2026-10-23T12:00:00Z",
+                  "source_option_id": null,
+                  "scheduled_start_at": "2026-10-23T10:00:00Z",
+                  "transport_point_id": "point-x91bf9f320a714b91"
+                }
+              ],
+              "transport_points": [
+                {
+                  "id": "point-xa0ec1aa1fc999154",
+                  "role": "PICKUP",
+                  "plan_id": "plan-x0a80f47aafdae7f4",
+                  "site_id": null,
+                  "sequence": 1,
+                  "address_id": "addr-00534",
+                  "order_boundary": "PICKUP"
+                },
+                {
+                  "id": "point-x91bf9f320a714b91",
+                  "role": "DELIVERY",
+                  "plan_id": "plan-x0a80f47aafdae7f4",
+                  "site_id": null,
+                  "sequence": 2,
+                  "address_id": "addr-00535",
+                  "order_boundary": "DELIVERY"
+                }
+              ],
+              "work_assignments": [
+                {
+                  "id": "asg-x3bfd2d7c41a7a3d5",
+                  "status": "IN_PROGRESS",
+                  "currency": "EUR",
+                  "order_id": "ord-00603",
+                  "driver_id": "drv-121",
+                  "fee_cents": 169500,
+                  "started_at": "2026-10-20T13:03:00Z",
+                  "accepted_at": "2026-10-15T03:05:00Z",
+                  "segment_ids": [
+                    "seg-xc6daf45b0e8ecfdd"
+                  ],
+                  "cancelled_at": null,
+                  "completed_at": null,
+                  "source_offer_id": "offer-x4292c4a7f37abb02"
+                }
+              ],
+              "transport_segments": [
+                {
+                  "id": "seg-xc6daf45b0e8ecfdd",
+                  "status": "IN_PROGRESS",
+                  "plan_id": "plan-x0a80f47aafdae7f4",
+                  "sequence": 1,
+                  "distance_km": 2391,
+                  "to_point_id": "point-x91bf9f320a714b91",
+                  "from_point_id": "point-xa0ec1aa1fc999154",
+                  "order_item_id": "item-xdab5a4d660a0e437",
+                  "transport_mode": "DRIVE_WITH_FERRY"
+                }
+              ],
+              "travel_reservations": [
+                {
+                  "id": "res-x1082202e8d139d61",
+                  "kind": "FERRY",
+                  "status": "BOOKED",
+                  "order_id": "ord-00603",
+                  "booked_at": "2026-10-15T05:01:00Z",
+                  "route_label": "DE to FI vehicle crossing",
+                  "departure_at": "2026-10-21T14:00:00Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "schedule_basis": {
+                    "kind": "BOOKING_TIMETABLE",
+                    "note": "Booking timetable recorded at purchase; no live boarding or discharge feed is attached.",
+                    "recorded_at": "2026-10-15T05:01:00Z",
+                    "reservation_id": "res-x1082202e8d139d61"
+                  },
+                  "origin_terminal": "West Baltic Vehicle Terminal",
+                  "amendment_request": {
+                    "status": "REQUESTED_NOT_CONFIRMED",
+                    "requested_at": "2026-10-21T08:43:00Z",
+                    "requested_change": "LATER_VEHICLE_CROSSING",
+                    "source_message_id": "msg-x7074c5c677e14192",
+                    "candidate_reservation_id": null
+                  },
+                  "booking_reference": "WBV-FERRY-00603",
+                  "check_in_cutoff_at": "2026-10-21T12:00:00Z",
+                  "origin_terminal_id": "terminal-west-baltic",
+                  "expected_arrival_at": "2026-10-22T20:00:00Z",
+                  "journey_state_basis": {
+                    "note": "Check-in is still ahead; no terminal arrival or boarding evidence is recorded.",
+                    "snapshot_at": "2026-10-21T09:00:00Z",
+                    "reservation_id": "res-x1082202e8d139d61",
+                    "delivery_event_id": null
+                  },
+                  "verified_milestones": [
+                    {
+                      "kind": "BOOKING_RECORDED",
+                      "evidence_id": "res-x1082202e8d139d61",
+                      "occurred_at": "2026-10-15T05:01:00Z",
+                      "evidence_type": "travel_reservation"
+                    }
+                  ],
+                  "destination_terminal": "South Finland Vehicle Terminal",
+                  "boarding_confirmation": "UNCONFIRMED",
+                  "check_in_confirmation": "UNCONFIRMED",
+                  "snapshot_journey_state": "BOOKED_BEFORE_CHECK_IN_CUTOFF",
+                  "destination_terminal_id": "terminal-south-finland",
+                  "terminal_road_estimate_id": "terminal-xadc1a0fcdfa902b9",
+                  "destination_terminal_arrival_confirmation": "UNCONFIRMED"
+                }
+              ],
+              "tracking_observations": [
+                {
+                  "id": "track-xf58a393f58ab242b",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T15:43:06.066838Z",
+                  "received_at": "2026-10-20T15:50:06.066838Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.024,
+                  "distance_remaining_km": 2334,
+                  "estimated_delivery_at": "2026-10-23T11:15:00Z"
+                },
+                {
+                  "id": "track-x5d6ee35972dda879",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T17:16:34.476281Z",
+                  "received_at": "2026-10-20T17:18:34.476281Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.068,
+                  "distance_remaining_km": 2228,
+                  "estimated_delivery_at": "2026-10-23T09:23:00Z"
+                },
+                {
+                  "id": "track-xf531521c783be127",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T18:49:47.043823Z",
+                  "received_at": "2026-10-20T18:55:47.043823Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.115,
+                  "distance_remaining_km": 2116,
+                  "estimated_delivery_at": "2026-10-23T11:23:00Z"
+                },
+                {
+                  "id": "track-x30c05e7219374c9d",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T20:34:11.702738Z",
+                  "received_at": "2026-10-20T20:40:11.702738Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.143,
+                  "distance_remaining_km": 2049,
+                  "estimated_delivery_at": "2026-10-23T11:55:00Z"
+                },
+                {
+                  "id": "track-x5a60924e681137e6",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-20T22:35:21.152031Z",
+                  "received_at": "2026-10-20T22:42:21.152031Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.168,
+                  "distance_remaining_km": 1989,
+                  "estimated_delivery_at": "2026-10-23T09:09:00Z"
+                },
+                {
+                  "id": "track-x3ef159a5f5fcfc03",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-21T00:37:50.456397Z",
+                  "received_at": "2026-10-21T00:44:50.456397Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.196,
+                  "distance_remaining_km": 1922,
+                  "estimated_delivery_at": "2026-10-23T10:57:00Z"
+                },
+                {
+                  "id": "track-xe1f773572a2e7f21",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-21T01:55:54.795189Z",
+                  "received_at": "2026-10-21T02:02:54.795189Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.242,
+                  "distance_remaining_km": 1812,
+                  "estimated_delivery_at": "2026-10-23T12:36:00Z"
+                },
+                {
+                  "id": "track-x3fe486c5847cfc53",
+                  "source": "driver_app",
+                  "order_id": "ord-00603",
+                  "segment_id": "seg-xc6daf45b0e8ecfdd",
+                  "observed_at": "2026-10-21T08:06:00Z",
+                  "received_at": "2026-10-21T08:13:00Z",
+                  "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                  "location_quality": "COARSE",
+                  "progress_fraction": 0.259,
+                  "distance_remaining_km": 1772,
+                  "estimated_delivery_at": "2026-10-23T09:24:00Z"
+                }
+              ],
+              "order_endpoint_details": [
+                {
+                  "id": "ep-x5e8c6222c01643cd",
+                  "site_id": null,
+                  "boundary": "PICKUP",
+                  "order_id": "ord-00603",
+                  "point_id": "point-xa0ec1aa1fc999154",
+                  "stated_at": "2026-10-14T09:37:00Z",
+                  "stated_by": "CUSTOMER_ORDER_INPUT",
+                  "address_id": "addr-00534",
+                  "contact_name": "Oscar Marlbrook",
+                  "contact_role": "handoff contact",
+                  "access_status": "NEEDS_VERIFICATION",
+                  "contact_handle": "handoff-00603-pickup@example.test",
+                  "contact_status": "UNCONFIRMED",
+                  "last_confirmed_at": null,
+                  "access_instruction": "Arrange a named seller handover at the door; no unattended key collection is agreed.",
+                  "last_confirmed_source": null
+                },
+                {
+                  "id": "ep-x1e15471c2568a009",
+                  "site_id": null,
+                  "boundary": "DELIVERY",
+                  "order_id": "ord-00603",
+                  "point_id": "point-x91bf9f320a714b91",
+                  "stated_at": "2026-10-14T09:37:00Z",
+                  "stated_by": "CUSTOMER_ORDER_INPUT",
+                  "address_id": "addr-00535",
+                  "contact_name": "Phoebe Marlbrook",
+                  "contact_role": "handoff contact",
+                  "access_status": "NEEDS_VERIFICATION",
+                  "contact_handle": "handoff-00603-delivery@example.test",
+                  "contact_status": "UNCONFIRMED",
+                  "last_confirmed_at": null,
+                  "access_instruction": "A named receiver must accept the car and keys; there is no agreed unattended drop.",
+                  "last_confirmed_source": null
+                }
+              ]
+            },
+            "messages": [
+              {
+                "id": "msg-xf06d346a050b3e0a",
+                "body": "The queue before the terminal has barely moved. The booked crossing for CD-420603 may close before I reach check-in.",
+                "channel": "support_chat",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "drv-121",
+                "visibility": "PUBLIC",
+                "author_type": "driver",
+                "authored_at": "2026-10-21T06:58:00Z",
+                "recipient_id": "ops-support",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x6facdfad04774a58",
+                "body": "I am checking the check-in deadline and next available sailing. Please send your latest ETA when it updates.",
+                "channel": "support_chat",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "ops-support",
+                "visibility": "PUBLIC",
+                "author_type": "operator",
+                "authored_at": "2026-10-21T07:10:00Z",
+                "recipient_id": "drv-121",
+                "recipient_type": "driver",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x108ad4ae10c6ef5e",
+                "body": "Do not cancel the current booking or promise another crossing until capacity and fare terms are confirmed.",
+                "channel": "internal_note",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "ops-support",
+                "visibility": "INTERNAL",
+                "author_type": "operator",
+                "authored_at": "2026-10-21T07:14:00Z",
+                "recipient_id": "ops-support",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x9d7829f6508ab7c0",
+                "body": "I am still in the queue with the car. I have not turned toward another terminal.",
+                "channel": "support_chat",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "drv-121",
+                "visibility": "PUBLIC",
+                "author_type": "driver",
+                "authored_at": "2026-10-21T07:31:00Z",
+                "recipient_id": "ops-support",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              },
+              {
+                "id": "msg-x7074c5c677e14192",
+                "body": "Carrier desk took our request to move this car to a later crossing, but has not confirmed a slot or fare. Keep the original booking active. Do not tell the driver to turn away or change the customer's delivery promise yet.",
+                "channel": "internal_note",
+                "language": "en",
+                "order_id": "ord-00603",
+                "author_id": "ops-travel",
+                "visibility": "INTERNAL",
+                "author_type": "operator",
+                "authored_at": "2026-10-21T08:43:00Z",
+                "recipient_id": "ops-shift",
+                "recipient_type": "operator",
+                "conversation_id": "conv-xdf71bc9a940be234"
+              }
+            ],
+            "reservations": [
+              {
+                "id": "res-x1082202e8d139d61",
+                "kind": "FERRY",
+                "status": "BOOKED",
+                "order_id": "ord-00603",
+                "booked_at": "2026-10-15T05:01:00Z",
+                "route_label": "DE to FI vehicle crossing",
+                "departure_at": "2026-10-21T14:00:00Z",
+                "assignment_id": "asg-x3bfd2d7c41a7a3d5",
+                "schedule_basis": {
+                  "kind": "BOOKING_TIMETABLE",
+                  "note": "Booking timetable recorded at purchase; no live boarding or discharge feed is attached.",
+                  "recorded_at": "2026-10-15T05:01:00Z",
+                  "reservation_id": "res-x1082202e8d139d61"
+                },
+                "origin_terminal": "West Baltic Vehicle Terminal",
+                "amendment_request": {
+                  "status": "REQUESTED_NOT_CONFIRMED",
+                  "requested_at": "2026-10-21T08:43:00Z",
+                  "requested_change": "LATER_VEHICLE_CROSSING",
+                  "source_message_id": "msg-x7074c5c677e14192",
+                  "candidate_reservation_id": null
+                },
+                "booking_reference": "WBV-FERRY-00603",
+                "check_in_cutoff_at": "2026-10-21T12:00:00Z",
+                "origin_terminal_id": "terminal-west-baltic",
+                "expected_arrival_at": "2026-10-22T20:00:00Z",
+                "journey_state_basis": {
+                  "note": "Check-in is still ahead; no terminal arrival or boarding evidence is recorded.",
+                  "snapshot_at": "2026-10-21T09:00:00Z",
+                  "reservation_id": "res-x1082202e8d139d61",
+                  "delivery_event_id": null
+                },
+                "verified_milestones": [
+                  {
+                    "kind": "BOOKING_RECORDED",
+                    "evidence_id": "res-x1082202e8d139d61",
+                    "occurred_at": "2026-10-15T05:01:00Z",
+                    "evidence_type": "travel_reservation"
+                  }
+                ],
+                "destination_terminal": "South Finland Vehicle Terminal",
+                "boarding_confirmation": "UNCONFIRMED",
+                "check_in_confirmation": "UNCONFIRMED",
+                "snapshot_journey_state": "BOOKED_BEFORE_CHECK_IN_CUTOFF",
+                "destination_terminal_id": "terminal-south-finland",
+                "terminal_road_estimate_id": "terminal-xadc1a0fcdfa902b9",
+                "destination_terminal_arrival_confirmation": "UNCONFIRMED"
+              }
+            ]
+          },
+          "purpose": "investigate",
+          "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+          "provider": "gemini",
+          "selected": {
+            "args": {},
+            "tool": "get_order_context"
+          },
+          "responseId": "4srcar3UFsKs3boP1tKBoQo",
+          "actualModel": "gemini-3.5-flash-lite"
+        },
+        {
+          "at": "2026-10-24T15:12:42.691Z",
+          "id": "8602d476-a5f9-4b49-a5b0-2b15b316d87d",
+          "model": "gemini-3.5-flash-lite",
+          "result": {
+            "at": "2026-10-21T09:00:00Z",
+            "id": "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4",
+            "safe": true,
+            "text": "Simulation: queue cleared; terminal ETA 10:00 UTC.",
+            "status": "replied",
+            "blockers": [],
+            "question": "What is your current terminal ETA, and do you have any safety or mechanical blockers?",
+            "simulated": true,
+            "terminalEta": "2026-10-21T10:00:00Z"
+          },
+          "purpose": "investigate",
+          "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+          "provider": "gemini",
+          "selected": {
+            "args": {
+              "question": "What is your current terminal ETA, and do you have any safety or mechanical blockers?"
+            },
+            "tool": "ask_driver"
+          },
+          "responseId": "68rcashm0LWewQ_u_qWQDQ",
+          "actualModel": "gemini-3.5-flash-lite"
+        },
+        {
+          "at": "2026-10-24T15:12:53.002Z",
+          "id": "8298b83f-8ecc-422e-87fd-b6b54354671e",
+          "model": "gemini-3.5-flash-lite",
+          "result": {
+            "missing": [],
+            "blockers": [],
+            "canRetain": true,
+            "limitation": "Deterministic planning check using a simulated driver report; no gate scan or boarding confirmation is asserted.",
+            "sourceRefs": [
+              "res-x1082202e8d139d61",
+              "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4"
+            ],
+            "terminalEta": "2026-10-21T10:00:00Z",
+            "missesCutoff": false,
+            "checkInCutoff": "2026-10-21T12:00:00Z",
+            "reservationId": "res-x1082202e8d139d61",
+            "driverEvidenceId": "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4"
+          },
+          "purpose": "investigate",
+          "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+          "provider": "gemini",
+          "selected": {
+            "args": {
+              "reservationId": "res-x1082202e8d139d61"
+            },
+            "tool": "check_booking_constraints"
+          },
+          "responseId": "9crcatPUEpLtkdUP4PTXsQg",
+          "actualModel": "gemini-3.5-flash-lite"
+        },
+        {
+          "at": "2026-10-24T15:12:55.736Z",
+          "id": "ae6561d9-8bad-4446-b642-d21e42b0b9fa",
+          "error": "Invalid provider call",
+          "model": "gemini-3.5-flash-lite",
+          "purpose": "investigate",
+          "provider": "gemini"
+        },
+        {
+          "id": "1285ff38-a237-41fb-98f4-c87e2f7756cd",
+          "provider": "gemini",
+          "model": "gemini-3.5-flash-lite",
+          "purpose": "investigate",
+          "at": "2026-10-24T15:14:58.723Z",
+          "selected": {
+            "tool": "close_disproved_alert",
+            "args": {
+              "reason": "Deterministic booking check confirms that the driver's terminal ETA (10:00 UTC) is well before the check-in cutoff (12:00 UTC), with no safety issues or blockers reported (source IDs: res-x1082202e8d139d61, driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4)."
+            }
+          },
+          "responseId": "c8vcauu4C7eTkdUP6rj4kAk",
+          "actualModel": "gemini-3.5-flash-lite",
+          "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+          "result": {
+            "resolved": true,
+            "delivered": false
+          }
+        }
+      ],
+      "stopReason": "Deterministic booking check confirms that the driver's terminal ETA (10:00 UTC) is well before the check-in cutoff (12:00 UTC), with no safety issues or blockers reported (source IDs: res-x1082202e8d139d61, driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4).",
+      "conversation": [],
+      "driverReplies": [
+        {
+          "at": "2026-10-21T09:00:00Z",
+          "id": "driver:f235a0d7-8b1d-4d21-b044-eb5cf23a89c4",
+          "safe": true,
+          "text": "Simulation: queue cleared; terminal ETA 10:00 UTC.",
+          "blockers": [],
+          "terminalEta": "2026-10-21T10:00:00Z"
+        }
+      ],
+      "contradictions": [],
+      "simulationTime": "2026-10-21T09:00:00Z",
+      "preferredProvider": "gemini"
+    }
+  ]
+}

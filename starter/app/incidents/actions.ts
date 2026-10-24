@@ -1,11 +1,11 @@
 "use server"
 
 import { cookies } from "next/headers"
-import type { Command, PublicIncident } from "@/lib/incidents/contracts"
-import { createIncident, decide, executeApproved, WorkflowError } from "@/lib/incidents/engine"
-import { mockProposal } from "@/lib/incidents/mock"
+import type { Command, PublicIncident, Scenario } from "@/lib/incidents/contracts"
+import { createIncident, WorkflowError } from "@/lib/incidents/engine"
+import { commandIncidentService, createLiveIncident } from "@/lib/incidents/service"
 import { publicIncident } from "@/lib/incidents/http"
-import { insertOrGetIncident, mutateIncident, toolsData } from "@/lib/incidents/store"
+import { insertOrGetIncident, toolsData } from "@/lib/incidents/store"
 import { issueSession, OPERATOR_COOKIE, tokenMatches, validSession } from "@/lib/incidents/operator-session"
 
 type Result = { incident?: PublicIncident; error?: string }
@@ -40,15 +40,11 @@ export async function commandIncident(id: string, command: Command): Promise<Res
   try {
     await requireOperator()
     if (typeof id !== "string" || !id || id.length > 100 || !command || typeof command !== "object") throw new WorkflowError("Invalid incident command")
-    const incident = await mutateIncident(id, async incident => {
-      // This UI exposes only iteration 1. No model calls or arbitrary agent tools.
-      switch (command.command) {
-        case "mock_proposal": await mockProposal(incident, toolsData); break
-        case "decide": decide(incident, { ...command, operator: "demo-operator" }); break
-        case "execute": executeApproved(incident, command.version); break
-        default: throw new WorkflowError("This command is not available in the mock workflow")
-      }
-    })
+    const incident = await commandIncidentService(id,{...command,...(command.command === "decide" ? {operator:"demo-operator"} : {})} as Command)
     return { incident: publicIncident(incident) }
   } catch (error) { return failure(error) }
+}
+
+export async function createAgentIncident(scenario: Scenario, provider: "groq" | "gemini"): Promise<Result> {
+  try { await requireOperator(); return {incident:publicIncident(await createLiveIncident(scenario,provider))} } catch(error) { return failure(error) }
 }

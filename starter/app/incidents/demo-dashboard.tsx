@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { AppFrame } from "../components/app-frame"
 import { SIMULATION_TIME, type PublicIncident } from "@/lib/incidents/contracts"
 import { createDemoIncident } from "./actions"
+import { LiveAgentLauncher } from "./live-agent-controls"
 import { OperatorAccess } from "./operator-access"
 import styles from "./incidents.module.css"
 
@@ -46,11 +47,12 @@ export default function IncidentsPage() {
     <header className={styles.header}><div><p className={styles.eyebrow}>Control room · fictional simulation</p><h1>Incidents</h1><p>Investigate the signal. Review the decision. Keep the car moving.</p></div><button className={styles.primary} disabled={busy || !incidents} onClick={openDemo}>{busy ? "Opening incident…" : "Open ferry-delay demo"}</button></header>
     <p className={styles.back}><Link href="/incidents">← Incident dataset</Link></p>
     <OperatorAccess />
-    <div className={styles.notice}><strong>Iteration 1 · mock investigation</strong><span>This demo reads the supplied order and simulates a proposal and booking change. No real messages or bookings are made.</span><Link href="/">Browse all orders →</Link></div>
+    <LiveAgentLauncher />
+    <div className={styles.notice}><strong>Preserved iteration-1 mock demo</strong><span>The original demo remains available. Use the launcher above for model-selected investigation. No real messages or bookings are made.</span><Link href="/">Browse all orders →</Link></div>
     {error && <div className={styles.error} role="alert">{error}<button className={styles.secondary} onClick={() => setRefresh(n => n + 1)}>Try again</button></div>}
     {!incidents && !error && <p role="status" aria-busy="true" className={styles.panel}>Loading incidents…</p>}
     {incidents && groups.map(group => <section key={group.title} className={styles.section}><div className={styles.sectionHead}><h2>{group.title} <span className={styles.count}>{group.rows.length}</span></h2><p>{group.note}</p></div>
-      {group.rows.length === 0 ? <p className={styles.empty}>No incidents in this queue.</p> : <ul className={styles.cards}>{group.rows.map(i => <li key={i.id}><Link className={styles.card} href={`/incidents/${i.id}`}><div className={styles.cardTop}><span className={styles.reference}>{i.orderId === "ord-00603" ? "CD-420603" : i.orderId}</span><span className={styles.badge}>{labels[i.state]}</span></div><h3>{i.summary}</h3><p>{i.nextStep}</p><span className={styles.open}>Open incident →</span></Link></li>)}</ul>}
+      {group.rows.length === 0 ? <p className={styles.empty}>No incidents in this queue.</p> : <ul className={styles.cards}>{group.rows.map(i => <li key={i.id}><Link className={styles.card} href={`/incidents/${i.id}`}><div className={styles.cardTop}><span className={styles.reference}>{i.orderId === "ord-00603" ? "CD-420603" : i.orderId}</span><span className={styles.badge}>{labels[i.state]}</span></div><p className={styles.source}>{i.mode === "llm" ? "Real LLM investigation · simulated services" : "Preserved mock demo"}</p><h3>{i.summary}</h3><p>{i.nextStep}</p><span className={styles.open}>Open incident →</span></Link></li>)}</ul>}
     </section>)}
     <p className={styles.footnote}>Orders without an investigation remain <strong>Not checked</strong>. A quiet queue is not proof that every order is safe.</p>
   </main></AppFrame>

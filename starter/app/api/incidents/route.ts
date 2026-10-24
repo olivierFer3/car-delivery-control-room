@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createIncident, WorkflowError } from "@/lib/incidents/engine"
 import { insertIncident, listIncidents, toolsData } from "@/lib/incidents/store"
 import { authorize, publicIncident, readBody } from "@/lib/incidents/http"
+import { createLiveIncident } from "@/lib/incidents/service"
 import type { Scenario } from "@/lib/incidents/contracts"
 export const runtime = "nodejs"
 export async function GET(request: Request) {
@@ -12,6 +13,10 @@ export async function POST(request: Request) {
   if (!authorize(request)) return NextResponse.json({ error: "Operator token required" }, { status: 401 })
   try {
     const b = await readBody(request)
+    if (b.mode === "llm") {
+      const incident = await createLiveIncident(b.scenario,b.provider)
+      return NextResponse.json(publicIncident(incident),{status:201})
+    }
     if (typeof b.orderId !== "string" || typeof b.signalId !== "string" || !["delay", "disproved", "no_response", "contradiction"].includes(b.scenario)) throw new WorkflowError("Invalid order, signal or scenario")
     const c = await toolsData.context(b.orderId)
     if (!c || !c.alerts.some(a => a.id === b.signalId)) throw new WorkflowError("Signal must belong to order")
