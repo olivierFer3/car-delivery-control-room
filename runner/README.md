@@ -26,7 +26,7 @@ Each cycle evaluates development regressions and a real isolated PostgreSQL/HTTP
 
 Iteration 3 includes a real database-contention check; iteration 5 requires source-labelled snapshot and participant memory. These are future tasks for the runner, not features claimed implemented by building it. Rule candidates become validated only after their scoped gates pass, with a receipt reference; rejected/conflicting rules retain counterexamples. Passing tests never proves there are no bugs.
 
-The smoke profile has a separate SQLite queue. It runs one iteration-2 cycle with one actual Codex review, no speculative product changes and **zero business-provider API calls**. It does not start or advance the overnight queue. Existing real-provider artifacts are explicitly historical baseline evidence, not a new live run. After product changes, fresh provider verification is mandatory and cannot be replaced by scripted model fixtures.
+The smoke profile has a separate SQLite queue. It runs one iteration-2 cycle with one actual Codex review, no speculative product changes and **zero business-provider API calls**. It does not start or advance the overnight queue. Existing real-provider artifacts are explicitly historical baseline evidence, not a new live run. After product changes, fresh provider verification is mandatory and cannot be replaced by scripted model fixtures. Exhausted allowances mark affected changes `not_live_verified` and block validation/commit, preserving changes for review.
 
 ## Exact commands
 
@@ -74,26 +74,22 @@ A completed smoke namespace is not automatically reset/replayed. All runtime sta
 | Reported coding-token ceiling | 200,000 |
 | Task retries after initial attempt | 2 |
 | Test/build command wall time | 180 seconds |
-| Business-provider requests | **0** |
+| Live verification attempts | **3 total** |
+| Model requests per verification attempt (all providers/retries combined) | **6** |
+| Business-provider requests overall | **18 maximum** |
 | Provider output cap when explicitly enabled | 2,048 tokens/request |
 
 A business request is reserved and counted **before** sending; retries also count. The live child has a process-local fetch wrapper plus persistent atomic request ledger. It accepts only model-provider hosts and refuses redirects/unexpected destinations. The coding worker and app process do not receive business-provider keys. Only the specific live-verification Node child receives imported keys; the legacy Python provider path is not run by this controller.
 
-To explicitly enable fresh real-provider checks, stop the controller, import only provider settings, and configure a reviewed request budget:
+Existing Groq/Gemini credentials and provider/model settings have been privately imported from the source `.env` into mode-0600 external `provider.env`. Database settings and operator credentials are never copied. `AGENT_PROVIDER` is respected; when absent the existing adapter defaults to Gemini (currently `gemini-3.5-flash-lite`). No fresh provider request was sent during this configuration change.
 
-```sh
-python3 runner/control.py stop
-python3 runner/control.py import-providers --source /home/matrix/home/projects/car-delivery-control-room/starter/.env
-python3 runner/control.py configure --api-calls 24
-# Review and commit this public config-only change on the agent branch.
-git add runner/config.json
-git commit -m "Set reviewed overnight business API budget"
-python3 runner/control.py resume
-```
+Each live verification attempt investigates **one incident**, scheduled delay → disproved → no_response across at most three attempts. The last scenario includes waiting and an explicit simulated reply/resume, all within its same six-request allowance. These are scoped checks, not three complete suites. The LLM chooses its tools; no step is filled in with mock reasoning to fit the cap. Extra tool choices, retries, failed requests, and any future fallback requests consume the same per-run and global request allowance. If six calls cannot establish the outcome, verification fails visibly. Current service does not enable fallback; no routing feature was added.
 
-The import filters only Groq/Gemini keys/model allowlists, writes a mode-0600 file outside the worktree, and never copies DATABASE_URL or the source operator token. Do not print or commit that file. Counters are not reset by configuration changes. A fresh live check can still block on rate limits/model availability.
+`state/api-budget.json` retains attempted runs and both counters across resume; failed/interrupted attempts consume a run and all requests already reserved. Requests are counted before transport. Each model request is capped at 2,048 output tokens; input JSON is capped at 48,000 characters. Only the controlled live child receives keys. The application/coding worker receive none. `live-verification-status.json` records the affected HEAD/dirty-file hashes and verification result. Budget exhaustion means `not_live_verified`, never a pass. Optional iteration 4 stays deferred.
 
-Codex uses the existing local CLI account authentication. Session attempts and duration are hard-bounded. Token usage is reported by Codex **after a turn**, so the reported-token ceiling prevents starting further sessions after the ceiling is reached; it is not a strict pre-inference token or dollar cap, and one turn can overshoot it. Interrupted sessions with unknown usage require review before another coding session. No account limit is bypassed.
+The 8-cycle and 4-hour limits cover the whole queue across resumes, not each iteration. A cycle is one evaluation/fix/regression attempt; it may need no coding session. At most four coding sessions may run, each at most 15 minutes: at most one hour of coding-session wall time, within the four-hour total. Tests, builds, app startup and live verification also use total elapsed time. Each task gets at most an initial attempt plus two retries, additionally constrained by the eight-cycle cap. Whichever limit is reached first stops/blocks progress. Ordinary commands/live verification have their own 180-second bound.
+
+Codex uses the existing local CLI account authentication. Session attempts and duration are hard-bounded. Reported input tokens include cached input tokens; cached tokens are not added a second time. The controller conservatively sums reported input, output and separate reasoning usage fields. Token usage is reported by Codex **after a turn**, so the reported-token ceiling prevents starting further sessions after the ceiling is reached; it is not a strict pre-inference token or dollar cap, and one turn can overshoot it. Interrupted sessions with unknown usage require review before another coding session. No account limit is bypassed.
 
 ## Supported-tooling evidence and limitations
 

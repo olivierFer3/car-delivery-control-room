@@ -6,8 +6,11 @@ const db=new URL(process.env.DATABASE_URL??'');assert.equal(db.port,'15438');ass
 assert.ok(process.env.OVERNIGHT_API_BUDGET)
 async function main(){
  const evidence=[]
- for(const scenario of ['delay','disproved','no_response'] as const){
-  let i=await createLiveIncident(scenario,'groq');i=await commandIncidentService(i.id,{command:'run'});evidence.push(i)
+ const scenario=process.env.OVERNIGHT_LIVE_SCENARIO
+ assert.ok(scenario==='delay'||scenario==='disproved'||scenario==='no_response')
+ const provider=process.env.AGENT_PROVIDER??'gemini';assert.ok(provider==='groq'||provider==='gemini')
+ {
+  let i=await createLiveIncident(scenario,provider);i=await commandIncidentService(i.id,{command:'run'});evidence.push(i)
   if(scenario==='delay')assert.equal(i.state,'needs_decision',i.lastAgentError??i.stopReason)
   if(scenario==='disproved')assert.equal(i.state,'resolved',i.lastAgentError??i.stopReason)
   if(scenario==='no_response'){
@@ -16,6 +19,6 @@ async function main(){
    i=await commandIncidentService(i.id,{command:'run'});evidence[evidence.length-1]=i;assert.equal(i.state,'resolved');assert.equal(i.tasks.filter(t=>t.tool==='ask_driver').length,1)
   }
  }
- const out=process.env.OVERNIGHT_API_BUDGET!.replace('api-budget.json','fresh-live-evidence.json');await writeFile(out,JSON.stringify({kind:'fresh real provider',evidence},null,2)+'\n');console.log('PASS fresh real-provider verification; fictional services only')
+ const out=process.env.OVERNIGHT_API_BUDGET!.replace('api-budget.json',`fresh-live-evidence-run-${process.env.OVERNIGHT_LIVE_RUN}.json`);await writeFile(out,JSON.stringify({kind:'fresh real provider',evidence},null,2)+'\n');console.log('PASS fresh real-provider verification; fictional services only')
 }
 main().then(()=>process.exit(0)).catch(e=>{console.error(e.message);process.exit(1)})

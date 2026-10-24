@@ -11,9 +11,12 @@ globalThis.fetch=async(input,init={})=>{
  try{
   fs.mkdirSync(lock);acquired=true
   const budget=JSON.parse(fs.readFileSync(file,'utf8'))
+  const run=budget.runs?.find(r=>r.id===budget.active_run)
+  if(budget.runs && (!run || run.status!=='running' || budget.runs.length>budget.max_runs))throw new Error('No authorized active verification run')
+  if(run && run.calls>=run.max_calls)throw new Error('Per-run model request budget exhausted')
   if(budget.calls>=budget.max_calls)throw new Error('Business API request budget exhausted')
-  if(init.body){const body=JSON.parse(String(init.body));if(JSON.stringify(body).length>48000)throw new Error('Provider input budget exceeded');if(body.max_completion_tokens)body.max_completion_tokens=Math.min(body.max_completion_tokens,budget.max_output_tokens);if(body.max_output_tokens)body.max_output_tokens=Math.min(body.max_output_tokens,budget.max_output_tokens);if(body.generationConfig)body.generationConfig.maxOutputTokens=Math.min(body.generationConfig.maxOutputTokens??budget.max_output_tokens,budget.max_output_tokens);init={...init,body:JSON.stringify(body)}}
-  budget.calls++;fs.writeFileSync(file+'.tmp',JSON.stringify(budget));fs.renameSync(file+'.tmp',file)
+  if(init.body){const body=JSON.parse(String(init.body));if(JSON.stringify(body).length>48000)throw new Error('Provider input budget exceeded');if(url.hostname==='api.groq.com')body.max_completion_tokens=Math.min(body.max_completion_tokens??budget.max_output_tokens,budget.max_output_tokens);if(body.max_output_tokens)body.max_output_tokens=Math.min(body.max_output_tokens,budget.max_output_tokens);if(body.generationConfig)body.generationConfig.maxOutputTokens=Math.min(body.generationConfig.maxOutputTokens??budget.max_output_tokens,budget.max_output_tokens);init={...init,body:JSON.stringify(body)}}
+  budget.calls++;if(run)run.calls++;fs.writeFileSync(file+'.tmp',JSON.stringify(budget));fs.renameSync(file+'.tmp',file)
  }finally{if(acquired)fs.rmdirSync(lock)}
  return original(input,{...init,redirect:'error'})
 }

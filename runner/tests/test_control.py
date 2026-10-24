@@ -87,4 +87,22 @@ class RunnerTests(unittest.TestCase):
         exitcode,_=c.Controller(self.s,self.cfg).command('api-cap',['node','--input-type=module','-e',script,str(file)],env=env)
         self.assertEqual(exitcode,0);self.assertEqual(json.loads(budget.read_text())['calls'],1)
 
+    def test_per_run_cap_counts_failures_and_fallback_together(self):
+        budget=self.root/'budget.json';budget.write_text(json.dumps({'calls':0,'max_calls':18,'max_runs':3,'max_output_tokens':128,'active_run':1,'runs':[{'id':1,'calls':0,'max_calls':6,'status':'running'}]}))
+        script="""let sent=0;globalThis.fetch=async(url,init)=>{sent++;const b=JSON.parse(init.body);if(url.includes('groq')&&b.max_completion_tokens!==128)throw Error('output cap');if(url.includes('google')&&b.generationConfig.maxOutputTokens!==128)throw Error('output cap');throw Error('simulated provider failure')};await import(process.argv[1]);for(let n=0;n<7;n++){try{await fetch(n%2?'https://generativelanguage.googleapis.com/v1beta/models/test:generateContent':'https://api.groq.com/openai/v1/chat/completions',{method:'POST',body:JSON.stringify(n%2?{generationConfig:{maxOutputTokens:999}}:{max_completion_tokens:999})})}catch(e){if(e.message==='output cap'||(n===6&&!e.message.includes('Per-run')))throw e}}if(sent!==6)throw Error('wrong request count');"""
+        env=c.clean_env();env['OVERNIGHT_API_BUDGET']=str(budget)
+        code,_=c.Controller(self.s,self.cfg).command('run-cap',['node','--input-type=module','-e',script,str(self.oldroot/'runner/api-budget.mjs')],env=env)
+        self.assertEqual(code,0);ledger=json.loads(budget.read_text());self.assertEqual(ledger['calls'],6);self.assertEqual(ledger['runs'][0]['calls'],6)
+    def test_three_used_runs_mark_affected_changes_not_verified(self):
+        self.cfg['limits'].update(live_verification_runs=3,business_api_calls=18)
+        c.write_json(self.s.dir/'api-budget.json',{'calls':7,'runs':[{'id':n} for n in range(1,4)]})
+        with patch.object(c,'git',side_effect=lambda *args:'changed-product.ts' if args[0]=='diff' else 'test-head'),patch.object(c,'fingerprint',return_value={'starter/lib/incidents/engine.ts':'changed'}):
+            with self.assertRaises(c.Blocked):c.Controller(self.s,self.cfg).live_gate()
+        self.assertEqual(self.s.get('live_verification')['status'],'not_live_verified')
+        self.assertEqual(len(c.read_json(self.s.dir/'api-budget.json')['runs']),3)
+    def test_cached_tokens_are_already_in_input_not_added_twice(self):
+        code="import json;print(json.dumps({'type':'turn.completed','usage':{'input_tokens':100,'cached_input_tokens':80,'output_tokens':4,'reasoning_output_tokens':2}}))"
+        c.Controller(self.s,self.cfg).command('cached-count',['python3','-c',code],coding=True)
+        self.assertEqual(self.s.get('coding_tokens'),106)
+
 if __name__=='__main__':unittest.main()

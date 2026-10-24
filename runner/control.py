@@ -39,6 +39,8 @@ def config():
         if type(v) is not int or v<0: raise Blocked('Limits must be nonnegative integers')
     if not 1<=c['limits']['cycles']<=100 or not 1<=c['limits']['elapsed_seconds']<=86400: raise Blocked('Invalid cycle/time limit')
     if c['limits']['coding_sessions']>20 or c['limits']['business_api_calls']>100: raise Blocked('Requested budget exceeds controller ceiling')
+    if c['limits'].get('live_verification_runs',0)>3 or c['limits'].get('model_requests_per_run',0)>6:raise Blocked('Live verification ceiling is three runs of six requests')
+    if c['limits']['business_api_calls']>c['limits'].get('live_verification_runs',0)*c['limits'].get('model_requests_per_run',0):raise Blocked('Global API allowance exceeds per-run limits')
     return c
 
 def assert_worktree(c):
@@ -64,7 +66,7 @@ def clean_env(provider=False):
     if provider:
         f=RUNTIME/'provider.env'
         if not f.exists(): raise Blocked('Fresh live verification needs the external runtime provider.env; import only provider settings explicitly')
-        allowed={'GROQ_API_KEY','GROQ_MODEL','GROQ_ALLOWED_MODELS','GEMINI_API_KEY','GEMINI_MODEL','GEMINI_ALLOWED_MODELS'}
+        allowed={'GROQ_API_KEY','GROQ_MODEL','GROQ_ALLOWED_MODELS','GEMINI_API_KEY','GEMINI_MODEL','GEMINI_ALLOWED_MODELS','AGENT_PROVIDER','AGENT_MODEL','AGENT_ALLOWED_MODELS','AGENT_FALLBACK_PROVIDER'}
         env.update({k:v for k,v in (line.split('=',1) for line in f.read_text().splitlines() if '=' in line and not line.startswith('#')) if k in allowed})
     return env
 
@@ -279,16 +281,34 @@ Return the requested final JSON schema. Do not include secrets or private chain-
             if {i['scenario'] for i in d['cases'] if i['state']=='resolved'}!={'delay','disproved','no_response'}:raise Blocked('Baseline live evidence incomplete')
             self.s.event('live_verification',kind_label='historical_baseline_ab2e042',fresh_provider_calls=0)
             return
-        limits=self.c['limits']
-        if limits['business_api_calls']==0:raise Blocked('Product changed: fresh real-provider verification required; business API budget is zero')
-        env=clean_env(provider=True);budget=self.s.dir/'api-budget.json'
-        if not budget.exists():write_json(budget,{'calls':0,'max_calls':limits['business_api_calls'],'max_output_tokens':limits['max_provider_output_tokens']})
-        b=read_json(budget);b['max_calls']=limits['business_api_calls'];write_json(budget,b)
-        env['OVERNIGHT_API_BUDGET']=str(budget)
-        code,_=self.command('fresh_live_verification',['node','--import',str(ROOT/'runner/api-budget.mjs'),'--import','tsx','../runner/live-check.ts'],cwd=ROOT/'starter',seconds=180,env=env)
-        self.s.put('business_api_calls',read_json(budget)['calls'])
-        if code:raise Blocked('Fresh live verification failed or exhausted its request budget; no mock substitution')
-        self.s.event('live_verification',kind_label='fresh_provider',attempts=read_json(budget)['calls'])
+        limits=self.c['limits'];budget=self.s.dir/'api-budget.json'
+        if not budget.exists():write_json(budget,{'calls':0,'runs':[]})
+        ledger=read_json(budget);ledger.setdefault('runs',[])
+        def not_verified(reason):
+            record={'status':'not_live_verified','head':git('rev-parse','HEAD'),'changes':fingerprint(),'reason':reason}
+            self.s.put('live_verification',record);self.s.event('live_verification',**record)
+            write_json(self.s.dir/'live-verification-status.json',record)
+        if len(ledger['runs'])>=limits['live_verification_runs'] or ledger['calls']>=limits['business_api_calls']:
+            not_verified('Live verification allowance exhausted; affected changes are NOT live-verified')
+            raise Blocked('Live verification allowance exhausted; affected changes are NOT live-verified')
+        try:env=clean_env(provider=True)
+        except Blocked as e:not_verified(str(e));raise
+        provider=env.get('AGENT_PROVIDER','gemini')
+        if provider not in ('groq','gemini'):not_verified('Unsupported configured live provider');raise Blocked('Configured live provider must be groq or gemini')
+        run_id=len(ledger['runs'])+1;scenario=['delay','disproved','no_response'][(run_id-1)%3]
+        ledger.update(max_calls=limits['business_api_calls'],max_runs=limits['live_verification_runs'],max_output_tokens=limits['max_provider_output_tokens'],active_run=run_id)
+        ledger['runs'].append({'id':run_id,'calls':0,'max_calls':limits['model_requests_per_run'],'status':'running','scenario':scenario,'provider':provider})
+        write_json(budget,ledger);self.s.put('live_verification_runs',run_id)
+        env.update(OVERNIGHT_API_BUDGET=str(budget),OVERNIGHT_LIVE_RUN=str(run_id),OVERNIGHT_LIVE_SCENARIO=scenario)
+        code=None
+        try:
+            code,_=self.command('fresh_live_verification',['node','--import',str(ROOT/'runner/api-budget.mjs'),'--import','tsx','../runner/live-check.ts'],cwd=ROOT/'starter',seconds=180,env=env)
+        finally:
+            ledger=read_json(budget);ledger['runs'][-1]['status']='passed' if code==0 else 'not_live_verified';write_json(budget,ledger)
+            self.s.put('business_api_calls',ledger['calls'])
+            record={'status':'live_verified' if code==0 else 'not_live_verified','head':git('rev-parse','HEAD'),'changes':fingerprint(),'run':run_id,'scenario':scenario,'provider':provider,'requests':ledger['runs'][-1]['calls']}
+            self.s.put('live_verification',record);self.s.event('live_verification',**record);write_json(self.s.dir/'live-verification-status.json',record)
+        if code:raise Blocked('Fresh live verification failed or exhausted its request budget; changes are NOT live-verified; no mock substitution')
     def run(self):
         assert_worktree(self.c);self.acquire()
         try:
@@ -370,11 +390,11 @@ def initialize(s,c,smoke=False):
     for spec in ([{'id':'smoke-iteration2','priority':0,'requires':[],'scope':'Audit the existing iteration-2 implementation without speculative changes','acceptance':['Development regressions and isolated PostgreSQL/HTTP gates pass','One real coding CLI session records a review; no business-provider calls'],'gate':'iteration2'}] if smoke else read_json(ROOT/'runner/queue.json')):
         s.db.execute('INSERT OR IGNORE INTO tasks(id,priority,spec,status) VALUES(?,?,?,?)',(spec['id'],spec['priority'],json.dumps(spec),'deferred' if spec.get('optional') and not c['optional_iteration4'] else 'pending'))
     s.db.commit()
-    for k,v in {'initialized':True,'status':'idle','cycles':0,'coding_sessions':0,'coding_tokens':0,'business_api_calls':0,'elapsed':0,'protected':protected(),'owned_changes':{},'baseline_head':git('rev-parse','HEAD'),'stop':False}.items():s.put(k,v)
+    for k,v in {'initialized':True,'status':'idle','cycles':0,'coding_sessions':0,'coding_tokens':0,'business_api_calls':0,'live_verification_runs':0,'elapsed':0,'protected':protected(),'owned_changes':{},'baseline_head':git('rev-parse','HEAD'),'stop':False}.items():s.put(k,v)
     s.event('initialized',baseline=git('rev-parse','HEAD'),namespace=s.dir.name)
 
 def status(s):
-    return {k:s.get(k) for k in ('status','reason','phase','cycles','coding_sessions','coding_tokens','business_api_calls','elapsed','controller','active_process','app_process')}|{'state_dir':str(s.dir),'tasks':[{k:t[k] for k in ('id','status','attempts')} for t in s.tasks()]}
+    return {k:s.get(k) for k in ('status','reason','phase','cycles','coding_sessions','coding_tokens','business_api_calls','live_verification_runs','live_verification','elapsed','controller','active_process','app_process')}|{'state_dir':str(s.dir),'tasks':[{k:t[k] for k in ('id','status','attempts')} for t in s.tasks()]}
 
 def prepare(c):
     assert_worktree(c);RUNTIME.mkdir(parents=True,exist_ok=True,mode=0o700)
@@ -429,7 +449,7 @@ def main():
                 if other.get('initialized'):
                     frozen=other.get('protected');frozen['runner/config.json']=sha(ROOT/'runner/config.json');other.put('protected',frozen)
             s.event('owner_configuration',limits=c['limits']);print('Configuration changed explicitly; usage counters were not reset. Commit the reviewed configuration before running.');return
-        allowed={'GROQ_API_KEY','GROQ_MODEL','GROQ_ALLOWED_MODELS','GEMINI_API_KEY','GEMINI_MODEL','GEMINI_ALLOWED_MODELS'}
+        allowed={'GROQ_API_KEY','GROQ_MODEL','GROQ_ALLOWED_MODELS','GEMINI_API_KEY','GEMINI_MODEL','GEMINI_ALLOWED_MODELS','AGENT_PROVIDER','AGENT_MODEL','AGENT_ALLOWED_MODELS','AGENT_FALLBACK_PROVIDER'}
         if not a.source:raise Blocked('Specify --source private env file; only provider settings will be imported')
         rows=[line for line in Path(a.source).read_text().splitlines() if '=' in line and line.split('=',1)[0] in allowed]
         target=RUNTIME/'provider.env';target.write_text('\n'.join(rows)+'\n');target.chmod(0o600);print('Imported provider settings only into ignored mode-0600 provider.env; no database settings copied.');return
