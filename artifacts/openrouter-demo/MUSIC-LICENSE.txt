@@ -1,0 +1,13 @@
+Background music: original procedural ambient composition generated for this demo.
+No third-party recording, sample, melody library or music asset is used.
+
+To the extent copyright or related rights apply, this composition and recording
+are dedicated to the public domain under CC0 1.0 Universal:
+https://creativecommons.org/publicdomain/zero/1.0/
+
+You may use, edit and distribute the music commercially or otherwise without
+attribution or royalty payments. The music dedication does not cover the app,
+video screenshots, brand names or other repository contents.
+
+Source: generate-music.py
+Audio: background-original.wav

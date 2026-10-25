@@ -1,0 +1,759 @@
+{
+  "running": false,
+  "stopping": false,
+  "phase": null,
+  "experiment": null,
+  "done": 3,
+  "total": 3,
+  "elapsed": 35,
+  "eta": null,
+  "settings": {
+    "source": "hand",
+    "count": 3,
+    "per_type": 0,
+    "split": "A",
+    "workers": 1,
+    "judge": false,
+    "weight": 3,
+    "context": "lean",
+    "mode": "openrouter",
+    "rules": false,
+    "lang": "fr"
+  },
+  "summary": {
+    "cases": 3,
+    "types": 3,
+    "model": "openrouter:openai/gpt-oss-120b",
+    "helper_model": "openai/gpt-oss-20b",
+    "judge_model": "openrouter:openai/gpt-oss-120b",
+    "not_evaluated": [],
+    "auto_when_human": {
+      "count": 0,
+      "out_of": 2,
+      "rate": 0,
+      "cases": []
+    },
+    "human_when_auto": {
+      "count": 0,
+      "out_of": 1,
+      "rate": 0,
+      "cases": []
+    },
+    "other_failures": {
+      "count": 0,
+      "out_of": 3,
+      "rate": 0,
+      "cases": []
+    },
+    "weight": 3,
+    "quality_weight": 1,
+    "weighted_error": 0,
+    "person_kind_mixups": 0,
+    "agent_only": {
+      "auto_when_human": {
+        "count": 0,
+        "out_of": 2,
+        "rate": 0,
+        "cases": []
+      },
+      "human_when_auto": {
+        "count": 0,
+        "out_of": 1,
+        "rate": 0,
+        "cases": []
+      },
+      "other_failures": {
+        "count": 0,
+        "out_of": 3,
+        "rate": 0,
+        "cases": []
+      },
+      "weight": 3,
+      "quality_weight": 1,
+      "weighted_error": 0,
+      "person_kind_mixups": 0
+    },
+    "safety_net_changes": 0,
+    "settings": {
+      "source": "hand",
+      "per_type": 0,
+      "limit": 3,
+      "split": null,
+      "mode": "openrouter",
+      "agent_models": [
+        "openrouter:openai/gpt-oss-120b"
+      ],
+      "helpers": [
+        "openai/gpt-oss-20b",
+        "gemini:gemma-4-26b-a4b-it",
+        "gemini:gemini-3.1-flash-lite",
+        "gemini:gemini-3.5-flash-lite",
+        "gemini:gemini-3-flash-preview",
+        "gemini:gemini-3.5-flash",
+        "gemini:gemini-3.6-flash"
+      ],
+      "context": "lean",
+      "rules": null,
+      "judge": false,
+      "weight": 3,
+      "safety_net": true
+    },
+    "pass_rate_by_type": 1,
+    "pass_rate_cases": 1,
+    "ending_accuracy": 1,
+    "endings": {
+      "correct": 3
+    },
+    "confusion": [
+      {
+        "expected": "agent_alone",
+        "got": "agent_alone",
+        "count": 1
+      },
+      {
+        "expected": "person_decides",
+        "got": "person_decides",
+        "count": 1
+      },
+      {
+        "expected": "person_only",
+        "got": "person_only",
+        "count": 1
+      }
+    ],
+    "trap_violations": {},
+    "must_not_broken": 0,
+    "must_coverage": null,
+    "sent_to_person": {
+      "agent": 2,
+      "expected": 2
+    },
+    "avg_seconds": 11.8,
+    "agent_calls_by_model": {
+      "openrouter:openai/gpt-oss-120b": 5
+    },
+    "avg_agent_tokens": 3924,
+    "avg_llm_calls": 1.7,
+    "by_type": [
+      {
+        "type": "DELIVERY_PHOTOS_MISSING",
+        "domain": "evidence_documents",
+        "cases": 1,
+        "pass_rate": 1,
+        "ending_rate": 1,
+        "violations": 0,
+        "avg_seconds": 16.1,
+        "auto_when_human": 0,
+        "human_when_auto": 0
+      },
+      {
+        "type": "OFFER_NOT_TAKEN",
+        "domain": "dispatch",
+        "cases": 1,
+        "pass_rate": 1,
+        "ending_rate": 1,
+        "violations": 0,
+        "avg_seconds": 8.4,
+        "auto_when_human": 0,
+        "human_when_auto": 0
+      },
+      {
+        "type": "SELLER_WANTS_VAT_CONFIRMATION",
+        "domain": "evidence_documents",
+        "cases": 1,
+        "pass_rate": 1,
+        "ending_rate": 1,
+        "violations": 0,
+        "avg_seconds": 11,
+        "auto_when_human": 0,
+        "human_when_auto": 0
+      }
+    ]
+  },
+  "report": "live-20261025-131417-run",
+  "error": null,
+  "rules": {
+    "from_run": "live-20261025-110016-A",
+    "rules": [
+      "When dashboard warning lights are reported: resolve alone if non-critical and safe, otherwise hand off to a person for technical verification.",
+      "When a flat tyre occurs: agent alone if the driver is safe and has a spare, otherwise hand off to a person to recompute ETA.",
+      "When a delivery occurs in a region with seasonal tyre regulations: agent alone if the date falls outside the mandatory winter period.",
+      "When tracking data is missing or a driver is unresponsive: hand off to a person if the status cannot be immediately confirmed.",
+      "When a vehicle is involved in an accident: hand off to a person to collect details and verify roadworthiness.",
+      "When expenses or accommodations exceed policy limits: hand off to a person because exceptions require human approval.",
+      "When a medical emergency occurs during delivery: hand off to a person for logistical adjustments and welfare checks.",
+      "When a delivery is delayed beyond scheduled slots: hand off to a person if the delay requires external coordination, schedule modification, or rescheduling.",
+      "When licence expiry or driver scheduling conflicts occur: proceed alone if the system can automatically handle the notification, otherwise hand off to a person.",
+      "When address conflicts or site closures occur: hand off to a person because resolving location discrepancies requires external verification.",
+      "When required pickup documents or signatures are missing: hand off to a person if alternative verification or customer coordination is needed.",
+      "When reimbursement claims lack standard receipts: hand off to a person because manual review of alternative proof is required.",
+      "When a payment deduction or fee is disputed: hand off to a person to review the validity of the penalty.",
+      "When vehicles are reported stolen or major undocumented damage is found: hand off to a person for emergency or discrepancy oversight.",
+      "When a vehicle is missing at pickup: hand off to a person because asset inventory discrepancies cannot be resolved autonomously.",
+      "When fuel contamination is reported: hand off to a person if the engine status requires professional service arrangements.",
+      "When multiple drivers are assigned to a job or transit orders are cancelled: hand off to a person to manage scheduling errors and financial approvals.",
+      "When billing documents or sensitive financial information are requested: hand off to a person to link invoices securely.",
+      "When document names differ from current bookings: proceed alone if site verification confirms the active booking details, otherwise hand off to a person.",
+      "When a driver is at the wrong location: provide the correct address from the order and verify the delivery window alone, otherwise hand off to a person."
+    ],
+    "created_at": "2026-10-25T11:02:49",
+    "cases": 77
+  },
+  "comparison": [
+    {
+      "run": "live-20261025-131417-run",
+      "mode": "openrouter",
+      "split": null,
+      "rules": 0,
+      "cases": 3,
+      "minutes": 0.6,
+      "first": {
+        "count": 0,
+        "out_of": 2,
+        "rate": 0,
+        "cases": []
+      },
+      "second": {
+        "count": 0,
+        "out_of": 1,
+        "rate": 0,
+        "cases": []
+      },
+      "other": {
+        "count": 0,
+        "out_of": 3,
+        "rate": 0,
+        "cases": []
+      },
+      "score": 0,
+      "first_agent": {
+        "count": 0,
+        "out_of": 2,
+        "rate": 0,
+        "cases": []
+      },
+      "score_agent": 0,
+      "not_evaluated": 0,
+      "finished": "2026-10-25T13:14:17"
+    },
+    {
+      "run": "live-20261025-111039-C-rules",
+      "mode": "fast",
+      "split": "C",
+      "rules": 20,
+      "cases": 41,
+      "minutes": 7.8,
+      "first": {
+        "count": 1,
+        "out_of": 25,
+        "rate": 0.04,
+        "cases": [
+          "syn-01868"
+        ]
+      },
+      "second": {
+        "count": 5,
+        "out_of": 16,
+        "rate": 0.312,
+        "cases": [
+          "syn-01407",
+          "syn-00980",
+          "syn-00622",
+          "syn-01638",
+          "syn-01703"
+        ]
+      },
+      "other": {
+        "count": 1,
+        "out_of": 41,
+        "rate": 0.024,
+        "cases": [
+          "syn-00306"
+        ]
+      },
+      "score": 0.22,
+      "first_agent": {
+        "count": 2,
+        "out_of": 25,
+        "rate": 0.08,
+        "cases": [
+          "syn-02020",
+          "syn-01868"
+        ]
+      },
+      "score_agent": 0.293,
+      "not_evaluated": 9,
+      "finished": "2026-10-25T11:10:39"
+    },
+    {
+      "run": "live-20261025-110016-A",
+      "mode": "fast",
+      "split": "A",
+      "rules": 0,
+      "cases": 77,
+      "minutes": 6.8,
+      "first": {
+        "count": 2,
+        "out_of": 46,
+        "rate": 0.043,
+        "cases": [
+          "syn-00479",
+          "syn-01890"
+        ]
+      },
+      "second": {
+        "count": 12,
+        "out_of": 31,
+        "rate": 0.387,
+        "cases": [
+          "syn-00377",
+          "syn-00425",
+          "syn-00860",
+          "syn-02376",
+          "syn-02574",
+          "syn-03028",
+          "syn-03211",
+          "syn-02952",
+          "syn-03262",
+          "syn-03185",
+          "syn-03849",
+          "syn-03534"
+        ]
+      },
+      "other": {
+        "count": 5,
+        "out_of": 77,
+        "rate": 0.065,
+        "cases": [
+          "syn-01607",
+          "syn-01652",
+          "syn-01369",
+          "syn-02319",
+          "syn-02523"
+        ]
+      },
+      "score": 0.299,
+      "first_agent": {
+        "count": 3,
+        "out_of": 46,
+        "rate": 0.065,
+        "cases": [
+          "syn-00479",
+          "syn-01890",
+          "syn-03746"
+        ]
+      },
+      "score_agent": 0.338,
+      "not_evaluated": 0,
+      "finished": "2026-10-25T11:00:16"
+    },
+    {
+      "run": "live-20261025-105308-B-control",
+      "mode": "fast",
+      "split": "B",
+      "rules": 0,
+      "cases": 77,
+      "minutes": 6.6,
+      "first": {
+        "count": 4,
+        "out_of": 48,
+        "rate": 0.083,
+        "cases": [
+          "syn-00066",
+          "syn-01673",
+          "syn-01968",
+          "syn-03599"
+        ]
+      },
+      "second": {
+        "count": 12,
+        "out_of": 29,
+        "rate": 0.414,
+        "cases": [
+          "syn-00188",
+          "syn-00546",
+          "syn-00573",
+          "syn-00627",
+          "syn-00878",
+          "syn-01420",
+          "syn-01075",
+          "syn-01881",
+          "syn-03292",
+          "syn-03022",
+          "syn-03175",
+          "syn-03216"
+        ]
+      },
+      "other": null,
+      "score": 0.312,
+      "first_agent": {
+        "count": 7,
+        "out_of": 48,
+        "rate": 0.146,
+        "cases": [
+          "syn-00066",
+          "syn-01190",
+          "syn-01673",
+          "syn-01968",
+          "syn-01763",
+          "syn-03599",
+          "syn-03711"
+        ]
+      },
+      "score_agent": 0.377,
+      "not_evaluated": 0,
+      "finished": "2026-10-25T10:53:08"
+    },
+    {
+      "run": "live-20261025-104633-B-rules",
+      "mode": "fast",
+      "split": "B",
+      "rules": 16,
+      "cases": 77,
+      "minutes": 6.7,
+      "first": {
+        "count": 2,
+        "out_of": 48,
+        "rate": 0.042,
+        "cases": [
+          "syn-01968",
+          "syn-03599"
+        ]
+      },
+      "second": {
+        "count": 9,
+        "out_of": 29,
+        "rate": 0.31,
+        "cases": [
+          "syn-00188",
+          "syn-00573",
+          "syn-00546",
+          "syn-00627",
+          "syn-01578",
+          "syn-01420",
+          "syn-02369",
+          "syn-03292",
+          "syn-03022"
+        ]
+      },
+      "other": null,
+      "score": 0.195,
+      "first_agent": {
+        "count": 4,
+        "out_of": 48,
+        "rate": 0.083,
+        "cases": [
+          "syn-00335",
+          "syn-01968",
+          "syn-03381",
+          "syn-03599"
+        ]
+      },
+      "score_agent": 0.221,
+      "not_evaluated": 0,
+      "finished": "2026-10-25T10:46:33"
+    },
+    {
+      "run": "live-20261025-103419-A",
+      "mode": "fast",
+      "split": "A",
+      "rules": 0,
+      "cases": 77,
+      "minutes": 7.1,
+      "first": {
+        "count": 5,
+        "out_of": 46,
+        "rate": 0.109,
+        "cases": [
+          "syn-00479",
+          "syn-01291",
+          "syn-01652",
+          "syn-01890",
+          "syn-03637"
+        ]
+      },
+      "second": {
+        "count": 13,
+        "out_of": 31,
+        "rate": 0.419,
+        "cases": [
+          "syn-00179",
+          "syn-00425",
+          "syn-00640",
+          "syn-00377",
+          "syn-01090",
+          "syn-00860",
+          "syn-02405",
+          "syn-02905",
+          "syn-03185",
+          "syn-03028",
+          "syn-03262",
+          "syn-02952",
+          "syn-03534"
+        ]
+      },
+      "other": null,
+      "score": 0.364,
+      "first_agent": {
+        "count": 7,
+        "out_of": 46,
+        "rate": 0.152,
+        "cases": [
+          "syn-00479",
+          "syn-00225",
+          "syn-01291",
+          "syn-01652",
+          "syn-01890",
+          "syn-03746",
+          "syn-03637"
+        ]
+      },
+      "score_agent": 0.377,
+      "not_evaluated": 0,
+      "finished": "2026-10-25T10:34:19"
+    }
+  ],
+  "usage": {
+    "day": "2026-10-25",
+    "models": [
+      {
+        "model": "openai/gpt-oss-120b",
+        "requests": 18,
+        "tokens": 1980,
+        "limit_requests": 1000,
+        "limit_tokens": 200000,
+        "room": 75
+      },
+      {
+        "model": "openai/gpt-oss-20b",
+        "requests": 303,
+        "tokens": 1057,
+        "limit_requests": 1000,
+        "limit_tokens": 200000,
+        "room": 75
+      },
+      {
+        "model": "gemini:gemini-3.1-flash-lite",
+        "requests": 495,
+        "tokens": 0,
+        "limit_requests": 500,
+        "limit_tokens": null,
+        "room": 0
+      },
+      {
+        "model": "gemini:gemini-3.5-flash-lite",
+        "requests": 495,
+        "tokens": 0,
+        "limit_requests": 500,
+        "limit_tokens": null,
+        "room": 0
+      },
+      {
+        "model": "gemini:gemma-4-26b-a4b-it",
+        "requests": 6,
+        "tokens": 4794,
+        "limit_requests": 14400,
+        "limit_tokens": null,
+        "room": 13674
+      },
+      {
+        "model": "gemini:gemini-3-flash-preview",
+        "requests": 0,
+        "tokens": 0,
+        "limit_requests": 20,
+        "limit_tokens": null,
+        "room": 19
+      },
+      {
+        "model": "gemini:gemini-3.5-flash",
+        "requests": 0,
+        "tokens": 0,
+        "limit_requests": 20,
+        "limit_tokens": null,
+        "room": 19
+      },
+      {
+        "model": "gemini:gemini-3.6-flash",
+        "requests": 0,
+        "tokens": 0,
+        "limit_requests": 20,
+        "limit_tokens": null,
+        "room": 19
+      },
+      {
+        "model": "openrouter:openai/gpt-oss-120b",
+        "requests": 5,
+        "tokens": 11771,
+        "limit_requests": 50,
+        "limit_tokens": null,
+        "room": null
+      }
+    ],
+    "openrouter": {
+      "spent_today_usd": 0.0005,
+      "budget_usd": 5,
+      "model": "openai/gpt-oss-120b",
+      "account": {
+        "usage_usd": 0.00000505,
+        "limit_usd": 20,
+        "limit_remaining_usd": 19.99999495,
+        "free_tier": false
+      }
+    }
+  },
+  "estimate": {
+    "agent_requests": 8,
+    "agent_room": null,
+    "helper_requests": 2,
+    "helper_room": 13806,
+    "usd": 0.0041,
+    "usd_left": 5,
+    "model": "openai/gpt-oss-120b"
+  },
+  "cases": [
+    {
+      "id": "test-0024",
+      "type": "SELLER_WANTS_VAT_CONFIRMATION",
+      "summary": "The German seller will only release the car once the buyer signs an EU delivery confirmation for VAT.",
+      "expected": "person_only",
+      "got": "person_only",
+      "got_raw": "person_only",
+      "passed": true,
+      "seconds": 11,
+      "error": false,
+      "traps": [],
+      "net": [],
+      "steps": [
+        {
+          "step": 1,
+          "tool": "hand_to_person",
+          "args": {
+            "handoff": "person_only",
+            "headline": "Buyer signature required for release of vehicle",
+            "facts": [
+              {
+                "fact": "German seller requires buyer's signed EU delivery confirmation (Gelangensbestätigung) before releasing the car",
+                "source": "site email 2026-11-30T08:20:00Z"
+              },
+              {
+                "fact": "Buyer is Finnish dealer Kaira Autot Oy; seller sells VAT‑free within the EU",
+                "source": "order facts"
+              }
+            ],
+            "recommendation": "Contact the buyer (Kaira Autot Oy) to obtain the signed EU delivery confirmation before authorising the pickup.",
+            "needs_approval": []
+          },
+          "result": {
+            "status": "finished"
+          },
+          "seconds": 0
+        }
+      ],
+      "conclusion": "Contact the buyer (Kaira Autot Oy) to obtain the signed EU delivery confirmation before authorising the pickup."
+    },
+    {
+      "id": "test-0022",
+      "type": "DELIVERY_PHOTOS_MISSING",
+      "summary": "The driver completed delivery in the app without uploading delivery photos.",
+      "expected": "agent_alone",
+      "got": "agent_alone",
+      "got_raw": "agent_alone",
+      "passed": true,
+      "seconds": 16.1,
+      "error": false,
+      "traps": [],
+      "net": [],
+      "steps": [
+        {
+          "step": 1,
+          "tool": "ask_driver",
+          "args": {
+            "question": "Hi Tuomas, the delivery proof requires at least 6 photos. Please upload the delivery photos for the Hamburg drop-off (or let us know if you cannot)."
+          },
+          "result": {
+            "reply": "I have the photos ready. I’ll upload them now."
+          },
+          "seconds": 0.34
+        },
+        {
+          "step": 2,
+          "tool": "ask_driver",
+          "args": {
+            "question": "Thanks, Tuomas. Please confirm once the photos are uploaded, and let us know if you encounter any issue."
+          },
+          "result": {
+            "reply": "Photos uploaded successfully. No issues encountered."
+          },
+          "seconds": 0.88
+        },
+        {
+          "step": 3,
+          "tool": "resolve_alone",
+          "args": {
+            "summary": "Driver Tuomas Ek uploaded the required delivery photos (6) for Hamburg drop-off, fulfilling proof requirement.",
+            "actions": [
+              "Recorded photo upload in system",
+              "Marked delivery proof as complete"
+            ],
+            "confidence": "high"
+          },
+          "result": {
+            "status": "finished"
+          },
+          "seconds": 0
+        }
+      ],
+      "conclusion": "Driver Tuomas Ek uploaded the required delivery photos (6) for Hamburg drop-off, fulfilling proof requirement."
+    },
+    {
+      "id": "test-0010",
+      "type": "OFFER_NOT_TAKEN",
+      "summary": "An offer has been published for three days with no driver; pickup is in two days.",
+      "expected": "person_decides",
+      "got": "person_decides",
+      "got_raw": "person_decides",
+      "passed": true,
+      "seconds": 8.4,
+      "error": false,
+      "traps": [],
+      "net": [],
+      "steps": [
+        {
+          "step": 1,
+          "tool": "hand_to_person",
+          "args": {
+            "handoff": "person_decides",
+            "headline": "Increase offer fee to attract driver for T-1010",
+            "facts": [
+              {
+                "fact": "Current offer fee is EUR 520, published Tue 10 Nov.",
+                "source": "offer"
+              },
+              {
+                "fact": "Similar Germany–Lapland jobs this month were taken at EUR 580–640.",
+                "source": "offer history"
+              },
+              {
+                "fact": "Three drivers opened the offer, none accepted.",
+                "source": "app statistics"
+              },
+              {
+                "fact": "Pickup is scheduled for Sun 15 Nov 10:00–14:00 Europe/Berlin, two days away.",
+                "source": "order"
+              }
+            ],
+            "recommendation": "Raise the offer fee to at least EUR 580 (mid-range of recent similar jobs) to increase likelihood of driver acceptance before the pickup window.",
+            "needs_approval": [
+              "Fee increase to EUR 580 or higher"
+            ]
+          },
+          "result": {
+            "status": "finished"
+          },
+          "seconds": 0
+        }
+      ],
+      "conclusion": "Raise the offer fee to at least EUR 580 (mid-range of recent similar jobs) to increase likelihood of driver acceptance before the pickup window."
+    }
+  ]
+}

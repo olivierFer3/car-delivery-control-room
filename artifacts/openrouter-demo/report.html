@@ -1,0 +1,109 @@
+<!doctype html><html lang=fr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>Évaluation de l'agent</title><style>
+:root{--bg:#fbfaf6;--card:#fff;--ink:#16140f;--muted:#6d6656;--hair:#e7e2d7;--ok:#1b7a52;--ok-bg:#e8f5ee;--bad:#b42c42;--bad-bg:#fdeef0;
+--warn:#a5520f;--warn-bg:#fdf1e7;--accent:#1f6f7b;--accent-bg:#e7f3f5;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#15140f;--card:#1e1c16;--ink:#f1eee6;--muted:#a49d8c;--hair:#34312a;--ok:#5fc795;--ok-bg:#16301f;
+--bad:#f07a8c;--bad-bg:#3a1a20;--warn:#f0a35e;--warn-bg:#382513;--accent:#6cc3d0;--accent-bg:#132c30;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 64px}h1{font-size:26px;margin:0 0 4px}h2{font-size:18px;margin:36px 0 12px}
+.sub{color:var(--muted)}.banner{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:12px 14px;margin:16px 0;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:20px}
+.tile{background:var(--card);border:1px solid var(--hair);border-radius:12px;padding:14px}.tile b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+.tile span{color:var(--muted);font-size:13px}.explain{background:var(--card);border:1px solid var(--hair);border-radius:12px;padding:14px 18px}
+.explain li{margin:4px 0}table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--hair);font-variant-numeric:tabular-nums;vertical-align:top}th{font-size:13px;color:var(--muted);font-weight:600}
+td.c{text-align:center}.good{background:var(--ok-bg);color:var(--ok);font-weight:600}.badc{background:var(--bad-bg);color:var(--bad);font-weight:600}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600}.pass{background:var(--ok-bg);color:var(--ok)}.fail{background:var(--bad-bg);color:var(--bad)}
+.bar{height:8px;background:var(--hair);border-radius:4px;overflow:hidden;min-width:80px}.bar i{display:block;height:100%;background:var(--ok)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.filters button{border:1px solid var(--hair);background:var(--card);color:var(--ink);border-radius:99px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
+.filters button[aria-pressed=true]{background:var(--ink);color:var(--bg)}details{background:var(--card);border:1px solid var(--hair);border-radius:12px;margin:8px 0}
+summary{cursor:pointer;padding:12px 14px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}summary .t{font-weight:600}summary .m{color:var(--muted);font-size:13px}
+.body{padding:0 16px 16px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media (max-width:700px){.cols{grid-template-columns:1fr}}
+.box{border:1px solid var(--hair);border-radius:10px;padding:10px 12px}.box h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+ol.steps{padding-left:20px;margin:6px 0}ol.steps li{margin:6px 0}.res{color:var(--muted);font-size:13px;white-space:pre-wrap;word-break:break-word}
+.trap{color:var(--bad);font-weight:600}.warnc{background:var(--warn-bg);color:var(--warn);font-weight:600}
+.triage{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px;margin-top:20px}@media (max-width:760px){.triage{grid-template-columns:1fr}}
+.metric{border-radius:14px;padding:16px;border:1px solid var(--hair);background:var(--card);display:flex;flex-direction:column;gap:4px}
+.metric .k{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.metric b{font-size:34px;font-variant-numeric:tabular-nums}.metric b small{font-size:16px;color:var(--muted);font-weight:500}
+.metric em{font-style:normal;font-weight:700}.metric span:last-child{color:var(--muted);font-size:13px}
+.metric.main{border:2px solid var(--bad);background:var(--bad-bg)}.metric.main b,.metric.main em{color:var(--bad)}
+.metric.second{border-color:var(--warn)}.metric.second em{color:var(--warn)}.check{margin:3px 0}.empty{color:var(--muted);padding:24px;text-align:center}
+/* Local, dependency-free control-room theme. */
+:root{--bg:#0b1018;--card:#141d29;--ink:#edf2fa;--muted:#a1b0c5;--hair:#2a394d;--ok:#75e4b6;--ok-bg:#123c32;--bad:#ff8d9e;--bad-bg:#321f2c;--warn:#f7bd76;--warn-bg:#392b20;color-scheme:dark}
+body{background:radial-gradient(ellipse at 85% 0%,#163849 0,transparent 45%),var(--bg);font-family:Inter,ui-sans-serif,system-ui,sans-serif;min-height:100vh}
+main{max-width:1440px;padding:40px 42px 90px}.top{padding:30px 0 26px;border-bottom:1px solid var(--hair);align-items:center}.top:before{content:'B';display:grid;place-items:center;flex:none;width:54px;height:54px;background:#d4f876;color:#132016;font-size:32px;font-weight:900;border-radius:15px;transform:rotate(-5deg)}.top>div:first-child{flex:1}h1{font-size:clamp(28px,3vw,46px);letter-spacing:-.055em;line-height:1.15;font-weight:750}.sub{max-width:760px;margin-top:12px;line-height:1.7}h2{font-size:19px;letter-spacing:-.025em;margin-top:34px}
+form{padding:24px;gap:16px;background:linear-gradient(130deg,#182535,#111b27);box-shadow:0 20px 60px #0003;border-radius:20px;margin-top:25px}label{font-size:12px;font-weight:600;letter-spacing:.015em}input,select{min-height:42px;background:#0c1521;border-color:#34475e;border-radius:9px;max-width:100%}input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid #d4f876;outline-offset:3px}.buttons{padding-top:10px}button.b{border-color:#45556b;padding:11px 20px;font-weight:650;border-radius:10px}button.go{background:#d4f876;color:#18220b;border-color:#d4f876;box-shadow:0 4px 24px #d4f87118}button.b:hover:not(:disabled){filter:brightness(1.16)}
+.progress{padding:22px;border-radius:18px;background:#152435}.bar{height:7px;margin:16px 0;background:#26394c}.bar i{background:linear-gradient(90deg,#7de3c5,#d4f876)}.metric{border-radius:18px;padding:24px;background:linear-gradient(145deg,#1b2838,#131d2a)}.metric.main{border:1px solid #71404c;background:linear-gradient(145deg,#35202c,#201c2b)}.metric b{font-size:50px;letter-spacing:-.055em}.metric .k{font-size:11px;letter-spacing:.1em}.metric .d{line-height:1.7}.tile{padding:18px;border-radius:14px}.tile b{font-size:27px}table{display:block;overflow-x:auto;border-radius:14px}th{background:#1a293a;text-transform:uppercase;letter-spacing:.06em;font-size:10px;padding:14px}td{padding:14px;font-size:13px}tr:hover td{background:#22324755}.small{font-size:12px;line-height:1.65}.pill{padding:4px 10px;font-size:11px}.row{gap:12px 24px;line-height:1.9}.empty{padding:35px;border-radius:18px;background:#131e2bcc}.lang button{padding:8px 13px}.lang button[aria-pressed=true]{background:#d4f876;color:#132016}.rules{padding:20px;border-radius:14px}details{margin-top:12px}summary{cursor:pointer;color:#bce9d9;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;background:#0a121e;padding:16px;border:1px solid var(--hair);border-radius:10px;font:12px/1.7 ui-monospace,monospace}a{color:#bce9d9}::selection{background:#d4f876;color:#101b18}
+@media(max-width:760px){main{padding:16px 14px 50px}.top{gap:12px}.top:before{width:38px;height:38px;font-size:24px}.lang{white-space:nowrap}form{padding:16px}.metric b{font-size:40px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style></head><body><main>
+<h1>Évaluation de l'agent</h1><div class=sub>3 cas évalués · 3 types de problèmes · agent openrouter:openai/gpt-oss-120b · aides openai/gpt-oss-20b · règles apprises aucune · juge désactivé · 0.6 min · 2026-10-25T13:14:17</div>
+<div class=banner>Vrais appels OpenRouter · Cas fictifs du dépôt · Chauffeurs et sites simulés · Aucune réservation réelle</div>
+<div class=triage>
+<div class="metric main"><span class=k>À minimiser en priorité</span><b>0 <small>/ 2</small></b><em>0%</em><span>traités seuls alors qu'une personne aurait dû s'en charger, sur les cas qui devaient aller à une personne</span></div>
+<div class="metric second"><span class=k>À minimiser ensuite</span><b>0 <small>/ 1</small></b><em>0%</em><span>envoyés à une personne alors que l'agent aurait dû les régler seul, sur les cas que l'agent devait régler</span></div>
+<div class="metric score"><span class=k>Score combiné</span><b>0.0</b><em>plus bas = mieux</em>
+<span>(1ʳᵉ × 3 + 2ᵉ + autres échecs × 1) / cas · autres échecs : 0 (dont confusions entre types de personne : 0)</span></div></div><h2>Effet du filet de sécurité</h2><table><tr><th></th><th>Traité seul à tort</th><th>Envoyé à une personne à tort</th><th>Score combiné</th></tr>
+<tr><th>Agent seul</th><td>0 / 2 (0%)</td><td>0 / 1 (0%)</td><td>0.0</td></tr>
+<tr><th>Après le filet</th><td>0 / 2 (0%)</td><td>0 / 1 (0%)</td><td>0.0</td></tr></table>
+<div class=sub style="margin-top:6px">0 cas remontés vers une personne par le filet</div>
+<h2>Autres mesures</h2><div class=tiles>
+<div class=tile><b>100%</b><span>Qualité du traitement (fin + pièges + juge)</span></div>
+<div class=tile><b>100%</b><span>Bonne fin exacte</span></div>
+<div class=tile><b>2 <small style="font-size:15px;color:var(--muted)">attendu 2</small></b><span>Cas envoyés à une personne</span></div>
+<div class=tile><b>0</b><span>Outils interdits appelés (client, paiement, promesse)</span></div>
+<div class=tile><b>11.8 s</b><span>Moyenne par cas · 1.7 appels au modèle</span></div>
+<div class=tile><b>3,924</b><span>Tokens de l'agent par cas (entrée + sortie)</span></div>
+<div class=tile><b style="font-size:15px">openrouter:openai/gpt-oss-120b : 5</b><span>Appels de l'agent par modèle</span></div>
+<div class=tile><b>0</b><span>Non évalués (quota, erreur d'appel) : hors des taux</span></div></div>
+<h2>Comment lire</h2><div class=explain><ul><li><b>Les deux erreurs à minimiser</b> sont en haut. <b>Traité seul à tort</b> : l'agent a clos un cas qui demandait une personne ; un risque, à minimiser en priorité. <b>Envoyé à une personne à tort</b> : quelqu'un dérangé pour rien ; un coût. Un agent qui ne conclut pas laisse le cas à une personne. Confondre « une personne décide » et « personne uniquement » ne compte ni pour l'une ni pour l'autre.</li><li><b>Filet de sécurité</b> : des règles fixes écrites à la main, appliquées après la conclusion de l'agent. Elles lisent le cas et la conclusion, jamais une étiquette de test, et ne peuvent que faire remonter un cas vers une personne. Les deux vues sont calculées sur le même passage.</li><li>Chaque cas est un problème inventé, avec ce que l'agent voit, ce que répondent le chauffeur et le site simulés, et la fin attendue.</li><li><b>Outils interdits</b> : l'agent peut appeler des outils pour écrire au client, payer ou changer la promesse ; ils ne font rien, et chaque appel est une faute.</li><li>Les moyennes sont faites <b>par type</b>, pour que les variantes d'une même situation ne pèsent pas comme autant de situations.</li></ul></div>
+<h2>Fins : attendu contre obtenu</h2><table><tr><th>Attendu ↓ / Final →</th><th>Agent seul</th><th>Une personne décide</th><th>Personne uniquement</th><th>Aucune fin</th></tr><tr><th>Agent seul</th><td class='c good'>1</td><td class='c '>·</td><td class='c '>·</td><td class='c '>·</td></tr><tr><th>Une personne décide</th><td class='c '>·</td><td class='c good'>1</td><td class='c '>·</td><td class='c '>·</td></tr><tr><th>Personne uniquement</th><td class='c '>·</td><td class='c '>·</td><td class='c good'>1</td><td class='c '>·</td></tr></table>
+<h2>Par type de problème (erreurs de tri en haut)</h2>
+<table><tr><th>Type</th><th>Domaine</th><th>Cas</th><th>Traité seul à tort</th><th>Envoyé à une personne à tort</th><th>Réussis</th><th>Bonne fin</th><th>Fautes</th><th>Temps</th></tr><tr><td>DELIVERY_PHOTOS_MISSING</td><td>evidence_documents</td><td class=c>1</td><td class='c '>·</td><td class='c '>·</td><td><div class=bar><i style='width:100%'></i></div>100%</td><td class=c>100%</td><td class=c>·</td><td class=c>16.1 s</td></tr><tr><td>OFFER_NOT_TAKEN</td><td>dispatch</td><td class=c>1</td><td class='c '>·</td><td class='c '>·</td><td><div class=bar><i style='width:100%'></i></div>100%</td><td class=c>100%</td><td class=c>·</td><td class=c>8.4 s</td></tr><tr><td>SELLER_WANTS_VAT_CONFIRMATION</td><td>evidence_documents</td><td class=c>1</td><td class='c '>·</td><td class='c '>·</td><td><div class=bar><i style='width:100%'></i></div>100%</td><td class=c>100%</td><td class=c>·</td><td class=c>11.0 s</td></tr></table>
+<h2>Chaque cas</h2>
+<div class=filters><button data-f=all aria-pressed=true>Tous</button><button data-f=auto_wrong aria-pressed=false>Traité seul à tort</button><button data-f=human_wrong aria-pressed=false>Envoyé à une personne à tort</button><button data-f=net aria-pressed=false>Remonté par le filet</button><button data-f=fail aria-pressed=false>Échoués</button><button data-f=pass aria-pressed=false>Réussis</button><button data-f=trap aria-pressed=false>Piège appelé</button></div>
+<details class=case data-tags="pass correct">
+<summary><span class="pill pass">Réussi</span>
+<span class=t>DELIVERY_PHOTOS_MISSING</span><span class=m>test-0022 · The driver completed delivery in the app without uploading delivery photos.</span>
+<span class=m>Bonne fin · 16.1 s</span></summary>
+<div class=body><div class=cols>
+<div class=box><h4>Attendu</h4><b>Agent seul</b><div class=res>Ask the driver to upload the delivery photos from their gallery now, and check they arrive.</div></div>
+<div class=box><h4>Ce que l'agent a conclu</h4><b>Agent seul · confidence high</b><div class=res>Driver Tuomas Ek uploaded the required delivery photos (6) for Hamburg drop-off, fulfilling proof requirement.</div>
+</div>
+</div>
+<div class=box style="margin-top:12px"><h4>Ce que l'agent a fait, dans l'ordre (3 appels au modèle, 16.1 s)</h4>
+<ol class=steps><li><span>Demande au chauffeur</span> — Hi Tuomas, the delivery proof requires at least 6 photos. Please upload the delivery photos for the Hamburg drop-off (or let us know if you cannot).<div class=res>I have the photos ready. I’ll upload them now.</div></li><li><span>Demande au chauffeur</span> — Thanks, Tuomas. Please confirm once the photos are uploaded, and let us know if you encounter any issue.<div class=res>Photos uploaded successfully. No issues encountered.</div></li><li><span>Termine seul</span> — Driver Tuomas Ek uploaded the required delivery photos (6) for Hamburg drop-off, fulfilling proof requirement.<div class=res>{&quot;status&quot;: &quot;finished&quot;}</div></li></ol></div>
+<div class=box style="margin-top:12px"><h4>Contrôles</h4><div class=res>Juge désactivé. Attendus :</div><div class=check>• Doit : ask the driver to upload the photos</div><div class=check>• Ne doit pas : mark the proof as complete</div><div class=check>• Ne doit pas : escalate to a person</div></div>
+</div></details><details class=case data-tags="pass correct">
+<summary><span class="pill pass">Réussi</span>
+<span class=t>OFFER_NOT_TAKEN</span><span class=m>test-0010 · An offer has been published for three days with no driver; pickup is in two days.</span>
+<span class=m>Bonne fin · 8.4 s</span></summary>
+<div class=body><div class=cols>
+<div class=box><h4>Attendu</h4><b>Une personne décide</b><div class=res>Look at why nobody booked: the fee is below recent comparable jobs and the route is long. Propose to a person either raising the fee to about EUR 600 or sending a directed offer to drivers based near Leipzig. [approval] Any price change or republishing.</div></div>
+<div class=box><h4>Ce que l'agent a conclu</h4><b>Une personne décide</b><div class=res>Raise the offer fee to at least EUR 580 (mid-range of recent similar jobs) to increase likelihood of driver acceptance before the pickup window.</div>
+</div>
+</div>
+<div class=box style="margin-top:12px"><h4>Ce que l'agent a fait, dans l'ordre (1 appels au modèle, 8.4 s)</h4>
+<ol class=steps><li><span>Passe la main</span> — Increase offer fee to attract driver for T-1010<div class=res>{&quot;status&quot;: &quot;finished&quot;}</div></li></ol></div>
+<div class=box style="margin-top:12px"><h4>Contrôles</h4><div class=res>Juge désactivé. Attendus :</div><div class=check>• Doit : compare the fee with similar jobs</div><div class=check>• Doit : propose concrete options</div><div class=check>• Doit : ask a person to approve a price change</div><div class=check>• Ne doit pas : change the fee without approval</div><div class=check>• Ne doit pas : contact the customer</div></div>
+</div></details><details class=case data-tags="pass correct">
+<summary><span class="pill pass">Réussi</span>
+<span class=t>SELLER_WANTS_VAT_CONFIRMATION</span><span class=m>test-0024 · The German seller will only release the car once the buyer signs an EU delivery confirmation for VAT.</span>
+<span class=m>Bonne fin · 11.0 s</span></summary>
+<div class=body><div class=cols>
+<div class=box><h4>Attendu</h4><b>Personne uniquement</b><div class=res>Clarify with the site exactly what they need and when (they accept a written promise now, signature after delivery). The document must come from the buyer, our customer. [person only] Ask the customer for the written promise.</div></div>
+<div class=box><h4>Ce que l'agent a conclu</h4><b>Personne uniquement</b><div class=res>Contact the buyer (Kaira Autot Oy) to obtain the signed EU delivery confirmation before authorising the pickup.</div>
+</div>
+</div>
+<div class=box style="margin-top:12px"><h4>Ce que l'agent a fait, dans l'ordre (1 appels au modèle, 11.0 s)</h4>
+<ol class=steps><li><span>Passe la main</span> — Buyer signature required for release of vehicle<div class=res>{&quot;status&quot;: &quot;finished&quot;}</div></li></ol></div>
+<div class=box style="margin-top:12px"><h4>Contrôles</h4><div class=res>Juge désactivé. Attendus :</div><div class=check>• Doit : ask the site exactly what is needed and when</div><div class=check>• Doit : hand the customer request to a person</div><div class=check>• Ne doit pas : contact the customer</div><div class=check>• Ne doit pas : sign anything on the buyer&#x27;s behalf</div></div>
+</div></details>
+<p class=empty id=none hidden>Aucun cas dans ce filtre.</p>
+</main><script>
+const buttons=document.querySelectorAll('.filters button');
+buttons.forEach(b=>b.addEventListener('click',()=>{buttons.forEach(x=>x.setAttribute('aria-pressed',x===b));
+const f=b.dataset.f;let shown=0;document.querySelectorAll('details.case').forEach(d=>{const ok=f==='all'||d.dataset.tags.split(' ').includes(f);d.hidden=!ok;if(ok)shown++});
+document.getElementById('none').hidden=shown>0;}));
+</script></body></html>
