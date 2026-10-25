@@ -3,16 +3,19 @@
 Our entry to Bahn's challenge at the Prompt Operations Hackathon (24–25 October 2026). The challenge
 itself is in [`PARTICIPANT-BRIEF.md`](PARTICIPANT-BRIEF.md) and [`OPERATIONS-CONTEXT.md`](OPERATIONS-CONTEXT.md).
 
-![Operator workspace](docs/verification/ui-redesign/desktop-workspace.png)
+![Incident library](docs/screenshots/incidents.png)
 
 ## What it is
 
 **A control room that shows a person only the cases that need them, and one real agent for one area:
 on the road, specifically a driver at risk of missing a booked ferry.**
 
-- **Workspace** (`/incidents`): two queues, *Needs a person* and *Handled by the agent*. Each case says
-  what happened, what the agent already found out (with the source and time of every fact), and the one
-  decision that is waiting.
+- **Incident library** (`/incidents`): every incident from the Bahn snapshot, the hand-written and generated
+  tests and the synthetic variants, with search and filters by status, domain, problem type, severity and
+  solution.
+- **Decision workspace** (`/incidents?view=workspace`): queues by status (*Decisions needed*, *Waiting for
+  information*, *Investigating*, *Solved by the agent*…). Each case says what happened, what the agent already
+  found out (with the source and time of every fact), and the one decision that is waiting.
 - **The agent** is a real language model in a tool loop (Groq `openai/gpt-oss-120b` or Gemini). It does the
   cheap work first: it reads the order, asks the driver for an ETA, checks safety and blockers, looks up
   live weather, road works and trains, checks the booked ferry against the ETA, and searches alternative
@@ -41,13 +44,38 @@ cd car-delivery-control-room/starter
 cp .env.example .env
 ```
 
-Edit `starter/.env`:
+Edit `starter/.env`. `.env` is git-ignored: never commit it and never put real keys in `.env.example`.
+
+**Required**
 
 ```sh
-INCIDENT_OPERATOR_TOKEN=any-long-random-string   # the operator "password" in the UI
-AGENT_PROVIDER=groq
-GROQ_API_KEY=your-groq-key                       # or AGENT_PROVIDER=gemini + GEMINI_API_KEY
+INCIDENT_OPERATOR_TOKEN=any-long-random-string   # the operator "password" in the UI; e.g. `openssl rand -hex 16`
 ```
+
+**The agent's model provider** (pick one; without a key the app runs, but an investigation shows a clear
+"missing key" message instead of reasoning):
+
+```sh
+# Groq (free key at https://console.groq.com)
+AGENT_PROVIDER=groq
+GROQ_API_KEY=your-groq-key
+
+# or Gemini (key at https://aistudio.google.com/apikey)
+AGENT_PROVIDER=gemini
+GEMINI_API_KEY=your-gemini-key
+```
+
+`AGENT_FALLBACK_PROVIDER` is empty by default: there is no silent fallback to another provider.
+
+**Leave as they are** for a local run: `DATABASE_URL` and the `S3_*` lines already match the ports in
+`starter/compose.yaml` (Postgres on 5438, attachment store on 9009). If you change a port there, change it here
+too. The `*_MODEL` / `*_ALLOWED_MODELS` lines already hold the models we tested.
+
+**Optional, off by default**: `ELEVENLABS_*`, `DRIVER_TEST_PHONE` and `TELEPHONY_LIVE_ENABLED` are only for real
+phone calls ([docs/telephony](docs/telephony/README.md)). Leave them empty and `false`; the Driver Support page
+then runs a clearly labelled test mode.
+
+Restart `npm run dev` after any change to `.env`.
 
 Then:
 
@@ -65,7 +93,8 @@ Open http://localhost:3000. Useful pages:
 
 | Page | What it is for |
 | --- | --- |
-| `/incidents` | The operator workspace: cases needing a person vs handled by the agent |
+| `/incidents` | The incident library: search and filter every incident |
+| `/incidents?view=workspace` | The decision workspace: cases by status, decisions waiting for a person |
 | `/incidents/orders` | All 100 orders; open an investigation on one of the six ferry orders |
 | `/incidents/<id>` | One case: evidence with sources, agent activity, proposal, approve / apply |
 | `/driver` | Driver Support on a phone: report a problem, answer the agent |
