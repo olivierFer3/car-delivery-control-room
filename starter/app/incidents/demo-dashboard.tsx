@@ -9,6 +9,7 @@ import { createDemoIncident } from "./actions"
 import { LiveAgentLauncher } from "./live-agent-controls"
 import { OperatorAccess } from "./operator-access"
 import { DriverLink } from "./driver-link"
+import { orderRef } from "@/lib/present/ref"
 import { StatusBadge, incidentStatus, paused, responsible } from "./status"
 import type { OperationalOrder } from "@/lib/incidents/operational"
 import styles from "./incidents.module.css"
@@ -63,7 +64,7 @@ export default function IncidentsPage() {
   ]
   const unchecked = orders?.filter(o => o.checkStatus === "Not checked").length
   const renderGroup = (group: (typeof groups)[number]) => <section key={group.id} id={group.id} aria-labelledby={`${group.id}-title`} className={styles.section}><div className={styles.sectionHead}><h2 id={`${group.id}-title`}>{group.title} <span className={styles.count}>{group.rows.length}</span></h2><p>{group.note}</p></div>
-      {group.rows.length === 0 ? <p className={styles.empty}>Nothing in this queue.</p> : <ul className={`${styles.cards} ${styles.rows}`}>{group.rows.map(i => <li key={i.id}><Link className={styles.card} href={`/incidents/${i.id}`}><div className={styles.cardTop}><span className={styles.reference}>{i.orderId === "ord-00603" ? "CD-420603" : i.orderId}</span><StatusBadge status={incidentStatus(i)} /></div><p className={styles.source}>{human(i) ? "Unsupported case · human handling" : i.driverReport ? `Driver report from ${i.driverReport.driverName} · real Groq agent · simulated services` : i.mode === "llm" ? "Real model investigation · simulated services" : "Preserved scripted demo"}</p><h3>{i.summary}</h3><p>{i.nextStep}</p><p className={styles.who}><strong>Next:</strong> {responsible(i)}</p><span className={styles.open}>Open incident →</span></Link></li>)}</ul>}
+      {group.rows.length === 0 ? <p className={styles.empty}>Nothing in this queue.</p> : <ul className={`${styles.cards} ${styles.rows}`}>{group.rows.map(i => <li key={i.id}><Link className={styles.card} href={`/incidents/${i.id}`}><div className={styles.cardTop}><span className={styles.reference}>{orderRef(i.orderId)}</span><StatusBadge status={incidentStatus(i)} /></div><p className={styles.source}>{human(i) ? "Unsupported case · human handling" : i.driverReport ? `Driver report from ${i.driverReport.driverName} · real Groq agent · simulated services` : i.mode === "llm" ? "Real model investigation · simulated services" : "Preserved scripted demo"}</p><h3>{i.summary}</h3><p>{i.nextStep}</p><p className={styles.who}><strong>Next:</strong> {responsible(i)}</p><span className={styles.open}>Open incident →</span></Link></li>)}</ul>}
     </section>
   return <AppFrame section="incidents" snapshotAt={SIMULATION_TIME}><main className={styles.page}>
     <header className={styles.hero}><div><p className={styles.eyebrow}>Control room · fictional simulation</p><h1>Operations workspace</h1><p>What needs you now, what the agent is doing, and what is still unchecked. No real messages, bookings or payments are made.</p></div><div className={styles.heroTools}><OperatorAccess /><Link className={styles.secondary} href="/incidents/orders">All {orders?.length ?? 100} orders →</Link></div></header>

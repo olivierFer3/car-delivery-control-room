@@ -116,3 +116,23 @@ Actual validation: 15 unit/contract tests, TypeScript, production build, and a r
 - Reviewed lifecycle races: cancelling during permission/connection must never submit; persistence failure closes capture; ended captures must survive reload instead of being cancelled on unmount; incident-keyed mounting prevents reusing another incident's capture. Tests cover permission, cancellation, interruption, restoration and confirmation.
 - Initial browser harness failures included a private APIRequest read without its bearer token, a button inside a collapsed history section, and an overly exact select-label match. Corrected those test locators/authentication and reran only the failing browser check. No legitimate assertion, approval gate or test was removed. The final browser uses real SDK/audio setup but fake microphone and an intercepted local WebSocket, with cookie-authenticated saves/confirmation and a business-model double.
 - Final: six client tests, real isolated-DB integration with no skips, 35 regressions, typecheck/build and the full mocked browser flow passed. All live evidence remains explicitly unverified. Existing dependency findings/attachment tracing warning were not hidden. Original runner stays stopped with six runs/30 requests and all counters unchanged.
+
+## 2026-10-25 Driver Support, telephony and interface passes (Claude Code)
+
+User prompts, in order: restyle the control room (three redesigns, rejected twice: first too dark and generic, then too Deutsche Bahn; third follows bahnexpress.com); build a mobile Driver Support page with a real Groq investigation; add real phone calls with ElevenLabs and Twilio, never calling anyone but the owner's test number and never without explicit approval.
+
+What was checked, not assumed:
+- Real Groq end-to-end run twice through the HTTP API in test mode (report, agent steps, question, simulated call, transcript read, proposal, operator approve, apply, driver status). Groq's 8,000 tokens per minute limit caused many HTTP 429 answers; added automatic retries and a calmer display.
+- The first real run exposed two agent faults: it chose `ask_driver` before reading the order, and it built proposals with incomplete evidence ids. Fixed with a clearer prompt and by requiring the live external check before a proposal for a driver report. A fix was only kept after a second real run.
+- Credentials were inspected without printing them. ElevenLabs was valid on a free plan; `ELEVENLABS_AGENT_ID` held a pasted URL tail; Twilio credentials were incomplete (no account SID, no number). So no real call was placed and none is claimed. Direct Twilio mode is covered by mocked-network tests only.
+
+Mistakes and corrections:
+- Ran a bare `git stash` in the shared checkout; restored by SHA within seconds, no work lost. Afterwards used a separate worktree for development.
+- A first public tunnel attempt was refused by the permission system and was not retried.
+- Early builds ran in the checkout where the owner's `next dev` was running; moved to a separate worktree.
+- Operator pages showed internal ids (`ord-00439`), raw provider errors and a developer-style tools panel, against the brief's "not a developer tool". Fixed: references now read `CD-420439`, provider and lease messages become one calm sentence, the tools panel is collapsed and renamed.
+- `starter/AGENTS.md` asks to read the Next.js docs first; this was not done. The code follows existing route patterns and the production build passes.
+
+Rejected: letting the browser choose a phone number; auto-applying a model's reading of a call without showing it (kept visible to the operator, who still approves the proposal); a public tunnel opened by the agent.
+
+Known limits: a model reads call transcripts into ETA and safety (shown with the transcript); real phone calls and live public data go beyond the brief's fixed snapshot and are off or labelled by default; the fresh-clone run was not repeated after these additions.
