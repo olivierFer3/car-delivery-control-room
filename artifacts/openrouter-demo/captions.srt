@@ -1,0 +1,24 @@
+1
+00:00:00,000 --> 00:00:12,000
+BAHN · Démo du véritable agent du dépôt
+Page locale d’évaluation · Mode OpenRouter
+
+2
+00:00:12,000 --> 00:00:42,000
+Vrais appels à openai/gpt-oss-120b via OpenRouter
+Cas fictifs · Chauffeurs et sites simulés · Aucune réservation réelle
+
+3
+00:00:42,000 --> 00:01:10,000
+3 cas terminés · 5 appels OpenRouter · Aucune erreur API
+3 décisions conformes aux attentes sur ce petit échantillon
+
+4
+00:01:10,000 --> 00:01:25,000
+Les décisions et appels d’outils sont consultables dans la page
+Coût enregistré : 0,000455 USD · Juge LLM désactivé
+
+5
+00:01:25,000 --> 00:01:36,080
+Rapport HTML conservé · Vérification du rendu mobile
+Capture du vrai navigateur, sans réponses préenregistrées
