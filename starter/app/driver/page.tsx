@@ -6,7 +6,7 @@ import styles from "./driver.module.css"
 type Order = { id: string; reference: string; vehicle: string; plate: string | null; route: string; driverName: string; ferry: { checkInCutoffAt: string; departureAt: string; from: string | null; to: string | null } | null; openIncidentId: string | null }
 type Step = { id: string; at: string; label: string; origin: "real" | "simulated" | "dataset" | "driver" | "agent"; status: "done" | "error" | "running"; summary: string; findings?: { text: string; severity: string }[] }
 type Msg = { id: string; role: "driver" | "agent" | "operator" | "system"; text: string; at: string; via: "text" | "voice" | "system"; callId?: string }
-type Call = { id: string; mode: "live" | "test"; status: string; toMasked: string; failure?: string; extracted?: { applied: boolean; summary: string } }
+type Call = { id: string; mode: "live" | "test"; status: string; twilioStatus?: string; toMasked: string; failure?: string; extracted?: { applied: boolean; summary: string } }
 type View = { id: string; reference: string; vehicle: string; driverName: string; report: string; state: string; phase: string; headline: string; detail: string; question: string | null; working: boolean; steps: Step[]; thread: Msg[]; calls: Call[]; phone: { mode: "live" | "test"; toMasked: string | null; canCall: boolean; calling: boolean }; serverTime: string }
 type Status = { simulationTime: string; agent: { provider: string; model: string } | null; phone: { mode: "live" | "test"; toMasked: string | null; missing: string[] } }
 
@@ -120,7 +120,7 @@ export default function DriverSupport() {
         <p className={styles.kicker}>The agent asks</p>
         <p className={styles.question}>{view.question}</p>
         {activeCall ? <div className={styles.callbox}>
-          <p><span className={styles.badge} data-kind={activeCall.mode}>{activeCall.mode === "live" ? "LIVE PHONE CALL" : "SIMULATED CALL"}</span> {activeCall.mode === "live" ? (activeCall.status === "ringing" ? `Your phone (${activeCall.toMasked}) is ringing. Answer it to talk to the voice agent.` : activeCall.status === "processing" ? "Call ended. Reading what you said…" : "You are on the call. Speak with the voice agent.") : "No phone network is used. Type what you would say."}</p>
+          <p><span className={styles.badge} data-kind={activeCall.mode}>{activeCall.mode === "live" ? "LIVE PHONE CALL" : "SIMULATED CALL"}</span> {activeCall.mode === "live" ? (activeCall.status === "ringing" ? `Your phone (${activeCall.toMasked}) is ringing. Answer it to talk to the voice agent.` : activeCall.status === "processing" ? "Call ended. Reading what you said…" : "You are on the call. Speak with the voice agent.") : "No phone network is used. Type what you would say."}{activeCall.mode === "live" && activeCall.twilioStatus ? <span className={styles.muted}> Phone network status: {activeCall.twilioStatus}.</span> : null}</p>
           {activeCall.mode === "test" && activeCall.status === "in_progress" && <>
             <label className={styles.field}>You say<textarea rows={2} value={say} maxLength={600} onChange={e => setSay(e.target.value)} placeholder="It will take me about 5 hours. I am safe. The truck is waiting for a tow." /></label>
             <div className={styles.row}><button className={styles.secondary} disabled={!say.trim() || !!busy} onClick={() => testCall(activeCall, "say")}>Say it</button><button className={styles.primary} disabled={!!busy} onClick={() => testCall(activeCall, "end")}>End call and send</button></div>

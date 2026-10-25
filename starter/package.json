@@ -23,7 +23,9 @@
     "verify:iteration2": "node --import tsx scripts/verify-iteration2.ts",
     "smoke:iteration2": "node scripts/smoke-iteration2.mjs",
     "test:external": "node --import tsx scripts/tests/external.test.ts",
-    "test:driver-phone": "node --import tsx scripts/tests/driver-phone.test.ts"
+    "test:driver-phone": "node --import tsx scripts/tests/driver-phone.test.ts",
+    "telephony:check": "node --import tsx scripts/telephony-check.ts",
+    "telephony:agent": "node --import tsx scripts/elevenlabs-agent-setup.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1155.0",

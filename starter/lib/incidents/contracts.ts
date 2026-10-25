@@ -15,10 +15,12 @@ export type DriverReport = { text: string; reportedAt: string; driverName: strin
 export type DriverMessage = { id: string; role: "driver" | "agent" | "operator" | "system"; text: string; at: string; via: "text" | "voice" | "system"; callId?: string }
 /** A phone conversation about one incident. `live` means a real call through the telephone network; `test` never leaves this server. */
 export type CallSession = {
-  id: string; mode: "live" | "test"; provider: "elevenlabs-twilio" | "test-mode"
+  id: string; mode: "live" | "test"; provider: "elevenlabs-twilio" | "twilio-direct" | "test-mode"
   status: "requested" | "ringing" | "in_progress" | "processing" | "completed" | "failed"
   toMasked: string; requestedAt: string; startedAt?: string; endedAt?: string
   conversationId?: string; callSid?: string; failure?: string
+  /** Twilio's own view of the call (direct mode): queued, ringing, in-progress, completed, busy, no-answer, failed. */
+  twilioStatus?: string; durationSecs?: number; price?: string
   transcript: { role: "agent" | "driver"; text: string; t?: number }[]
   extracted?: { minutesToTerminal: number | null; safe: boolean | null; blockers: string[]; summary: string; applied: boolean; note: string }
 }

@@ -44,6 +44,19 @@ ElevenLabs capabilities used (from ElevenLabs documentation, October 2026):
 * One test call of 2 minutes should cost well under USD 1 in total.
 * Groq usage per investigation: about 8 to 10 short model calls plus one transcript read; this stays within the free tier but is rate-limited (8,000 tokens per minute).
 
+## Two ways to place the call (both use the same ElevenLabs voice agent)
+
+| | `twilio-direct` (preferred, implemented) | `elevenlabs-twilio` (native) |
+| --- | --- | --- |
+| Who places the call | this server, with the Twilio API (the connecting TwiML comes from ElevenLabs `register-call`) | ElevenLabs, through a Twilio number imported into ElevenLabs |
+| Settings | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` (or `TWILIO_API_KEY_SID` + `TWILIO_API_KEY` secret), `TWILIO_PHONE_NUMBER` | `ELEVENLABS_PHONE_NUMBER_ID` (import the number in the ElevenLabs dashboard) |
+| What you see | Twilio's own call status, duration and price on the Driver Support page and in the Control Room, plus the voice agent's transcript | the voice agent's conversation only |
+| Hard cost cap | Twilio `TimeLimit` = `TELEPHONY_MAX_CALL_SECONDS` (default 150 s, max 300 s) | the agent's maximum call length |
+
+Both need `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID` (just `agent_...`, nothing after it), `DRIVER_TEST_PHONE` and `TELEPHONY_LIVE_ENABLED=true`. If Twilio credentials are complete the direct mode is used; `TELEPHONY_PROVIDER=elevenlabs-twilio` forces the native one.
+
+Check everything without placing a call or exposing a secret: `cd starter && npm run telephony:check`. It reads the ElevenLabs agent and plan, the Twilio account type, whether your Twilio number exists and has voice, whether the destination is a verified caller ID (trial accounts), the exact per-minute price to the destination, and the balance. `npm run telephony:agent` shows (dry run) and, with `-- --apply`, applies the agent settings from `AGENT-PROMPT.md` (call variables in the first message, clean prompt, 120 s cap).
+
 ## What you need to configure (one time)
 
 1. Twilio: create an account, buy or verify one number, note Account SID and Auth Token (or an API key). For a trial account, verify your own mobile number in Twilio first.
