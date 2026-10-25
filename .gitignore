@@ -18,3 +18,9 @@ gemini_api_key.txt
 
 # Isolated validation runtime: credentials, SQLite state, logs, locks.
 .overnight/
+
+# Daily model usage counter (local)
+agent/.usage.json
+
+# OpenRouter API key, kept out of git
+openrouter_api_key.txt

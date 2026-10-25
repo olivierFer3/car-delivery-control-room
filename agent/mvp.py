@@ -10,6 +10,8 @@ Usage:
     python3 agent/mvp.py CD-420322 --auto            # no prompt, decision skipped
 """
 
+import email.message
+import io
 import json
 import os
 import re
@@ -243,7 +245,10 @@ def api_request(base, key, path, body=None):
         "Authorization": f"Bearer {key}", "Content-Type": "application/json", "User-Agent": "bahn-control-room-mvp/0.1",
     })
     with urllib.request.urlopen(request, timeout=60) as response:
-        return json.load(response)
+        payload = json.load(response)
+        if isinstance(payload, dict):  # Groq reports the day's remaining requests in these headers
+            payload["_ratelimit"] = {k: v for k, v in response.headers.items() if k.lower().startswith("x-ratelimit")}
+        return payload
 
 
 # ---------------------------------------------------------------- Gemini (helpers only)
@@ -342,11 +347,43 @@ RATE_LIMITS = {
     GEMINI_PREFIX + "gemma-4-26b-a4b-it": (30, 16_000), GEMINI_PREFIX + "gemini-3-flash-preview": (5, 250_000),
     GEMINI_PREFIX + "gemini-3.5-flash": (5, 250_000), GEMINI_PREFIX + "gemini-3.6-flash": (5, 250_000),
 }
-SAFETY = 0.9  # use every request per minute, but only 90 % of the tokens (token counts are estimates)
+SAFETY = 0.9  # use 90 % of the tokens per minute (token counts are estimates)
+RPM_SAFETY = 0.8  # and 80 % of the requests per minute: Google refused bursts at 100 %
 _window = {}  # model -> [(time, tokens)] over the last 60 s
 
 # Fast mode: the agent runs on the two Gemini Flash Lite models (15 requests per minute each, 250k tokens),
 # which lets 77 cases finish in minutes; helpers use Groq gpt-oss-20b and Gemma, so the agent keeps its quota.
+# OpenRouter (OpenAI-compatible). Free ":free" models allow 20 requests per minute and 50 a day (1,000 a day
+# after buying 10 dollars of credits); paid models follow the account's credits.
+OPENROUTER_API = "https://openrouter.ai/api/v1"
+OPENROUTER_KEY_FILE = ROOT / "openrouter_api_key.txt"
+OPENROUTER_PREFIX = "openrouter:"
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "openai/gpt-oss-120b")
+# ":free" models: 50 requests a day (1,000 after 10 dollars of credits). Paid models are bound by credits only,
+# so the evaluation gets its own dollar cap and leaves the rest of the credit for the demo.
+OPENROUTER_DAILY = (int(os.environ.get("OPENROUTER_DAILY_REQUESTS", "50")), None)
+OPENROUTER_BUDGET_USD = float(os.environ.get("OPENROUTER_BUDGET_USD", "5"))
+OPENROUTER_MAX_TOKENS = 2_000  # cap on each agent answer, so one call can never cost much
+OPENROUTER_PRICES = {}  # model id -> (dollars per input token, per output token), from the /models list
+
+
+def openrouter_spent_today():
+    return sum(v.get("cost", 0.0) for m, v in usage_today().items() if m.startswith(OPENROUTER_PREFIX))
+
+
+def openrouter_account():
+    """Credit used and limit of the key, from OpenRouter (no model call, nothing billed)."""
+    data = api_request(OPENROUTER_API, openrouter_key(), "key").get("data", {})
+    return {"usage_usd": data.get("usage"), "limit_usd": data.get("limit"), "limit_remaining_usd": data.get("limit_remaining"),
+            "free_tier": data.get("is_free_tier")}
+
+
+def openrouter_key():
+    if OPENROUTER_KEY_FILE.exists():
+        return OPENROUTER_KEY_FILE.read_text().strip()
+    return os.environ.get("OPENROUTER_API_KEY", "").strip()
+
+
 FAST_AGENT = [GEMINI_PREFIX + "gemini-3.1-flash-lite", GEMINI_PREFIX + "gemini-3.5-flash-lite"]
 FAST_HELPERS = ["openai/gpt-oss-20b", GEMINI_PREFIX + "gemma-4-26b-a4b-it"]
 
@@ -357,6 +394,30 @@ def configure(mode="groq"):
     groq: agent on Groq gpt-oss-120b; helpers on the Gemini pool when a Gemini key is set, else gpt-oss-20b.
     fast: agent on the Gemini Flash Lite models; helpers on gpt-oss-20b, then Gemma, then other Gemini models."""
     global MODEL, POOL, HELPER_POOL
+    if mode == "openrouter":
+        if not openrouter_key():
+            raise SystemExit("OpenRouter mode needs a key in openrouter_api_key.txt.")
+        rows = api_request(OPENROUTER_API, openrouter_key(), "models").get("data", [])
+        listed = {row["id"] for row in rows}
+        for row in rows:
+            price = row.get("pricing") or {}
+            try:
+                OPENROUTER_PRICES[row["id"]] = (float(price.get("prompt", 0)), float(price.get("completion", 0)))
+            except (TypeError, ValueError):
+                pass
+        if OPENROUTER_MODEL not in listed:
+            raise SystemExit(f"OpenRouter does not list {OPENROUTER_MODEL!r}; set OPENROUTER_MODEL.")
+        POOL = [OPENROUTER_PREFIX + OPENROUTER_MODEL]
+        MODEL = POOL[0]
+        RATE_LIMITS.setdefault(MODEL, (20, 1_000_000))
+        if gemini_key():
+            gemini_model()
+        try:
+            groq = set(available_models())
+        except SystemExit:
+            groq = set()
+        HELPER_POOL = [name for name in FAST_HELPERS if name in groq or name in GEMINI_POOL] + [n for n in GEMINI_POOL if n not in FAST_HELPERS]
+        return HELPER_POOL[0] if HELPER_POOL else MODEL
     if mode == "fast":
         if not gemini_key():
             raise SystemExit("Fast mode needs a Gemini key in gemini_api_key.txt.")
@@ -383,12 +444,77 @@ def _reserve(model, tokens):
     rpm, tpm = RATE_LIMITS.get(model, (60, 1_000_000))
     now = time.monotonic()
     window = [(t, n) for t, n in _window.get(model, []) if now - t < 60]
-    if len(window) < rpm and sum(n for _, n in window) + tokens <= tpm * SAFETY:
+    if len(window) < max(1, int(rpm * RPM_SAFETY)) and sum(n for _, n in window) + tokens <= tpm * SAFETY:
         window.append((now, tokens))
         _window[model] = window
         return 0.0
     _window[model] = window
     return max(0.2, 60 - (now - window[0][0])) if window else 0.2
+
+
+# ---------------------------------------------------------------- daily budget
+# Free-tier requests and tokens per day (Groq console, Google AI Studio, OpenRouter docs; 2026-10-25). A model
+# stops being used at DAILY_SAFETY of its limit, so a run never pushes an account over its daily quota.
+# The counter is kept per day on disk; Google renews at midnight Pacific time, and the same day is used for all.
+DAILY_LIMITS = {
+    "openai/gpt-oss-120b": (1_000, 200_000), "openai/gpt-oss-20b": (1_000, 200_000),
+    GEMINI_PREFIX + "gemini-3.1-flash-lite": (500, None), GEMINI_PREFIX + "gemini-3.5-flash-lite": (500, None),
+    GEMINI_PREFIX + "gemma-4-26b-a4b-it": (14_400, None), GEMINI_PREFIX + "gemini-3-flash-preview": (20, None),
+    GEMINI_PREFIX + "gemini-3.5-flash": (20, None), GEMINI_PREFIX + "gemini-3.6-flash": (20, None),
+}
+DAILY_SAFETY = 0.95
+USAGE_FILE = Path(__file__).resolve().parent / ".usage.json"
+_usage_lock = threading.Lock()
+
+
+def quota_day():
+    return datetime.now(ZoneInfo("America/Los_Angeles")).date().isoformat()
+
+
+def usage_today():
+    """{model: {"requests": n, "tokens": n}} for the current quota day."""
+    try:
+        data = json.loads(USAGE_FILE.read_text())
+    except (OSError, ValueError):
+        data = {}
+    return data.get(quota_day(), {})
+
+
+def record_usage(model, tokens, headers=None, cost=0.0):
+    with _usage_lock:
+        try:
+            data = json.loads(USAGE_FILE.read_text())
+        except (OSError, ValueError):
+            data = {}
+        day = {key: value for key, value in data.items() if key >= quota_day()}  # keep today only
+        today = day.setdefault(quota_day(), {})
+        entry = today.setdefault(model, {"requests": 0, "tokens": 0})
+        entry["requests"] += 1
+        entry["tokens"] += int(tokens or 0)
+        if cost:
+            entry["cost"] = round(entry.get("cost", 0.0) + float(cost), 6)
+        headers = {k.lower(): v for k, v in (headers or {}).items()}
+        try:  # trust the provider's own count of today's requests when it gives one (Groq does)
+            limit, left = int(headers["x-ratelimit-limit-requests"]), int(headers["x-ratelimit-remaining-requests"])
+            entry["requests"] = max(entry["requests"], limit - left)
+        except (KeyError, ValueError):
+            pass
+        USAGE_FILE.write_text(json.dumps(day, indent=1))
+
+
+def daily_room(model):
+    """Requests this model may still take today under DAILY_SAFETY (None when no daily limit is known)."""
+    if model.startswith(OPENROUTER_PREFIX) and not model.endswith(":free"):
+        return None if openrouter_spent_today() < OPENROUTER_BUDGET_USD else 0  # credit-bound: dollar cap only
+    limits = DAILY_LIMITS.get(model) or (OPENROUTER_DAILY if model.startswith(OPENROUTER_PREFIX) else None)
+    if not limits:
+        return None
+    used = usage_today().get(model, {})
+    requests, tokens = limits
+    room = int(requests * DAILY_SAFETY) - used.get("requests", 0)
+    if tokens:
+        room = min(room, int((tokens * DAILY_SAFETY - used.get("tokens", 0)) // 2_500))  # ~2,500 tokens a call
+    return max(0, room)
 
 
 def next_model(wanted, tokens=0):
@@ -400,9 +526,9 @@ def next_model(wanted, tokens=0):
         order = [wanted] + [name for name in HELPER_POOL if name != wanted] + [name for name in POOL if name != wanted]
     with _cooldown_lock:
         now = time.monotonic()
-        usable = [name for name in order if COOLDOWN.get(name, 0) != float("inf")]
+        usable = [name for name in order if COOLDOWN.get(name, 0) != float("inf") and daily_room(name) != 0]
         if not usable:
-            raise SystemExit("Every model hit its daily limit; try tomorrow.")
+            raise SystemExit("Every model hit its daily limit (or the daily budget guard); try tomorrow.")
         waits = []
         for name in usable:
             if COOLDOWN.get(name, 0) > now:
@@ -452,7 +578,14 @@ def chat(messages, tools=None, model=None, **options):
             body.pop("reasoning_effort", None)
         started = time.perf_counter()
         try:
-            if body["model"].startswith(GEMINI_PREFIX):
+            if body["model"].startswith(OPENROUTER_PREFIX):
+                sent = {**body, "model": body["model"][len(OPENROUTER_PREFIX):], "usage": {"include": True}}  # usage.cost in dollars
+                sent["max_tokens"] = min(int(sent.pop("max_completion_tokens", OPENROUTER_MAX_TOKENS)), OPENROUTER_MAX_TOKENS)
+                payload = api_request(OPENROUTER_API, openrouter_key(), "chat/completions", sent)
+                if "choices" not in payload:  # OpenRouter can return an error object with HTTP 200
+                    raise urllib.error.HTTPError("openrouter", int((payload.get("error") or {}).get("code") or 502), "x",
+                                                 email.message.Message(), io.BytesIO(json.dumps(payload).encode()))
+            elif body["model"].startswith(GEMINI_PREFIX):
                 sent = {**body, "model": body["model"][len(GEMINI_PREFIX):]}
                 if "max_completion_tokens" in sent:
                     sent["max_tokens"] = sent.pop("max_completion_tokens")
@@ -465,6 +598,8 @@ def chat(messages, tools=None, model=None, **options):
             else:
                 payload = groq_request("chat/completions", body)
             usage = payload.get("usage", {})
+            record_usage(body["model"], (usage.get("prompt_tokens") or 0) + (usage.get("completion_tokens") or 0) or tokens,
+                         payload.get("_ratelimit"), usage.get("cost") or 0.0)
             return payload["choices"][0]["message"], {
                 "seconds": round(time.perf_counter() - started, 2), "model": body["model"],
                 "tokens_in": usage.get("prompt_tokens"), "tokens_out": usage.get("completion_tokens"),
@@ -481,6 +616,10 @@ def chat(messages, tools=None, model=None, **options):
                 pause = float("inf") if daily else float(error.headers.get("retry-after") or (said and said.group(1)) or 5) + 0.5
                 cool_down(body["model"], pause)
                 print(f"  · {body['model']} {'daily limit reached, dropped' if daily else f'rate limited for {pause:.0f}s'}, switching model")
+                if not daily:
+                    attempt -= 1  # a per-minute refusal is a wait, not a failed attempt; the deadline still bounds it
+                    if time.monotonic() > deadline:
+                        raise SystemExit("Still rate limited after 10 minutes.")
                 continue
             # A malformed tool call from the model (Groq tool_use_failed, or "Tool call validation failed"):
             # the same model often repeats it, so rest it briefly and let the next one answer.
