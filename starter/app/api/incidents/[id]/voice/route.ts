@@ -5,7 +5,7 @@ import {WorkflowError} from '@/lib/incidents/engine'
 import {voiceConfigured,requireVoiceConfig,signedVoiceSession} from '@/lib/incidents/voice-provider'
 import {listVoiceSessions,reserveVoiceSession,saveVoiceSession,confirmVoiceReply,failReservedSession} from '@/lib/incidents/voice-store'
 export const runtime='nodejs'
-function allowed(r:Request){const origin=r.headers.get('origin');if(origin&&origin!==new URL(r.url).origin)return false;const cookie=r.headers.get('cookie')?.split(';').map(s=>s.trim()).find(s=>s.startsWith(OPERATOR_COOKIE+'='))?.slice(OPERATOR_COOKIE.length+1);return authorize(r)||validSession(cookie,process.env.INCIDENT_OPERATOR_TOKEN)}
+function allowed(r:Request){const origin=r.headers.get('origin');if(origin){const incoming=new URL(r.url),host=r.headers.get('host')??incoming.host,protocol=r.headers.get('x-forwarded-proto')??incoming.protocol.replace(':','');if(origin!==`${protocol}://${host}`)return false;}const cookie=r.headers.get('cookie')?.split(';').map(s=>s.trim()).find(s=>s.startsWith(OPERATOR_COOKIE+'='))?.slice(OPERATOR_COOKIE.length+1);return authorize(r)||validSession(cookie,process.env.INCIDENT_OPERATOR_TOKEN)}
 const json=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'Cache-Control':'no-store'}})
 export async function GET(r:Request,{params}:{params:Promise<{id:string}>}){if(!allowed(r))return json({error:'Unlock operator access to use voice'},401);try{return json({available:voiceConfigured(),maxSeconds:120,sessions:await listVoiceSessions((await params).id)})}catch{return json({error:'Voice history unavailable; text reply remains available'},503)}}
 export async function POST(r:Request,{params}:{params:Promise<{id:string}>}){
