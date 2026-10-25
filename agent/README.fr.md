@@ -7,12 +7,13 @@ ne servent pas pour cette partie.
 
 ## Clés
 
-Chaque clé seule sur une ligne, dans un fichier à la racine du dépôt (les deux sont ignorés par git) :
+Chaque clé seule sur une ligne, dans un fichier à la racine du dépôt (les trois sont ignorés par git) :
 
 - `groq_api_key.txt` : clé Groq (gratuite sur console.groq.com). Sert à l'agent en mode `groq`.
 - `gemini_api_key.txt` : clé Gemini (Google AI Studio). Sert à l'agent en mode `fast` et aux aides.
   Une clé d'un projet Google sans facturation reste sur le niveau gratuit : au-delà du quota, les appels
   sont refusés, jamais facturés. Vérifier le niveau dans Google AI Studio, page « API keys ».
+- `openrouter_api_key.txt` : clé OpenRouter. Sert uniquement à l'agent en mode `openrouter` (voir plus bas).
 
 ## L'agent
 
@@ -27,12 +28,17 @@ façons : **seul** (aucune personne nécessaire), **une personne décide** (une 
 **personne uniquement** (client nécessaire, urgence). Il ne réserve, ne paie, ne change une promesse et ne
 contacte jamais le client : les outils existent mais sont bloqués, et chaque appel compte comme une faute.
 
+Chaque appel de l'agent reçoit les consignes et un **guide de tri** (quand finir seul, quand préparer une
+décision, quand seule une personne peut agir). `--context full` ajoute le guide des opérations de Bahn.
+
 **Filet de sécurité.** Des règles fixes écrites à la main, appliquées après la conclusion de l'agent. Elles
-lisent le cas et la conclusion de l'agent (jamais une étiquette de test) et ne peuvent que faire remonter un
-cas vers une personne : amendes, réclamations, consignes contradictoires du client, sécurité, voiture qui
-ne doit pas rouler, conclusion qui réserve ou paie quelque chose, ou confiance de l'agent inférieure à
-« high ». Réglées sur les 31 cas écrits à la main ; sur les 3 850 cas synthétiques, elles ne font jamais
-remonter un cas que l'agent doit régler seul.
+lisent ce que dit le cas et ce que les personnes ont répondu (jamais une étiquette de test, jamais la
+formulation de l'agent) et ne peuvent que faire remonter un cas vers une personne : amendes, réclamations,
+consignes contradictoires du client, sécurité, voiture qui ne doit pas rouler, ou confiance de l'agent
+inférieure à « high ». Un appel d'outil interdit, bloqué, compte comme une faute mais ne fait pas remonter
+le cas à lui seul. Réglées sur les cas écrits à la main et le lot A ; testées sans appel au modèle sur les
+3 850 cas synthétiques, elles ne font jamais remonter un cas que l'agent doit régler seul (les vraies
+conclusions de l'agent sur de nouveaux cas peuvent différer).
 
 ## Cas de test
 
@@ -48,8 +54,10 @@ Les deux mesures principales, à minimiser, surtout la première :
 2. **Envoyé à une personne à tort** : quelqu'un dérangé pour un cas que l'agent devait régler (taux sur les
    cas que l'agent devait régler). Un coût.
 
-Un score combiné compte la première 3 fois (`--weight`). Les deux sont donnés pour l'agent seul et après
-le filet de sécurité, sur le même passage.
+Les autres échecs (confusion entre « une personne décide » et « personne uniquement », outil interdit
+appelé, interdit violé selon le juge) comptent une fois, comme la deuxième erreur, et ne sont pas comptés
+deux fois quand le cas est déjà une erreur de tri. Score combiné = (1ʳᵉ × 3 + 2ᵉ + autres échecs) / cas
+(`--weight`). Les deux erreurs de tri sont données pour l'agent seul et après le filet, sur le même passage.
 
 ### Page en direct (recommandée)
 
@@ -75,7 +83,7 @@ python3 agent/evaluate.py --file synthetic --per-type 1 --split B --mode fast
 python3 agent/evaluate.py --rescore agent/eval_results/<passage>   # recalcule un ancien passage, sans API
 ```
 
-Options : `--mode fast|groq`, `--split A|B|C`, `--context lean|full`, `--judge`, `--workers N`,
+Options : `--mode fast|groq|openrouter`, `--split A|B|C`, `--context lean|full`, `--judge`, `--workers N`,
 `--weight W`, `--lang en|fr`. Chaque passage écrit `results.jsonl`, `summary.json` et `report.html` dans
 `agent/eval_results/<passage>/`.
 
@@ -97,3 +105,27 @@ Moins de tokens par cas : le cas et ses messages arrivent dans le premier messag
 `gpt-oss` est réglé sur « low », les réponses des aides sont plafonnées, et le contexte allégé est le défaut
 (`--context full` ajoute un guide de tri et le guide des opérations de Bahn, ~2 000 tokens de plus par
 appel). Les règles apprises et le guide ne contiennent aucun cas de test ni aucune réponse attendue.
+
+### Garde de quota journalier
+
+Un compteur dans `agent/.usage.json` (ignoré par git) note les requêtes et les tokens par modèle pour le jour
+de quota (minuit heure du Pacifique, quand Google renouvelle), recalé sur les en-têtes `x-ratelimit` de Groq
+quand ils existent. Un modèle à 95 % de sa limite journalière n'est plus utilisé. Avant un passage, la page
+estime les requêtes nécessaires (environ 2,8 appels de l'agent et 0,8 appel des aides par cas, mesurés le
+25/10/2026) et refuse de lancer si le quota restant ne suffit pas. Les limites de `mvp.DAILY_LIMITS` sont les
+chiffres gratuits lus dans la console Groq et Google AI Studio le 25/10/2026 ; les vérifier s'ils changent.
+
+### OpenRouter et contrôle des coûts
+
+En mode `openrouter`, seuls les appels de l'agent passent par OpenRouter ; personnes simulées, recherche et
+écriture des règles restent sur des modèles gratuits. Chaque appel OpenRouter demande son coût facturé
+(`usage.include`) et plafonne la réponse à 2 000 tokens. Les évaluations s'arrêtent à `OPENROUTER_BUDGET_USD`
+(5 dollars par défaut) dépensés dans la journée, pour garder le reste du crédit ; la page affiche la dépense
+du jour et le crédit de la clé (`/api/v1/key`, sans appel de modèle). Avant un passage, la page l'estime à
+partir du prix du modèle et d'environ 7 500 tokens en entrée et 400 en sortie par cas, et refuse au-delà.
+
+**Ce qui est vérifié :** les contrôles de coût (agent seul sur OpenRouter, réponse plafonnée, coût enregistré,
+plafond en dollars qui refuse avant l'envoi, estimation, affichage du crédit) ont été testés avec un faux
+serveur OpenRouter ; aucun vrai appel ni aucune facturation OpenRouter n'a encore eu lieu. **Les coûts sont
+des estimations, pas des garanties :** le nombre réel de tokens par cas varie, et les prix sont lus chez
+OpenRouter au moment du passage.
