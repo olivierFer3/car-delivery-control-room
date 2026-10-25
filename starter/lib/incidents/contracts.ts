@@ -9,7 +9,25 @@ export type Decision = { version: number; choice: "approve" | "reject" | "altern
 export type Execution = { version: number; status: "succeeded" | "failed"; at: string; effects: Action[]; reason: string }
 export type DriverReply = { id: string; terminalEta: string; safe: boolean; blockers: string[]; text: string; at: string }
 export type ModelTurn = { id: string; provider: string; model: string; responseId?: string; actualModel?: string; endpoint?: string; purpose: "investigate" | "explain"; at: string; selected?: ToolCall; result?: unknown; error?: string }
+/** A report typed or spoken by the (synthetic) driver on the Driver Support page. Untrusted text. */
+export type DriverReport = { text: string; reportedAt: string; driverName: string; vehicle: string; reference: string; channel: "driver_app" }
+/** One line of the driver conversation. `at` is real wall-clock time; everything else in an incident is simulated time. */
+export type DriverMessage = { id: string; role: "driver" | "agent" | "operator" | "system"; text: string; at: string; via: "text" | "voice" | "system"; callId?: string }
+/** A phone conversation about one incident. `live` means a real call through the telephone network; `test` never leaves this server. */
+export type CallSession = {
+  id: string; mode: "live" | "test"; provider: "elevenlabs-twilio" | "test-mode"
+  status: "requested" | "ringing" | "in_progress" | "processing" | "completed" | "failed"
+  toMasked: string; requestedAt: string; startedAt?: string; endedAt?: string
+  conversationId?: string; callSid?: string; failure?: string
+  transcript: { role: "agent" | "driver"; text: string; t?: number }[]
+  extracted?: { minutesToTerminal: number | null; safe: boolean | null; blockers: string[]; summary: string; applied: boolean; note: string }
+}
 export type Incident = {
+  driverReport?: DriverReport
+  driverMessages?: DriverMessage[]
+  /** Set while the server retries a run that stopped for a temporary reason (model rate limit, time limit). */
+  agentRetry?: { attempt: number; reason: string }
+  calls?: CallSession[]
   /** Operational cases retain the selected source, separate from legacy demo replays. */
   workflow?: "ferry_delay" | "human_review"
   mode?: "llm" | "mock"

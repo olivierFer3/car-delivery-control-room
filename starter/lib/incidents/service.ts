@@ -6,6 +6,7 @@ import { insertIncident, insertOrGetIncident, mutateIncident, saveAgentCheckpoin
 import { orderSignals, sourceTimestamp } from "./operational"
 import { SIMULATION_TIME } from "./contracts"
 import { mockProposal } from "./mock"
+import { syncThread } from "./activity"
 export async function createLiveIncident(scenario: Scenario, provider: "groq" | "gemini") {
   if (!["delay","disproved","no_response","contradiction"].includes(scenario) || !["groq","gemini"].includes(provider)) throw new WorkflowError("Invalid live-agent scenario or provider")
   if (!configuredProviders(provider,false).length) throw new WorkflowError(`Configure ${provider} credentials and an allowed model before starting`)
@@ -44,7 +45,7 @@ export async function commandIncidentService(id: string, command: Command): Prom
       i.activeRun = {id:leaseId,expiresAt:new Date(Date.now()+110_000).toISOString()}
     })
     const providers = configuredProviders(i.preferredProvider,false)
-    const checkpoint = () => saveAgentCheckpoint(i,leaseId)
+    const checkpoint = async () => { syncThread(i); await saveAgentCheckpoint(i,leaseId) }
     try {
       if (command.command === "run") await runAgent(i,toolsData,providers,checkpoint)
       else await explainIncident(i,command.text,providers)
@@ -59,5 +60,6 @@ export async function commandIncidentService(id: string, command: Command): Prom
       case "receive_driver_reply": receiveDriverReply(i,command); break
       default: throw new WorkflowError("Unknown incident command")
     }
+    syncThread(i)
   })
 }

@@ -9,6 +9,7 @@ import { fmtDateTime, fmtMoney } from "@/lib/present/time"
 import { commandIncident } from "../actions"
 import { LiveAgentControls } from "../live-agent-controls"
 import { OperatorAccess } from "../operator-access"
+import { ORIGIN_LABEL, activitySteps } from "@/lib/incidents/activity"
 import { StatusBadge, incidentStatus, paused, responsible } from "../status"
 import styles from "../incidents.module.css"
 
@@ -42,10 +43,13 @@ export default function IncidentPage() {
     return () => controller.abort()
   }, [id, refresh])
   useEffect(()=>{
-    if (incident?.mode !== "llm" || (!busy && !incident.activeRun)) return
-    const timer=setInterval(()=>setRefresh(n=>n+1),2500)
+    if (incident?.mode !== "llm") return
+    // Driver incidents change by themselves (agent steps, calls, replies), so they refresh while the page is open.
+    const live = !!incident.driverReport || !!busy || !!incident.activeRun
+    if (!live) return
+    const timer=setInterval(()=>{ if (!document.hidden) setRefresh(n=>n+1) }, incident.state === "resolved" ? 5000 : 2000)
     return ()=>clearInterval(timer)
-  },[busy,incident?.mode,incident?.activeRun])
+  },[busy,incident?.mode,incident?.activeRun,incident?.driverReport,incident?.state])
   async function act(command: Command, label: string) {
     setBusy(label); setError("")
     try {
@@ -79,15 +83,24 @@ export default function IncidentPage() {
       <div aria-live="polite" className={styles.next}><p className={styles.eyebrow}>What happens next</p><p>{paused(incident) ? `The agent stopped after its last check (${incident.nextStep.toLowerCase()}). Resume the investigation below to let it continue.` : incident.nextStep}</p><p className={styles.who}><strong>Who acts:</strong> {responsible(incident)}</p>{busy && <p role="status">{busy}</p>}
         {canPrepare && <button disabled={!!busy} className={styles.primary} onClick={() => act({ command: "mock_proposal" }, "Preparing mock proposal…")}>{proposal ? "Prepare another mock proposal" : "Prepare mock proposal"}</button>}
       </div>
-      {incident.mode === "llm" && <LiveAgentControls incident={incident} busy={!!busy} act={act} />}
-        <section className={styles.panel}><div className={styles.sectionHead}><h2>Proposed decision {proposal && <span className={styles.count}>Version {proposal.version}</span>}</h2></div>
+        {(proposal || !incident.driverReport) && <section className={styles.panel}><div className={styles.sectionHead}><h2>Proposed decision {proposal && <span className={styles.count}>Version {proposal.version}</span>}</h2></div>
           {!proposal ? <p className={styles.empty}>No proposal yet. Investigate the incident to check whether a change is needed.</p> : <><h3>{proposal.summary}</h3><p className={styles.consequences}>{proposal.consequences}</p>
           {proposal.actions.map((action, index) => <div className={styles.action} key={index}><h3>What would change: the fictional ferry booking</h3><dl className={styles.facts}><div><dt>Booked departure now</dt><dd>{typeof bookedFerry?.row?.departure_at === "string" ? fmtDateTime(bookedFerry.row.departure_at) : "Not in the checked sources"}</dd></div><div><dt>Proposed departure</dt><dd>{fmtDateTime(action.departureAt)}</dd></div><div><dt>Proposed arrival</dt><dd>{fmtDateTime(action.arrivalAt)}</dd></div><div><dt>Quoted cost of the new booking</dt><dd>{fmtMoney(action.costCents, action.currency)}</dd></div></dl><details><summary className={styles.source}>Booking references</summary><dl className={styles.facts}><div><dt>Reservation</dt><dd className={styles.identifier}>{action.reservationId}</dd></div><div><dt>Proposed option</dt><dd className={styles.identifier}>{action.optionId}</dd></div></dl></details><p className={styles.footnote}>Quote only; fictional availability. Approval applies to these actions in version {proposal.version}.</p></div>)}
           {incident.state === "needs_decision" && <div className={styles.review}><label htmlFor="decision-comment">Decision note <span>(optional)</span></label><textarea id="decision-comment" value={comment} maxLength={4000} disabled={!!busy} onChange={event => setComment(event.target.value)} placeholder="Add context for the decision" /><div className={styles.buttons}><button className={styles.primary} disabled={!!busy} onClick={() => decide("approve")}>Approve version {proposal.version}</button><button className={styles.secondary} disabled={!!busy} onClick={() => decide("reject")}>Reject proposal</button><button className={styles.secondary} disabled={!!busy} onClick={() => decide("alternative")}>Request alternative</button></div><p className={styles.footnote}>Approval is saved first. You then explicitly apply the simulated change.</p></div>}
           {incident.state === "approved" && <div className={styles.review}><p>Version {proposal.version} is approved. No change has been applied yet.</p><button className={styles.primary} disabled={!!busy} onClick={() => act({ command: "execute", version: proposal.version }, "Applying simulated change…")}>Apply approved simulated change</button></div>}
           {latestDecision && <p className={styles.decision}>Latest decision: <strong>{latestDecision.choice === "approve" ? "Approved" : latestDecision.choice === "reject" ? "Rejected" : "Alternative requested"}</strong> · version {latestDecision.version} · {latestDecision.operator}{latestDecision.comment ? ` — ${latestDecision.comment}` : ""}</p>}
           </>}
-        </section>
+        </section>}
+        {incident.driverReport && <section className={styles.panel} aria-label="Driver conversation"><div className={styles.sectionHead}><h2>Driver conversation <span className={styles.count}>{incident.driverMessages?.length ?? 0}</span></h2><p>Typed or spoken by {incident.driverReport.driverName} (synthetic driver, live person) on the Driver Support page.</p></div>
+          <ol className={styles.thread}>{(incident.driverMessages ?? []).map(m => { const call = m.callId ? incident.calls?.find(c => c.id === m.callId) : undefined; return <li key={m.id} data-role={m.role}><span className={styles.threadWho}>{m.role === "driver" ? incident.driverReport!.driverName : m.role === "agent" ? "Agent" : m.role === "operator" ? "Operator" : "System"}{m.via === "voice" && <span className={styles.originBadge} data-kind={call?.mode === "live" ? "real" : "simulated"}>{call?.mode === "live" ? "LIVE PHONE CALL" : "SIMULATED CALL"}</span>}{m.via === "text" && <span className={styles.originBadge} data-kind="driver">TYPED</span>}<time>{new Date(m.at).toLocaleTimeString("en-GB")}</time></span><p>{m.text}</p></li> })}</ol>
+          {incident.calls?.map(c => <p key={c.id} className={styles.fine}>{c.mode === "live" ? "Live phone call" : "Simulated test call (no phone network)"} · {c.status}{c.failure ? ` · ${c.failure}` : ""}{c.extracted ? ` · read by AI: ${c.extracted.minutesToTerminal ?? "no ETA"} min, safe ${c.extracted.safe ?? "unknown"}${c.extracted.applied ? ", sent to the agent" : ", NOT applied"}` : ""}</p>)}
+        </section>}
+        {incident.mode === "llm" && (incident.modelTurns?.length ?? 0) > 0 && <section className={styles.panel} aria-label="Live agent activity"><div className={styles.sectionHead}><h2>Live agent activity <span className={styles.count}>{activitySteps(incident).length}</span></h2><p>Real model calls and tool results, newest last. Each result is labelled by where the data came from.</p></div>
+          <ol className={styles.steps}>{activitySteps(incident).map(s => <li key={s.id} data-status={s.status}><span className={styles.threadWho}><strong>{s.label}</strong><span className={styles.originBadge} data-kind={s.origin}>{ORIGIN_LABEL[s.origin]}</span><time>{new Date(s.at).toLocaleTimeString("en-GB")}</time></span><p>{s.status === "running" ? "Running…" : s.summary}</p>{s.findings?.map((f, k) => <p key={k} className={styles.finding} data-severity={f.severity}>{f.text}</p>)}</li>)}</ol>
+        </section>}
+      {incident.mode === "llm" && (incident.driverReport
+        ? <details className={styles.panel}><summary><strong>Operator tools</strong> · resume the agent, ask it a question, or answer for the driver as a fallback</summary><LiveAgentControls incident={incident} busy={!!busy} act={act} /></details>
+        : <LiveAgentControls incident={incident} busy={!!busy} act={act} />)}
         <section className={styles.panel} aria-live="polite"><h2>Simulated action result</h2>{incident.executions.length === 0 ? <p className={styles.empty}>No action has been executed. A proposal or approval alone does not change a booking.</p> : incident.executions.map(execution => <div className={execution.status === "succeeded" ? styles.success : styles.error} key={execution.version}><h3>{execution.status === "succeeded" ? "Simulated booking change completed" : "Simulated change failed"}</h3><p>Version {execution.version} · {fmtDateTime(execution.at)}</p><p>{execution.reason}</p><p>{execution.effects.length} simulated change{execution.effects.length === 1 ? "" : "s"} recorded. The source order and delivery status remain unchanged.</p></div>)}</section>
         <section className={styles.panel}><h2>Sources and evidence <span className={styles.count}>{incident.evidence.length}</span></h2>{!incident.evidence.length && <p className={styles.empty}>The agent has not checked the linked sources yet.</p>}<ul className={styles.evidence}>{incident.evidence.map(e => <li key={e.id} id={`evidence-${e.id}`}><p className={styles.source}>{e.id.startsWith("live:") ? `Live data · real, not simulated · ${e.source.replace("live_external:","").split(" · ")[0]}` : e.kind === "reported" ? "Attributed report" : e.kind === "assumption" ? "Assumption" : "Source record"} · {fmtDateTime(e.at)}{proposal?.evidenceIds.includes(e.id) ? " · Cited in proposal" : ""}</p><p>{evidenceText(e)}</p><details><summary className={styles.source}>Show source record · {e.source}</summary><pre>{(() => { try { return JSON.stringify(JSON.parse(e.text), null, 2) } catch { return e.text } })()}</pre></details></li>)}</ul></section>
       </div><aside className={styles.stack}>

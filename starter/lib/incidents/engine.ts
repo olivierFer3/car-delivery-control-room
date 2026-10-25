@@ -118,6 +118,7 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     case "create_proposal": {
       argsOnly(a, Object.keys(proposalArgsSchema.properties))
       requireThat(!i.contradictions.length, "Resolve contradictions before changing a booking")
+      requireThat(!i.driverReport || i.tasks.some(t => t.tool === "check_external_conditions"), "For a driver report, run check_external_conditions (live weather, roads and trains) before proposing a change")
       const c = await data.context(i.orderId); requireThat(c, "Order not found")
       const optionId = text(a, "optionId"), reservationId = text(a, "reservationId")
       const checked = i.tasks.some(t => t.tool === "check_option_constraints" && (t.result as { optionId: string; feasible: boolean }).optionId === optionId && (t.result as { feasible: boolean }).feasible)
