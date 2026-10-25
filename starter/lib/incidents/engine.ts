@@ -53,7 +53,7 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     case "get_order_context": {
       argsOnly(a, [])
       const c = await data.context(i.orderId); requireThat(c, "Order not found")
-      requireThat(c.alerts.some(x => x.id === i.signalId), "Initial signal not linked to this order")
+      requireThat(c.alerts.some(x => x.id === i.signalId) || (i.workflow === "ferry_delay" && c.reservations.some(x => x.id === i.signalId)), "Initial signal not linked to this order")
       for (const row of [...c.alerts, ...c.messages, ...c.reservations, ...c.options]) {
         if (!i.evidence.some(x => x.id === row.id)) i.evidence.push({ id: row.id, source: `${row.data_origin === "SIMULATED_SERVICE" ? "simulated_service" : "dataset"}:${row.id}`, at: String(row.authored_at ?? row.triggered_at ?? row.checked_at ?? row.booked_at ?? SIMULATION_TIME), text: JSON.stringify(row), kind: row.author_type === "driver" ? "reported" : "record" })
       }

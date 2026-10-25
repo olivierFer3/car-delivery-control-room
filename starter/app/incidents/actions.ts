@@ -3,7 +3,7 @@
 import { cookies } from "next/headers"
 import type { Command, PublicIncident, Scenario } from "@/lib/incidents/contracts"
 import { createIncident, WorkflowError } from "@/lib/incidents/engine"
-import { commandIncidentService, createLiveIncident } from "@/lib/incidents/service"
+import { commandIncidentService, createLiveIncident, createOperationalIncident } from "@/lib/incidents/service"
 import { publicIncident } from "@/lib/incidents/http"
 import { insertOrGetIncident, toolsData } from "@/lib/incidents/store"
 import { issueSession, OPERATOR_COOKIE, tokenMatches, validSession } from "@/lib/incidents/operator-session"
@@ -47,4 +47,8 @@ export async function commandIncident(id: string, command: Command): Promise<Res
 
 export async function createAgentIncident(scenario: Scenario, provider: "groq" | "gemini"): Promise<Result> {
   try { await requireOperator(); return {incident:publicIncident(await createLiveIncident(scenario,provider))} } catch(error) { return failure(error) }
+}
+
+export async function openOrderInvestigation(orderId:string,signalId:string,provider?:string):Promise<Result>{
+  try{await requireOperator();return {incident:publicIncident(await createOperationalIncident(orderId,signalId,provider))}}catch(error){return failure(error)}
 }
