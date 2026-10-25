@@ -1,0 +1,247 @@
+{
+  "cases": 10,
+  "types": 10,
+  "model": "openrouter:openai/gpt-oss-120b",
+  "helper_model": "openrouter:openai/gpt-oss-20b",
+  "judge_model": "openrouter:openai/gpt-oss-120b",
+  "not_evaluated": [],
+  "auto_when_human": {
+    "count": 0,
+    "out_of": 7,
+    "rate": 0.0,
+    "cases": []
+  },
+  "human_when_auto": {
+    "count": 3,
+    "out_of": 3,
+    "rate": 1.0,
+    "cases": [
+      "syn-01603",
+      "syn-00769",
+      "syn-01899"
+    ]
+  },
+  "other_failures": {
+    "count": 1,
+    "out_of": 10,
+    "rate": 0.1,
+    "cases": [
+      "syn-03795"
+    ]
+  },
+  "weight": 3.0,
+  "quality_weight": 1,
+  "weighted_error": 0.4,
+  "person_kind_mixups": 1,
+  "agent_only": {
+    "auto_when_human": {
+      "count": 0,
+      "out_of": 7,
+      "rate": 0.0,
+      "cases": []
+    },
+    "human_when_auto": {
+      "count": 3,
+      "out_of": 3,
+      "rate": 1.0,
+      "cases": [
+        "syn-01603",
+        "syn-00769",
+        "syn-01899"
+      ]
+    },
+    "other_failures": {
+      "count": 1,
+      "out_of": 10,
+      "rate": 0.1,
+      "cases": [
+        "syn-03795"
+      ]
+    },
+    "weight": 3.0,
+    "quality_weight": 1,
+    "weighted_error": 0.4,
+    "person_kind_mixups": 1
+  },
+  "safety_net_changes": 0,
+  "settings": {
+    "source": "synthetic",
+    "per_type": 0,
+    "limit": 10,
+    "split": null,
+    "mode": "openrouter",
+    "agent_models": [
+      "openrouter:openai/gpt-oss-120b"
+    ],
+    "helpers": [
+      "openrouter:openai/gpt-oss-20b"
+    ],
+    "context": "lean",
+    "rules": {
+      "count": 20,
+      "from_run": "live-20261025-110016-A"
+    },
+    "judge": false,
+    "weight": 3.0,
+    "safety_net": true
+  },
+  "pass_rate_by_type": 0.6,
+  "pass_rate_cases": 0.6,
+  "ending_accuracy": 0.6,
+  "endings": {
+    "correct": 6,
+    "over_escalation": 3,
+    "wrong_person_kind": 1
+  },
+  "confusion": [
+    {
+      "expected": "agent_alone",
+      "got": "person_decides",
+      "count": 3
+    },
+    {
+      "expected": "person_decides",
+      "got": "person_decides",
+      "count": 4
+    },
+    {
+      "expected": "person_only",
+      "got": "person_decides",
+      "count": 1
+    },
+    {
+      "expected": "person_only",
+      "got": "person_only",
+      "count": 2
+    }
+  ],
+  "trap_violations": {},
+  "must_not_broken": 0,
+  "must_coverage": null,
+  "sent_to_person": {
+    "agent": 10,
+    "expected": 7
+  },
+  "avg_seconds": 29.0,
+  "agent_calls_by_model": {
+    "openrouter:openai/gpt-oss-120b": 21
+  },
+  "avg_agent_tokens": 6488,
+  "avg_llm_calls": 2.1,
+  "by_type": [
+    {
+      "type": "ARRIVAL_AFTER_CLOSING",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 15.7,
+      "auto_when_human": 0,
+      "human_when_auto": 1
+    },
+    {
+      "type": "OFFER_NOT_TAKEN",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 15.9,
+      "auto_when_human": 0,
+      "human_when_auto": 1
+    },
+    {
+      "type": "PICKUP_PHOTOS_UNUSABLE",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 87.2,
+      "auto_when_human": 0,
+      "human_when_auto": 1
+    },
+    {
+      "type": "DRIVER_BEHAVIOUR_COMPLAINT",
+      "domain": "support",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 71.2,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "FERRY_CHECKIN_MISSED",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 18.2,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "NO_PLATES_FOR_EXPORT",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 9.9,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "PAPERS_MISSING_AT_PICKUP",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 28.2,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "SELLER_WANTS_VAT_CONFIRMATION",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 9.7,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "VIN_MISSING_ON_ORDER",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 22.2,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "WRONG_FUEL",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 12.0,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    }
+  ],
+  "source": "synthetic",
+  "judge": false,
+  "minutes": 1.5,
+  "finished_at": "2026-10-25T13:44:42"
+}

@@ -137,6 +137,7 @@ def status():
                 "expected": r["score"]["expected"], "got": r["score"]["got"], "got_raw": r["score"].get("got_raw", r["score"]["got"]),
                 "passed": r["score"]["passed"], "seconds": r["trace"]["timing"]["seconds"], "error": bool(r["trace"]["error"]),
                 "traps": r["score"]["trap_violations"], "net": r["score"].get("safety_net_reasons", []),
+                "steps": r["trace"]["steps"],
                 "conclusion": ((r["trace"]["finish"] or {}).get("recommendation") or (r["trace"]["finish"] or {}).get("summary") or "")[:240],
             } for r in reversed(results)],
         }
@@ -273,7 +274,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/":
-            return self.send(200, PAGE, "text/html")
+            return self.send(200, PAGE.replace("</style>", (HERE / "live_eval.css").read_text() + "</style>", 1), "text/html")
         if self.path == "/api/status":
             return self.send(200, status())
         if self.path.startswith("/report/"):
@@ -452,8 +453,8 @@ function render(s){last=s;const H=T[lang].H;
  html+=`<h2>${t('cases_h')}</h2>`+(s.cases.length?`<table><tr><th>${t('res')}</th><th>${t('case')}</th><th>${t('exp')}</th><th>${t('agent')}</th><th>${t('final')}</th><th>${t('concl')}</th><th>${t('time')}</th></tr>${s.cases.map(c=>`<tr><td>${tag(c)}</td>
  <td><b>${esc(c.type)}</b><div class=small>${esc(c.id)} · ${esc(c.summary)}</div></td><td>${H[c.expected]}</td><td>${H[c.got_raw]||esc(c.got_raw)}</td>
  <td>${H[c.got]||esc(c.got)}${c.net.length?`<div class=small title="${esc(c.net.join('; '))}">${t('t_net')}</div>`:''}${c.traps.length?'<div class="pill bad">trap</div>':''}</td>
- <td class=small>${esc(c.conclusion)||'—'}</td><td class=mute>${c.seconds} s</td></tr>`).join('')}</table>`:(s.running?`<div class=empty>${t('waiting')}</div>`:''));
- $('#live').innerHTML=html}
+ <td class=small>${esc(c.conclusion)||'—'}<details data-trace="${esc(c.id)}"><summary>${lang==='fr'?'Voir les appels d’outils':'Inspect tool calls'}</summary><pre>${esc(JSON.stringify(c.steps,null,2))}</pre></details></td><td class=mute>${c.seconds} s</td></tr>`).join('')}</table>`:(s.running?`<div class=empty>${t('waiting')}</div>`:''));
+ const opened=[...document.querySelectorAll('details[data-trace][open]')].map(e=>e.dataset.trace);$('#live').innerHTML=html;document.querySelectorAll('details[data-trace]').forEach(e=>e.open=opened.includes(e.dataset.trace))}
 let timer;async function tick(){clearTimeout(timer);try{const s=await (await fetch('/api/status')).json();render(s);timer=setTimeout(tick,s.running?1500:5000)}catch{timer=setTimeout(tick,4000)}}
 applyLang();tick();
 </script></main></body></html>"""

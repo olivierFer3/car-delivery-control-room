@@ -359,6 +359,8 @@ OPENROUTER_API = "https://openrouter.ai/api/v1"
 OPENROUTER_KEY_FILE = ROOT / "openrouter_api_key.txt"
 OPENROUTER_PREFIX = "openrouter:"
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "openai/gpt-oss-120b")
+# Helpers (simulated people, rule learning) also run on OpenRouter, on a cheaper model, under the same dollar cap.
+OPENROUTER_HELPER = os.environ.get("OPENROUTER_HELPER_MODEL", "openai/gpt-oss-20b")
 # ":free" models: 50 requests a day (1,000 after 10 dollars of credits). Paid models are bound by credits only,
 # so the evaluation gets its own dollar cap and leaves the rest of the credit for the demo.
 OPENROUTER_DAILY = (int(os.environ.get("OPENROUTER_DAILY_REQUESTS", "50")), None)
@@ -405,19 +407,15 @@ def configure(mode="groq"):
                 OPENROUTER_PRICES[row["id"]] = (float(price.get("prompt", 0)), float(price.get("completion", 0)))
             except (TypeError, ValueError):
                 pass
-        if OPENROUTER_MODEL not in listed:
-            raise SystemExit(f"OpenRouter does not list {OPENROUTER_MODEL!r}; set OPENROUTER_MODEL.")
+        for name, setting in ((OPENROUTER_MODEL, "OPENROUTER_MODEL"), (OPENROUTER_HELPER, "OPENROUTER_HELPER_MODEL")):
+            if name not in listed:
+                raise SystemExit(f"OpenRouter does not list {name!r}; set {setting}.")
         POOL = [OPENROUTER_PREFIX + OPENROUTER_MODEL]
         MODEL = POOL[0]
-        RATE_LIMITS.setdefault(MODEL, (20, 1_000_000))
-        if gemini_key():
-            gemini_model()
-        try:
-            groq = set(available_models())
-        except SystemExit:
-            groq = set()
-        HELPER_POOL = [name for name in FAST_HELPERS if name in groq or name in GEMINI_POOL] + [n for n in GEMINI_POOL if n not in FAST_HELPERS]
-        return HELPER_POOL[0] if HELPER_POOL else MODEL
+        HELPER_POOL = [OPENROUTER_PREFIX + OPENROUTER_HELPER]
+        for name in POOL + HELPER_POOL:
+            RATE_LIMITS.setdefault(name, (20, 1_000_000))
+        return HELPER_POOL[0]
     if mode == "fast":
         if not gemini_key():
             raise SystemExit("Fast mode needs a Gemini key in gemini_api_key.txt.")

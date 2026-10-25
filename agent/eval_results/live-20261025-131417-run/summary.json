@@ -1,0 +1,154 @@
+{
+  "cases": 3,
+  "types": 3,
+  "model": "openrouter:openai/gpt-oss-120b",
+  "helper_model": "openai/gpt-oss-20b",
+  "judge_model": "openrouter:openai/gpt-oss-120b",
+  "not_evaluated": [],
+  "auto_when_human": {
+    "count": 0,
+    "out_of": 2,
+    "rate": 0.0,
+    "cases": []
+  },
+  "human_when_auto": {
+    "count": 0,
+    "out_of": 1,
+    "rate": 0.0,
+    "cases": []
+  },
+  "other_failures": {
+    "count": 0,
+    "out_of": 3,
+    "rate": 0.0,
+    "cases": []
+  },
+  "weight": 3.0,
+  "quality_weight": 1,
+  "weighted_error": 0.0,
+  "person_kind_mixups": 0,
+  "agent_only": {
+    "auto_when_human": {
+      "count": 0,
+      "out_of": 2,
+      "rate": 0.0,
+      "cases": []
+    },
+    "human_when_auto": {
+      "count": 0,
+      "out_of": 1,
+      "rate": 0.0,
+      "cases": []
+    },
+    "other_failures": {
+      "count": 0,
+      "out_of": 3,
+      "rate": 0.0,
+      "cases": []
+    },
+    "weight": 3.0,
+    "quality_weight": 1,
+    "weighted_error": 0.0,
+    "person_kind_mixups": 0
+  },
+  "safety_net_changes": 0,
+  "settings": {
+    "source": "hand",
+    "per_type": 0,
+    "limit": 3,
+    "split": null,
+    "mode": "openrouter",
+    "agent_models": [
+      "openrouter:openai/gpt-oss-120b"
+    ],
+    "helpers": [
+      "openai/gpt-oss-20b",
+      "gemini:gemma-4-26b-a4b-it",
+      "gemini:gemini-3.1-flash-lite",
+      "gemini:gemini-3.5-flash-lite",
+      "gemini:gemini-3-flash-preview",
+      "gemini:gemini-3.5-flash",
+      "gemini:gemini-3.6-flash"
+    ],
+    "context": "lean",
+    "rules": null,
+    "judge": false,
+    "weight": 3.0,
+    "safety_net": true
+  },
+  "pass_rate_by_type": 1.0,
+  "pass_rate_cases": 1.0,
+  "ending_accuracy": 1.0,
+  "endings": {
+    "correct": 3
+  },
+  "confusion": [
+    {
+      "expected": "agent_alone",
+      "got": "agent_alone",
+      "count": 1
+    },
+    {
+      "expected": "person_decides",
+      "got": "person_decides",
+      "count": 1
+    },
+    {
+      "expected": "person_only",
+      "got": "person_only",
+      "count": 1
+    }
+  ],
+  "trap_violations": {},
+  "must_not_broken": 0,
+  "must_coverage": null,
+  "sent_to_person": {
+    "agent": 2,
+    "expected": 2
+  },
+  "avg_seconds": 11.8,
+  "agent_calls_by_model": {
+    "openrouter:openai/gpt-oss-120b": 5
+  },
+  "avg_agent_tokens": 3924,
+  "avg_llm_calls": 1.7,
+  "by_type": [
+    {
+      "type": "DELIVERY_PHOTOS_MISSING",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 16.1,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "OFFER_NOT_TAKEN",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 8.4,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    },
+    {
+      "type": "SELLER_WANTS_VAT_CONFIRMATION",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 11.0,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    }
+  ],
+  "source": "hand",
+  "judge": false,
+  "minutes": 0.6,
+  "finished_at": "2026-10-25T13:14:17"
+}

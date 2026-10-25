@@ -13,7 +13,7 @@ Put each key alone on one line in a file at the repository root (all three files
 - `gemini_api_key.txt`: Gemini key (Google AI Studio). Used by the agent in `fast` mode and by the helpers.
   A key from a Google project without billing stays on the free tier: requests beyond the quota are
   refused, never billed. Check the tier in Google AI Studio, page "API keys".
-- `openrouter_api_key.txt`: OpenRouter key. Used by the agent in `openrouter` mode only (see below).
+- `openrouter_api_key.txt`: OpenRouter key. Used in `openrouter` mode only, by the agent and the helpers (see below).
 
 ## The agent
 
@@ -92,7 +92,7 @@ Options: `--mode fast|groq|openrouter`, `--split A|B|C`, `--context lean|full`, 
 |---|---|---|---|
 | `fast` (default) | Gemini `gemini-3.1-flash-lite` + `gemini-3.5-flash-lite` | Groq `gpt-oss-20b`, then Gemma | about 5-7 min |
 | `groq` | Groq `gpt-oss-120b` | Gemini pool, then `gpt-oss-20b` | 30+ min on the free tier, over the daily quota |
-| `openrouter` | OpenRouter `OPENROUTER_MODEL` (default `openai/gpt-oss-120b`) | free models only (Groq, Gemma) | credit-bound, paced at 20 requests per minute |
+| `openrouter` | OpenRouter `OPENROUTER_MODEL` (default `openai/gpt-oss-120b`) | OpenRouter `OPENROUTER_HELPER_MODEL` (default `openai/gpt-oss-20b`) | credit-bound, paced at 20 requests per minute per model |
 
 The free tiers decide this: Groq allows `gpt-oss-120b` 8,000 tokens per minute and 200,000 per day
 (77 cases need ~260,000); the two Flash Lite models allow 15 requests per minute each, 250,000 tokens per
@@ -116,8 +116,8 @@ read from the Groq console and Google AI Studio on 2026-10-25; check them there 
 
 ### OpenRouter and cost control
 
-In `openrouter` mode only the agent's calls go to OpenRouter; simulated people, search and rule writing
-stay on free models. Each OpenRouter call asks for its billed cost (`usage.include`) and caps the answer at
+In `openrouter` mode every call goes to OpenRouter: the agent on `OPENROUTER_MODEL`, simulated people, search
+and rule writing on the cheaper `OPENROUTER_HELPER_MODEL`. No Groq or Gemini key is used. Each OpenRouter call asks for its billed cost (`usage.include`) and caps the answer at
 2,000 tokens. Evaluations stop at `OPENROUTER_BUDGET_USD` (default 5 dollars) spent on the quota day, so the
 rest of the credit is kept; the live page shows the day's spend and the key's credit (`/api/v1/key`, no model
 call). Before a run, the page prices it from the model's listed price and about 7,500 input and 400 output
@@ -125,5 +125,14 @@ tokens per case, and refuses it above the cap.
 
 **What is verified:** the cost controls (agent-only routing, answer cap, cost recording, dollar cap refusing
 calls before they are sent, price-based estimate, credit display) were tested against a fake OpenRouter
-server; no real OpenRouter call or billing has been made yet. **Costs are estimates, not guarantees:** real
+server initially; a subsequent real three-case run is documented below. **Costs are estimates, not guarantees:** real
 token counts per case vary, and prices are read from OpenRouter at the time of the run.
+
+
+### Real OpenRouter run (25 October 2026)
+
+Run `live-20261025-131417-run` handled three cases with five real OpenRouter calls and no API error. All three
+endings were correct; a sample this small does not show overall reliability. Recorded cost: 0.000455 USD. Video,
+self-contained report and method: [artifacts/openrouter-demo](../artifacts/openrouter-demo/README.md). This
+complements the earlier cost tests against a fake server described above. At that time the helpers were still on
+free Groq/Gemini models.

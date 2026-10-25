@@ -4,6 +4,7 @@ English by default; render(..., lang="fr") gives the French page."""
 
 import html
 import json
+from pathlib import Path
 
 TEXT = {
     "en": {
@@ -237,7 +238,7 @@ def render(summary, results, banner=None, lang="en"):
         f"{summary['minutes']} {t['minutes']}" if summary.get("minutes") is not None else "", esc(summary.get("finished_at", ""))]))
     by_model = ", ".join(f"{m} : {c}" for m, c in summary.get("agent_calls_by_model", {}).items()) or "—"
     return f"""<!doctype html><html lang={lang}><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>{t['title']}</title><style>{CSS}</style></head><body><main>
+<title>{t['title']}</title><style>{CSS}{Path(__file__).with_name('live_eval.css').read_text(encoding='utf-8')}</style></head><body><main>
 <h1>{t['title']}</h1><div class=sub>{run_line}</div>
 {f'<div class=banner>{esc(banner)}</div>' if banner else ''}
 {triage_block(summary, t)}

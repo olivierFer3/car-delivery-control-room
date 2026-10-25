@@ -13,7 +13,7 @@ Chaque clé seule sur une ligne, dans un fichier à la racine du dépôt (les tr
 - `gemini_api_key.txt` : clé Gemini (Google AI Studio). Sert à l'agent en mode `fast` et aux aides.
   Une clé d'un projet Google sans facturation reste sur le niveau gratuit : au-delà du quota, les appels
   sont refusés, jamais facturés. Vérifier le niveau dans Google AI Studio, page « API keys ».
-- `openrouter_api_key.txt` : clé OpenRouter. Sert uniquement à l'agent en mode `openrouter` (voir plus bas).
+- `openrouter_api_key.txt` : clé OpenRouter. Sert uniquement en mode `openrouter`, à l'agent et aux auxiliaires (voir plus bas).
 
 ## L'agent
 
@@ -93,6 +93,7 @@ Options : `--mode fast|groq|openrouter`, `--split A|B|C`, `--context lean|full`,
 |---|---|---|---|
 | `fast` (défaut) | Gemini `gemini-3.1-flash-lite` + `gemini-3.5-flash-lite` | Groq `gpt-oss-20b`, puis Gemma | environ 5-7 min |
 | `groq` | Groq `gpt-oss-120b` | pool Gemini, puis `gpt-oss-20b` | plus de 30 min en gratuit, au-delà du quota journalier |
+| `openrouter` | OpenRouter `OPENROUTER_MODEL` (défaut `openai/gpt-oss-120b`) | OpenRouter `OPENROUTER_HELPER_MODEL` (défaut `openai/gpt-oss-20b`) | limité par le crédit, 20 requêtes par minute par modèle |
 
 Ce sont les offres gratuites qui décident : Groq donne à `gpt-oss-120b` 8 000 tokens par minute et 200 000
 par jour (77 cas en demandent ~260 000) ; les deux Flash Lite ont chacun 15 requêtes par minute, 250 000
@@ -117,8 +118,9 @@ chiffres gratuits lus dans la console Groq et Google AI Studio le 25/10/2026 ; l
 
 ### OpenRouter et contrôle des coûts
 
-En mode `openrouter`, seuls les appels de l'agent passent par OpenRouter ; personnes simulées, recherche et
-écriture des règles restent sur des modèles gratuits. Chaque appel OpenRouter demande son coût facturé
+En mode `openrouter`, tous les appels passent par OpenRouter : l'agent sur `OPENROUTER_MODEL`, personnes
+simulées, recherche et écriture des règles sur `OPENROUTER_HELPER_MODEL`, moins cher. Aucune clé Groq ou Gemini
+n'est utilisée. Chaque appel OpenRouter demande son coût facturé
 (`usage.include`) et plafonne la réponse à 2 000 tokens. Les évaluations s'arrêtent à `OPENROUTER_BUDGET_USD`
 (5 dollars par défaut) dépensés dans la journée, pour garder le reste du crédit ; la page affiche la dépense
 du jour et le crédit de la clé (`/api/v1/key`, sans appel de modèle). Avant un passage, la page l'estime à
@@ -126,6 +128,11 @@ partir du prix du modèle et d'environ 7 500 tokens en entrée et 400 en sortie 
 
 **Ce qui est vérifié :** les contrôles de coût (agent seul sur OpenRouter, réponse plafonnée, coût enregistré,
 plafond en dollars qui refuse avant l'envoi, estimation, affichage du crédit) ont été testés avec un faux
-serveur OpenRouter ; aucun vrai appel ni aucune facturation OpenRouter n'a encore eu lieu. **Les coûts sont
+serveur OpenRouter initialement ; un passage réel de trois cas est documenté plus bas. **Les coûts sont
 des estimations, pas des garanties :** le nombre réel de tokens par cas varie, et les prix sont lus chez
 OpenRouter au moment du passage.
+
+
+### Démo réelle OpenRouter (25 octobre 2026)
+
+Le passage `live-20261025-131417-run` a exécuté trois cas avec cinq vrais appels OpenRouter, sans erreur API. Les trois fins sont conformes ; cet échantillon ne démontre pas une fiabilité globale. Coût enregistré : 0,000455 USD. Vidéo, rapport autonome et méthode : [artifacts/openrouter-demo](../artifacts/openrouter-demo/README.md). Cette vérification complète les anciens tests de coûts sur serveur factice décrits ci-dessus.
