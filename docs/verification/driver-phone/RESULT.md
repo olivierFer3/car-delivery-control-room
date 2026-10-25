@@ -11,3 +11,7 @@ Scenario, run twice (orders CD-420324 and CD-420075, driver says about 5 hours, 
 5. The per-minute model limit produced several HTTP 429 answers; the agent waited and retried by itself and the activity list shows them as "AI model busy".
 
 Not verified (needs credentials/payment/your phone): a real phone call, ElevenLabs voice quality, access from a phone over an HTTPS tunnel.
+
+## Final run on `f6e1f2b` (after removing real calls)
+
+Same scenario, real Groq, simulated call, CD-420324: report, question, call, transcript read (300 min, safe, engine dead), 5 REAL live sources, booking check (cutoff missed), alternatives, proposal v1, operator approve, apply, driver sees "Solved". Also checked: approving without the operator token is refused (HTTP 401); driver API without the access code is refused (401); applying twice leaves one execution (idempotent). Screenshots: `final-e2e-operator.png`, `final-e2e-driver.png`.
