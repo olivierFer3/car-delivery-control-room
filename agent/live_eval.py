@@ -47,11 +47,72 @@ def comparison():
         rows.append({
             "run": folder.parent.name, "mode": settings.get("mode"), "split": settings.get("split"),
             "rules": (settings.get("rules") or {}).get("count", 0), "cases": s["cases"], "minutes": s.get("minutes"),
-            "first": s["auto_when_human"], "second": s["human_when_auto"], "score": s.get("weighted_error"),
+            "first": s["auto_when_human"], "second": s["human_when_auto"], "other": s.get("other_failures"), "score": s.get("weighted_error"),
             "first_agent": raw.get("auto_when_human"), "score_agent": raw.get("weighted_error"),
             "not_evaluated": len(s.get("not_evaluated", [])), "finished": s.get("finished_at"),
         })
     return sorted(rows, key=lambda r: r["finished"] or "", reverse=True)[:16]
+
+
+# Requests per case measured on the runs of 2026-10-25: about 2.7 agent calls and 0.7 helper calls.
+AGENT_CALLS_PER_CASE, HELPER_CALLS_PER_CASE = 2.8, 0.8
+# Agent tokens per case with the playbook in every call (~2,700 a call): used to price OpenRouter runs.
+AGENT_TOKENS_IN_PER_CASE, AGENT_TOKENS_OUT_PER_CASE = 7_500, 400
+_account = {"at": 0, "data": None}
+
+
+def openrouter_account():
+    """The key's credit, refreshed at most once a minute (no model call, nothing billed)."""
+    if not mvp.openrouter_key():
+        return None
+    if time.time() - _account["at"] > 60:
+        try:
+            _account["data"] = mvp.openrouter_account()
+        except Exception as error:  # noqa: BLE001 - shown, never blocks the page
+            _account["data"] = {"error": str(error)[:120]}
+        _account["at"] = time.time()
+    return _account["data"]
+
+
+def usage():
+    """Today's use of each model against its daily limit."""
+    today = mvp.usage_today()
+    names = list(mvp.DAILY_LIMITS) + [m for m in today if m not in mvp.DAILY_LIMITS]
+    rows = []
+    for name in names:
+        limit = mvp.DAILY_LIMITS.get(name) or (mvp.OPENROUTER_DAILY if name.startswith(mvp.OPENROUTER_PREFIX) else (None, None))
+        used = today.get(name, {})
+        rows.append({"model": name, "requests": used.get("requests", 0), "tokens": used.get("tokens", 0),
+                     "limit_requests": limit[0], "limit_tokens": limit[1], "room": mvp.daily_room(name)})
+    return {"day": mvp.quota_day(), "models": rows, "openrouter": {
+        "spent_today_usd": round(mvp.openrouter_spent_today(), 4), "budget_usd": mvp.OPENROUTER_BUDGET_USD,
+        "model": mvp.OPENROUTER_MODEL, "account": openrouter_account()} if mvp.openrouter_key() else None}
+
+
+def budget_check(settings, action):
+    """(ok, estimate): whether today's remaining quota covers this run or experiment."""
+    mvp.configure(settings["mode"])
+    cases = 77 * settings["per_type"] if settings["per_type"] else settings["count"]
+    runs = 3 if action == "experiment" else (0 if action == "learn" else 1)
+    learning = 1 if action in ("experiment", "learn") else 0
+    agent_need = int(runs * cases * AGENT_CALLS_PER_CASE + learning * (cases + 1) * 1.05)
+    helper_need = int(runs * cases * HELPER_CALLS_PER_CASE)
+
+    def room(models):
+        rooms = [mvp.daily_room(m) for m in models]
+        return 10**9 if any(r is None for r in rooms) else sum(rooms)
+    if settings["mode"] == "openrouter":
+        price_in, price_out = mvp.OPENROUTER_PRICES.get(mvp.OPENROUTER_MODEL, (0.0, 0.0))
+        dollars = runs * cases * (AGENT_TOKENS_IN_PER_CASE * price_in + AGENT_TOKENS_OUT_PER_CASE * price_out)
+        left = mvp.OPENROUTER_BUDGET_USD - mvp.openrouter_spent_today()
+        estimate = {"agent_requests": agent_need, "agent_room": None, "helper_requests": helper_need,
+                    "helper_room": room(mvp.HELPER_POOL) if mvp.HELPER_POOL else None,
+                    "usd": round(dollars, 4), "usd_left": round(left, 4), "model": mvp.OPENROUTER_MODEL}
+        return dollars <= left and (estimate["helper_room"] is None or helper_need <= estimate["helper_room"]), estimate
+    agent_room = room(mvp.POOL)
+    helper_room = room(mvp.HELPER_POOL) if mvp.HELPER_POOL else max(0, agent_room - agent_need)
+    estimate = {"agent_requests": agent_need, "agent_room": agent_room, "helper_requests": helper_need, "helper_room": helper_room}
+    return agent_need <= agent_room and helper_need <= helper_room, estimate
 
 
 def status():
@@ -70,7 +131,7 @@ def status():
             "report": STATE.get("report"), "error": STATE.get("error"),
             "rules": document and {"from_run": document["from_run"], "rules": document["rules"], "created_at": document["created_at"],
                                    "cases": len(document["source_case_ids"])},
-            "comparison": comparison(),
+            "comparison": comparison(), "usage": usage(), "estimate": STATE.get("estimate"),
             "cases": [{
                 "id": r["case"]["id"], "type": r["case"]["problem_type"], "summary": r["case"]["summary"],
                 "expected": r["score"]["expected"], "got": r["score"]["got"], "got_raw": r["score"].get("got_raw", r["score"]["got"]),
@@ -116,7 +177,10 @@ def learn_from(folder):
     with LOCK:
         STATE.update(phase="learn")
     results = [json.loads(line) for line in (folder / "results.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
-    return learned.learn(results, case_agent.HELPER_MODEL, folder.name)
+    # The agent's models are idle while rules are written and faster; on OpenRouter the agent's model is paid,
+    # so the free helper models write the rules instead.
+    writer = case_agent.HELPER_MODEL if STATE["settings"]["mode"] == "openrouter" else mvp.MODEL
+    return learned.learn(results, writer, folder.name)
 
 
 def worker(settings, action):
@@ -130,7 +194,8 @@ def worker(settings, action):
             case_agent.HELPER_MODEL = mvp.configure(settings["mode"])
             learn_from(folder)
         elif action == "experiment":
-            steps = [("A", False, "A"), ("learn", None, "learn"), ("B", True, "B+rules"), ("B", False, "B control")]
+            test = settings["split"] if settings["split"] != "A" else "B"  # the rules are tested on another split
+            steps = [("A", False, "A"), ("learn", None, "learn"), (test, True, f"{test}+rules"), (test, False, f"{test} control")]
             first = None
             for index, (split, rules, label) in enumerate(steps, 1):
                 if STOP.is_set():
@@ -169,7 +234,7 @@ def start(body, action):
             "judge": bool(body.get("judge", False)),
             "weight": max(1.0, min(float(body.get("weight", 3)), 20.0)),
             "context": "full" if body.get("context") == "full" else "lean",
-            "mode": "groq" if body.get("mode") == "groq" else "fast",
+            "mode": body.get("mode") if body.get("mode") in ("groq", "openrouter") else "fast",
             "rules": bool(body.get("rules", False)),
             "lang": "fr" if body.get("lang") == "fr" else "en",
         }
@@ -180,9 +245,16 @@ def start(body, action):
     with LOCK:
         if STATE.get("running"):
             return 409, {"error": "A run is already in progress"}
+    try:
+        ok, estimate = budget_check(settings, action)
+    except SystemExit as error:
+        return 400, {"error": str(error)}
+    if not ok:
+        return 409, {"error": "budget", "estimate": estimate}
+    with LOCK:
         STOP.clear()
         STATE.clear()
-        STATE.update(running=True, results=[], settings=settings, total=0, phase=action)
+        STATE.update(running=True, results=[], settings=settings, total=0, phase=action, estimate=estimate)
     threading.Thread(target=worker, args=(settings, action), daemon=True).start()
     return 202, {"ok": True}
 
@@ -265,7 +337,7 @@ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--hair);verti
 <div class=top><div><h1 data-t=title></h1><div class=sub data-t=intro></div></div>
 <div class=lang><button data-l=en>EN</button> <button data-l=fr>FR</button></div></div>
 <form id=f>
-<label><span data-t=mode></span><select name=mode><option value=fast data-t=mode_fast></option><option value=groq data-t=mode_groq></option></select></label>
+<label><span data-t=mode></span><select name=mode><option value=fast data-t=mode_fast></option><option value=groq data-t=mode_groq></option><option value=openrouter data-t=mode_or></option></select></label>
 <label><span data-t=source></span><select name=source><option value=synthetic data-t=src_syn></option><option value=hand data-t=src_hand></option><option value=generated data-t=src_gen></option></select></label>
 <label><span data-t=per_type></span><input name=per_type type=number min=0 max=50 value=1></label>
 <label><span data-t=count></span><input name=count type=number min=0 max=5000 value=0></label>
@@ -282,17 +354,19 @@ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--hair);verti
 <div id=live></div>
 <script>
 const T={en:{title:"Live agent evaluation",intro:"Pick the cases, start, and follow the metrics while the cases run. Nothing real is sent or booked.",
-mode:"Agent model",mode_fast:"Fast: Gemini Flash Lite (77 cases in ~5-7 min)",mode_groq:"gpt-oss-120b on Groq (slow on the free tier)",
+mode:"Agent model",mode_fast:"Fast: Gemini Flash Lite (77 cases in ~5-7 min)",mode_groq:"gpt-oss-120b on Groq (slow on the free tier)",mode_or:"OpenRouter (model in OPENROUTER_MODEL)",
+usage_h:"Today's quota use",usage_day:"quota day",model_c:"Model",used_c:"Requests used",limit_c:"Daily limit",room_c:"Left (after the 5 % margin)",
+budget:"Not enough quota left today for this run",of_cap:"under the evaluation cap",or_h:"OpenRouter credit",or_spent:"spent today by evaluations",or_cap:"evaluation cap",or_key:"key: used",or_left:"left on the key",need:"needs about",have:"left",agent_w:"agent",helper_w:"helpers",estimate:"Estimated use of this run",
 source:"Case set",src_syn:"Synthetic (3,850, 77 types)",src_hand:"Hand-written (31)",src_gen:"Generated by Groq",
 per_type:"Cases per type",count:"…or number of cases (when per type is 0)",split:"Split (different cases of each type)",workers:"In parallel",
 weight:"Weight of the main error",context:"Agent context",ctx_lean:"Lean (cheaper)",ctx_full:"Full (triage playbook + Bahn guide)",
 use_rules:"Apply learned rules (refused on the cases they came from)",judge:"Judge (must / must not): one more call per case, not needed for the two triage errors",
-run:"Run",experiment:"Run full experiment (A → learn → B with rules → B without)",learn:"Learn rules from the last run",stop:"Stop",
+run:"Run",experiment:"Run full experiment (A → learn → chosen split with rules → without)",learn:"Learn rules from the last run",stop:"Stop",
 done:"cases finished",evaluated:"evaluated",not_eval:"not evaluated (API error, left out of the rates)",elapsed:"elapsed",left:"about",
 left2:"left",running:"running",stopping:"stopping…",finished:"finished",step:"Experiment step",open_report:"Open the full report",
 first_k:"Minimise first",first_d:"Handled alone although a person had to handle them · out of the cases that needed a person",
 second_k:"Minimise next",second_d:"Sent to a person although the agent should have handled them · out of the cases the agent should handle",
-score_k:"Combined score",lower:"lower is better",score_d:"(1st × w + 2nd) / cases evaluated",agent_alone_line:"Agent alone, before the safety net",
+score_k:"Combined score",lower:"lower is better",score_d:"(1st × w + 2nd + other failures) / cases evaluated",other:"Other failures (mix-ups, traps, judge): same weight as the 2nd error",other_c:"Other failures",agent_alone_line:"Agent alone, before the safety net",
 net_moved:"moved towards a person by the safety net",quality:"Handling quality (ending + traps + judge)",traps:"Forbidden tools called",
 per_case:"Per case",calls:"model calls",tokens:"Agent tokens per case",cases_h:"Finished cases (newest first)",waiting:"The first case is on its way…",
 res:"Result",case:"Case",exp:"Expected",agent:"Agent",final:"Final",concl:"Agent's conclusion",time:"Time",
@@ -304,17 +378,19 @@ daily_limit:"Daily quota reached on every model: run stopped. Finished cases sta
 idle:"Nothing running. Pick the settings and start.",learning:"Learning rules from the run…",
 H:{agent_alone:"Agent alone",person_decides:"A person decides",person_only:"A person only",none:"No ending"}},
 fr:{title:"Évaluation de l'agent, en direct",intro:"Choisis les cas, lance, et suis les métriques pendant que les cas tournent. Rien de réel n'est envoyé ni réservé.",
-mode:"Modèle de l'agent",mode_fast:"Rapide : Gemini Flash Lite (77 cas en ~5-7 min)",mode_groq:"gpt-oss-120b sur Groq (lent en gratuit)",
+mode:"Modèle de l'agent",mode_fast:"Rapide : Gemini Flash Lite (77 cas en ~5-7 min)",mode_groq:"gpt-oss-120b sur Groq (lent en gratuit)",mode_or:"OpenRouter (modèle dans OPENROUTER_MODEL)",
+usage_h:"Consommation du quota aujourd'hui",usage_day:"jour de quota",model_c:"Modèle",used_c:"Requêtes utilisées",limit_c:"Limite par jour",room_c:"Reste (après 5 % de marge)",
+budget:"Pas assez de quota aujourd'hui pour ce passage",of_cap:"sous le plafond d'évaluation",or_h:"Crédit OpenRouter",or_spent:"dépensés aujourd'hui par les évaluations",or_cap:"plafond d'évaluation",or_key:"clé : utilisé",or_left:"reste sur la clé",need:"demande environ",have:"reste",agent_w:"agent",helper_w:"aides",estimate:"Consommation estimée de ce passage",
 source:"Jeu de cas",src_syn:"Synthétiques (3 850, 77 types)",src_hand:"Écrits à la main (31)",src_gen:"Générés par Groq",
 per_type:"Cas par type",count:"…ou nombre de cas (si cas par type = 0)",split:"Lot (cas différents de chaque type)",workers:"En parallèle",
 weight:"Poids de l'erreur principale",context:"Contexte de l'agent",ctx_lean:"Allégé (économe)",ctx_full:"Complet (guide de tri + guide Bahn)",
 use_rules:"Appliquer les règles apprises (refusé sur les cas dont elles viennent)",judge:"Juge (doit / ne doit pas) : 1 appel de plus par cas, inutile pour les 2 erreurs de tri",
-run:"Lancer",experiment:"Lancer l'expérience complète (A → apprentissage → B avec règles → B sans)",learn:"Apprendre des règles du dernier passage",stop:"Arrêter",
+run:"Lancer",experiment:"Lancer l'expérience complète (A → apprentissage → lot choisi avec règles → sans)",learn:"Apprendre des règles du dernier passage",stop:"Arrêter",
 done:"cas terminés",evaluated:"évalués",not_eval:"non évalués (erreur d'appel, hors des taux)",elapsed:"écoulé",left:"reste environ",
 left2:"",running:"en cours",stopping:"arrêt en cours…",finished:"terminé",step:"Étape de l'expérience",open_report:"Ouvrir le rapport complet",
 first_k:"À minimiser en priorité",first_d:"Traités seuls alors qu'une personne aurait dû s'en charger · sur les cas qui devaient aller à une personne",
 second_k:"À minimiser ensuite",second_d:"Envoyés à une personne alors que l'agent aurait dû les régler seul · sur les cas que l'agent devait régler",
-score_k:"Score combiné",lower:"plus bas = mieux",score_d:"(1ʳᵉ × poids + 2ᵉ) / cas évalués",agent_alone_line:"Agent seul, avant le filet de sécurité",
+score_k:"Score combiné",lower:"plus bas = mieux",score_d:"(1ʳᵉ × poids + 2ᵉ + autres échecs) / cas évalués",other:"Autres échecs (confusions, pièges, juge) : même poids que la 2ᵉ erreur",other_c:"Autres échecs",agent_alone_line:"Agent seul, avant le filet de sécurité",
 net_moved:"remontés vers une personne par le filet",quality:"Qualité du traitement (fin + pièges + juge)",traps:"Outils interdits appelés",
 per_case:"Par cas",calls:"appels au modèle",tokens:"Tokens de l'agent par cas",cases_h:"Cas terminés (le plus récent en haut)",waiting:"Le premier cas arrive…",
 res:"Résultat",case:"Cas",exp:"Attendu",agent:"Agent",final:"Final",concl:"Conclusion de l'agent",time:"Temps",
@@ -334,7 +410,8 @@ function applyLang(){document.documentElement.lang=lang;document.querySelectorAl
 document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{lang=b.dataset.l;applyLang()});
 function body(){const d=new FormData($('#f'));return JSON.stringify({mode:d.get('mode'),source:d.get('source'),per_type:+d.get('per_type'),count:+d.get('count'),
  split:d.get('split'),workers:+d.get('workers'),weight:+d.get('weight'),context:d.get('context'),rules:d.get('rules')==='on',judge:d.get('judge')==='on',lang})}
-async function post(path){const r=await fetch(path,{method:'POST',body:body()});$('#err').textContent=r.ok?'':(await r.json()).error;tick()}
+async function post(path){const r=await fetch(path,{method:'POST',body:body()});if(r.ok){$('#err').textContent='';return tick()}
+ const e=await r.json();const x=e.estimate||{};$('#err').textContent=e.error!=='budget'?e.error:(x.usd!=null?`${t('budget')}: ~$${x.usd} (${t('have')} $${x.usd_left} ${t('of_cap')})`:`${t('budget')}: ${t('agent_w')} ${t('need')} ${x.agent_requests} (${t('have')} ${x.agent_room}), ${t('helper_w')} ${t('need')} ${x.helper_requests} (${t('have')} ${x.helper_room}).`);tick()}
 $('#f').onsubmit=e=>{e.preventDefault();post('/api/start')};$('#exp').onclick=()=>post('/api/experiment');$('#learn').onclick=()=>post('/api/learn');
 $('#stop').onclick=()=>fetch('/api/stop',{method:'POST',body:'{}'}).then(tick);
 function tag(c){if(c.error)return `<span class="pill warn">${t('t_ne')}</span>`;
@@ -344,7 +421,7 @@ function tag(c){if(c.error)return `<span class="pill warn">${t('t_ne')}</span>`;
 let last=null;
 function render(s){last=s;const H=T[lang].H;
  ['#go','#exp','#learn'].forEach(b=>$(b).disabled=s.running);$('#stop').disabled=!s.running||s.stopping;
- if(s.error)$('#err').textContent=s.error==='daily_limit'?t('daily_limit'):s.error; else $('#err').textContent='';
+ if(s.error)$('#err').textContent=s.error==='daily_limit'?t('daily_limit'):s.error;
  let html='';
  if(!s.running&&!s.summary)html+=`<h2></h2><div class=empty>${t('idle')}</div>`;
  const m=s.summary,w=s.total?Math.round(100*s.done/s.total):0;
@@ -359,15 +436,19 @@ function render(s){last=s;const H=T[lang].H;
  <div class=metric><span class=k>${t('score_k')}</span><b>${m.weighted_error??'—'}</b><em>${t('lower')}</em><span class=d>${t('score_d')}</span></div></div>
  <div class="row" style="margin-top:8px"><span>${t('agent_alone_line')}: <b>${frac(r.auto_when_human)}</b> · <b>${frac(r.human_when_auto)}</b> · ${t('score_k')} <b>${r.weighted_error??'—'}</b></span>
  <span><b>${m.safety_net_changes||0}</b> ${t('net_moved')}</span></div>
- <div class=tiles><div class=tile><b>${pct(m.pass_rate_cases)}</b><span>${t('quality')}</span></div>
+ <div class=tiles><div class=tile><b>${frac(m.other_failures)}</b><span>${t('other')}</span></div><div class=tile><b>${pct(m.pass_rate_cases)}</b><span>${t('quality')}</span></div>
  <div class=tile><b>${Object.values(m.trap_violations).reduce((x,y)=>x+y,0)}</b><span>${t('traps')}</span></div>
  <div class=tile><b>${m.avg_seconds} s</b><span>${t('per_case')} · ${m.avg_llm_calls} ${t('calls')}</span></div>
  <div class=tile><b>${(m.avg_agent_tokens||0).toLocaleString(lang)}</b><span>${t('tokens')}</span></div></div>`}
+ if(s.estimate)html+=`<div class=row style="margin-top:8px"><span>${t('estimate')}: ${t('agent_w')} <b>${s.estimate.agent_requests}</b>${s.estimate.agent_room!=null?' / '+s.estimate.agent_room:''}${s.estimate.usd!=null?` (~$${s.estimate.usd})`:''} · ${t('helper_w')} <b>${s.estimate.helper_requests}</b> / ${s.estimate.helper_room??'—'}</span></div>`;
+ const o=s.usage.openrouter;if(o){const a=o.account||{};html+=`<h2>${t('or_h')} <span class=small>(${esc(o.model)})</span></h2><div class=row><span><b>$${o.spent_today_usd}</b> ${t('or_spent')} · ${t('or_cap')} <b>$${o.budget_usd}</b></span>${a.usage_usd!=null?`<span>${t('or_key')} <b>$${(+a.usage_usd).toFixed(4)}</b>${a.limit_remaining_usd!=null?` · ${t('or_left')} <b>$${(+a.limit_remaining_usd).toFixed(2)}</b>`:''}</span>`:''}${a.error?`<span class=mute>${esc(a.error)}</span>`:''}</div>`}
+ html+=`<h2>${t('usage_h')} <span class=small>(${t('usage_day')} ${esc(s.usage.day)})</span></h2><table><tr><th>${t('model_c')}</th><th>${t('used_c')}</th><th>${t('limit_c')}</th><th>${t('room_c')}</th></tr>${s.usage.models.filter(u=>u.requests||u.room!==null).map(u=>`<tr>
+ <td>${esc(u.model)}</td><td>${u.requests}</td><td>${u.limit_requests??'—'}${u.limit_tokens?` · ${u.limit_tokens.toLocaleString(lang)} tokens`:''}</td><td class="${u.room===0?'mute':''}"><b>${u.room??'—'}</b></td></tr>`).join('')}</table>`;
  html+=`<h2>${t('rules_h')}</h2>`+(s.rules?`<div class=rules><div class=small>${s.rules.rules.length} · ${t('rules_from')} ${esc(s.rules.from_run)} · ${s.rules.cases} ${t('rules_cases')}</div><ol>${s.rules.rules.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:`<div class=empty>${t('rules_none')}</div>`);
  if(s.comparison.length)html+=`<h2>${t('cmp_h')}</h2><table><tr><th>${t('run_c')}</th><th>${t('mode_c')}</th><th>${t('split_c')}</th><th>${t('rules_c')}</th><th>${t('cases_c')}</th>
- <th>${t('first_c')}</th><th>${t('first_agent_c')}</th><th>${t('second_c')}</th><th>${t('score_c')}</th><th>${t('min_c')}</th></tr>${s.comparison.map(c=>`<tr>
+ <th>${t('first_c')}</th><th>${t('first_agent_c')}</th><th>${t('second_c')}</th><th>${t('other_c')}</th><th>${t('score_c')}</th><th>${t('min_c')}</th></tr>${s.comparison.map(c=>`<tr>
  <td><a href="/report/${esc(c.run)}" target=_blank>${esc(c.run)}</a></td><td>${esc(c.mode)}</td><td>${esc(c.split||'—')}</td><td>${c.rules||'—'}</td><td>${c.cases}</td>
- <td>${frac(c.first)}</td><td class=mute>${frac(c.first_agent)}</td><td>${frac(c.second)}</td><td><b>${c.score??'—'}</b></td><td>${c.minutes??'—'}</td></tr>`).join('')}</table>`;
+ <td>${frac(c.first)}</td><td class=mute>${frac(c.first_agent)}</td><td>${frac(c.second)}</td><td>${frac(c.other)}</td><td><b>${c.score??'—'}</b></td><td>${c.minutes??'—'}</td></tr>`).join('')}</table>`;
  html+=`<h2>${t('cases_h')}</h2>`+(s.cases.length?`<table><tr><th>${t('res')}</th><th>${t('case')}</th><th>${t('exp')}</th><th>${t('agent')}</th><th>${t('final')}</th><th>${t('concl')}</th><th>${t('time')}</th></tr>${s.cases.map(c=>`<tr><td>${tag(c)}</td>
  <td><b>${esc(c.type)}</b><div class=small>${esc(c.id)} · ${esc(c.summary)}</div></td><td>${H[c.expected]}</td><td>${H[c.got_raw]||esc(c.got_raw)}</td>
  <td>${H[c.got]||esc(c.got)}${c.net.length?`<div class=small title="${esc(c.net.join('; '))}">${t('t_net')}</div>`:''}${c.traps.length?'<div class="pill bad">trap</div>':''}</td>

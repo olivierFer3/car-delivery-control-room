@@ -50,6 +50,9 @@ RUN_SETTINGS = {}
 #   human_when_auto: the agent sent a person a case it should have finished alone (cost).
 # The weighted error counts the first WEIGHT times; change it with --weight.
 WEIGHT = 3
+# Cases that fail for another reason than a triage error (person-kind mix-up, forbidden tool, must_not broken
+# per the judge) count in the combined score with this weight, the same as the second triage error.
+QUALITY_WEIGHT = 1
 # The judge runs on the agent's model (the strongest) unless GROQ_JUDGE_MODEL says otherwise; set in main().
 JUDGE_MODEL = None
 HANDOFFS = ("agent_alone", "person_decides", "person_only")
@@ -178,6 +181,13 @@ def handled_alone(result, key="got"):
     return result["score"].get(key, result["score"]["got"]) == "agent_alone"
 
 
+def passed(result, key="got"):
+    """Passed: right ending (with key's handoff), no forbidden tool, no must_not broken."""
+    s = result["score"]
+    got = s.get(key, s["got"])
+    return got == s["expected"] and not s["trap_violations"] and not s["must_not_broken"]
+
+
 def triage_errors(results, key="got"):
     """The two triage errors, as counts, rates over the cases concerned, and one weighted score.
     key "got" scores the handoff after the safety net, "got_raw" the agent's own handoff."""
@@ -185,14 +195,18 @@ def triage_errors(results, key="got"):
     must_be_alone = [r for r in results if should_be_alone(r)]
     auto_wrong = [r for r in must_be_human if handled_alone(r, key)]
     human_wrong = [r for r in must_be_alone if not handled_alone(r, key)]
+    triage_ids = {r["case"]["id"] for r in auto_wrong + human_wrong}
+    other_fail = [r for r in results if not passed(r, key) and r["case"]["id"] not in triage_ids]
     rate = lambda part, whole: round(len(part) / len(whole), 3) if whole else None
     return {
         "auto_when_human": {"count": len(auto_wrong), "out_of": len(must_be_human), "rate": rate(auto_wrong, must_be_human),
                             "cases": [r["case"]["id"] for r in auto_wrong]},
         "human_when_auto": {"count": len(human_wrong), "out_of": len(must_be_alone), "rate": rate(human_wrong, must_be_alone),
                             "cases": [r["case"]["id"] for r in human_wrong]},
-        "weight": WEIGHT,
-        "weighted_error": round((WEIGHT * len(auto_wrong) + len(human_wrong)) / len(results), 3) if results else None,
+        "other_failures": {"count": len(other_fail), "out_of": len(results), "rate": rate(other_fail, results),
+                           "cases": [r["case"]["id"] for r in other_fail]},
+        "weight": WEIGHT, "quality_weight": QUALITY_WEIGHT,
+        "weighted_error": round((WEIGHT * len(auto_wrong) + len(human_wrong) + QUALITY_WEIGHT * len(other_fail)) / len(results), 3) if results else None,
         "person_kind_mixups": sum(r["score"].get("ending" if key == "got" else "ending_raw", r["score"]["ending"]) == "wrong_person_kind" for r in results),
     }
 
@@ -249,7 +263,8 @@ def print_triage(summary):
     show = lambda m: f"{m['count']}/{m['out_of']}" + (f" ({m['rate']:.0%})" if m["rate"] is not None else "")
     print(f"\nHandled alone, should have gone to a person: {show(a)}   <- minimise first")
     print(f"Sent to a person, should have been handled alone: {show(h)}")
-    print(f"Weighted error (first x{summary['weight']}): {summary['weighted_error']}")
+    print(f"Other failures (mix-ups, traps, judge): {show(summary['other_failures'])}")
+    print(f"Combined score (first x{summary['weight']:g} + second + other x{summary['quality_weight']:g}) / cases: {summary['weighted_error']}")
     raw = summary.get("agent_only")
     if raw:
         print(f"Agent alone, before the safety net: {show(raw['auto_when_human'])} kept alone wrongly · "
@@ -272,10 +287,15 @@ def rescore(folder):
     results = [json.loads(line) for line in (folder / "results.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
     old = json.loads((folder / "summary.json").read_text()) if (folder / "summary.json").exists() else {}
     for result in results:
+        if result["trace"].get("finish") is not None or result["trace"].get("safety_net"):
+            final, reasons = case_agent.safety_net(result["case"], result["trace"])  # current safety-net rules
+            result["trace"]["safety_net"] = {**(result["trace"].get("safety_net") or {}), "handoff": final, "reasons": reasons}
         result["score"] = score(result["case"], result["trace"], result["judge"])
+    global RUN_SETTINGS
     mvp.MODEL, case_agent.HELPER_MODEL, JUDGE_MODEL = old.get("model"), old.get("helper_model"), old.get("judge_model")
+    RUN_SETTINGS = old.get("settings") or {}
     summary = summarise(results)
-    summary.update({key: old[key] for key in ("source", "judge", "finished_at") if key in old})
+    summary.update({key: old[key] for key in ("source", "judge", "finished_at", "minutes") if key in old})
     (folder / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
     (folder / "report.html").write_text(report.render(summary, results), encoding="utf-8")
     print(f"Rescored {len(results)} cases in {folder}")
@@ -367,7 +387,8 @@ def main(argv):
     print_triage(summary)
     print(f"Minutes: {summary['minutes']} · report: {out / 'report.html'}")
     if "--learn" in argv:
-        document = learned.learn(results, case_agent.HELPER_MODEL, out.name)
+        writer = case_agent.HELPER_MODEL if RUN_SETTINGS.get("mode") == "openrouter" else mvp.MODEL  # never the paid model
+        document = learned.learn(results, writer, out.name)
         print(f"\n{len(document['rules'])} rules learned from {len(document['source_case_ids'])} cases -> {learned.RULES_FILE}")
 
 

@@ -12,7 +12,7 @@ TEXT = {
         "first_k": "Minimise first", "second_k": "Minimise next", "score_k": "Combined score", "lower": "lower is better",
         "first_d": "handled alone although a person had to handle them, out of the cases that needed a person",
         "second_d": "sent to a person although the agent should have handled them, out of the cases the agent should handle",
-        "score_d": "(first × {w} + second) / cases · mix-ups between person kinds: {m}",
+        "score_d": "(first × {w} + second + other failures × {q}) / cases · other failures: {o} (of which person-kind mix-ups: {m})",
         "net_h": "Effect of the safety net", "net_agent": "Agent alone", "net_final": "After the safety net",
         "net_changed": "cases moved towards a person by the safety net",
         "other": "Other measures", "quality": "Handling quality (ending + traps + judge)", "ending_acc": "Exact ending",
@@ -48,7 +48,7 @@ TEXT = {
         "first_k": "À minimiser en priorité", "second_k": "À minimiser ensuite", "score_k": "Score combiné", "lower": "plus bas = mieux",
         "first_d": "traités seuls alors qu'une personne aurait dû s'en charger, sur les cas qui devaient aller à une personne",
         "second_d": "envoyés à une personne alors que l'agent aurait dû les régler seul, sur les cas que l'agent devait régler",
-        "score_d": "(1ʳᵉ × {w} + 2ᵉ) / cas · confusions entre types de personne : {m}",
+        "score_d": "(1ʳᵉ × {w} + 2ᵉ + autres échecs × {q}) / cas · autres échecs : {o} (dont confusions entre types de personne : {m})",
         "net_h": "Effet du filet de sécurité", "net_agent": "Agent seul", "net_final": "Après le filet",
         "net_changed": "cas remontés vers une personne par le filet",
         "other": "Autres mesures", "quality": "Qualité du traitement (fin + pièges + juge)", "ending_acc": "Bonne fin exacte",
@@ -193,7 +193,7 @@ def triage_block(summary, t):
 <div class="metric main"><span class=k>{t['first_k']}</span><b>{a['count']} <small>/ {a['out_of']}</small></b><em>{rate(a)}</em><span>{t['first_d']}</span></div>
 <div class="metric second"><span class=k>{t['second_k']}</span><b>{h['count']} <small>/ {h['out_of']}</small></b><em>{rate(h)}</em><span>{t['second_d']}</span></div>
 <div class="metric score"><span class=k>{t['score_k']}</span><b>{summary['weighted_error']}</b><em>{t['lower']}</em>
-<span>{t['score_d'].format(w=f"{summary['weight']:g}", m=summary['person_kind_mixups'])}</span></div></div>"""
+<span>{t['score_d'].format(w=f"{summary['weight']:g}", q=f"{summary.get('quality_weight', 0):g}", o=(summary.get('other_failures') or {}).get('count', 0), m=summary['person_kind_mixups'])}</span></div></div>"""
     raw = summary.get("agent_only")
     if raw:
         line = lambda m: f"{m['count']} / {m['out_of']} ({rate(m)})"
