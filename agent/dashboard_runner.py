@@ -19,9 +19,10 @@ def main():
         # Enough attempts to switch models a few times under Groq's free per-minute quota.
         mvp.RATE_LIMIT_RETRIES = 6
         case_agent.MAX_STEPS = 10
-        mvp.pick_model()
+        # Agent on Groq gpt-oss-120b (as in the dashboard so far); helpers on the Gemini pool when a key is set.
+        helper = mvp.configure("groq")
         # Simulated driver, site and search use the second model, keeping the agent's quota for the agent.
-        case_agent.HELPER_MODEL = mvp.other_model()
+        case_agent.HELPER_MODEL = helper
         trace = case_agent.run(record)
     # Do not echo provider error bodies (which may include request content).
     if trace.get("error"):

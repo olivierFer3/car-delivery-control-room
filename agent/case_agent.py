@@ -39,8 +39,13 @@ Then finish with exactly one call:
 - hand_to_person with handoff "person_only": only a person can act, for example the customer must be contacted,
   or there is an emergency.
 
+Before you finish, find the fact that decides the case (a time against a slot or window, an amount against a
+policy limit, a date against a legal period, whether a site accepts, whether an item was found) and finish on it.
+
 Rules:
 - Never contact the customer (anyone who pays: the buyer or seller dealer). Drivers and sites may be contacted.
+  Informing the customer is never needed to finish a case: Bahn's people do it. If the customer must be involved,
+  that is a reason to hand over, not to message them.
 - A person says yes before any booking, payment, date or promise change.
 - These always go to a person with handoff "person_only": fines and penalties, conflicting customer instructions
   (address, date, contact), disputes, claims and anything only the customer can decide. Prepare the facts; do not
@@ -51,8 +56,8 @@ Rules:
 - Use only places, times and names that appear in the case or in replies; never fill a gap with a guess.
 - Be short. Operations people read this."""
 
-# Extra context sent with every agent call. Full by default: Groq's gpt-oss models take 131k tokens, so a few
-# thousand more cost little room but more of the per-minute quota. AGENT_CONTEXT=lean sends only SYSTEM.
+# Context sent with every agent call: the instructions and the triage playbook always; AGENT_CONTEXT=full adds
+# Bahn's operations guide (~1,200 more tokens per call).
 # The playbook states company rules; it contains no test case and no expected answer.
 CONTEXT_LEVEL = os.environ.get("AGENT_CONTEXT", "full")
 OPERATIONS_CONTEXT = Path(__file__).resolve().parent.parent / "OPERATIONS-CONTEXT.md"
@@ -66,17 +71,26 @@ Finish alone (resolve_alone) when every step is inside a written rule and nothin
 - a delay whose new arrival still falls inside the agreed window: record the new ETA, tell nobody else;
 - a missing upload (photos, scans) that the driver or site can send now; check it arrived before calling it done;
 - information a pickup or delivery site can give (VIN, key box, opening hours, an authorised receiver by name);
-- a driver's flexible ticket or a carrier's automatic rebooking that still meets the slot or window.
+- a driver's flexible ticket or a carrier's automatic rebooking that still meets the slot or window;
+- a problem the driver or a site has already resolved inside the rules, with nothing left to book, pay, change
+  or agree: confirm it and finish. That the customer might like to know is not a reason to escalate; Bahn
+  informs customers through its own channels.
 
 Bring one decision (hand_to_person, person_decides) when a yes is needed:
 - any booking or purchase: tickets, ferries, hotels, tows, repairs, tyre or locksmith services, chargers above the limit;
 - any cost above a policy limit, any waiting pay, any driver fee change or offer repricing;
 - any change of pickup slot, delivery date, delivery promise, driver assignment or route;
 - safety events: red warning lights, accidents, illness, theft, wrong fuel, a car that must not be driven;
-- evidence that is weaker than required and would need to be accepted as it is.
-Prepare it: the facts with their sources, the options with time and price, your recommendation, what changes after yes.
+- evidence that is weaker than required and would need to be accepted as it is;
+- anything still open after your questions: a driver who says they will do it later does not close a case that
+  needed a decision; a site that cannot hand over when planned means a new slot; a stopped or cancelled trip
+  leaves costs and the driver's way home to decide.
+person_decides is the default whenever a person is needed. Prepare it: the facts with their sources, the options with time and price, your recommendation, what changes after yes.
 
-Leave it to a person only (hand_to_person, person_only) when the customer is needed or it is an emergency:
+Leave it to a person only (hand_to_person, person_only) only when the next step cannot happen without the
+customer itself, or it is an emergency. Missing papers, a mismatched identity, theft or a missing signature are
+person_decides (a person decides, and involves the customer if needed) unless the only possible next step is the
+customer's:
 - the customer must answer, agree or be told (anything that changes what they were promised, conflicting customer
   instructions such as two addresses, documents only the buyer can sign, payment or release disputes with the seller);
 - fines, penalties, claims, complaints about a driver, invoices: prepare the file, never decide who pays;
@@ -98,13 +112,14 @@ LEARNED_RULES = []
 
 
 def system_prompt(now, ref):
-    prompt = SYSTEM.format(now=now, ref=ref)
+    """The triage playbook always comes with the instructions; the full context adds Bahn's operations guide."""
+    prompt = f"{SYSTEM.format(now=now, ref=ref)}\n\n{PLAYBOOK}"
     if LEARNED_RULES:
         prompt += "\n\nRules learned from earlier cases (general, apply them when they fit):\n" + "\n".join(f"- {rule}" for rule in LEARNED_RULES)
     if CONTEXT_LEVEL == "lean":
         return prompt
     operations = OPERATIONS_CONTEXT.read_text(encoding="utf-8") if OPERATIONS_CONTEXT.exists() else ""
-    return f"{prompt}\n\n{PLAYBOOK}\n\nCompany operations guide:\n{operations}"
+    return f"{prompt}\n\nCompany operations guide:\n{operations}"
 
 
 # ---------------------------------------------------------------- safety net
@@ -117,19 +132,12 @@ SAFETY_NET = [
         r"refuses? to (accept|take)|order note|two addresses|conflicting|payment (has )?not|not received the payment|"
         r"hold on (this|the) car|only the buyer|buyer('s)? sign|on (the )?buyer's behalf|same vin|which car they bought|"
         r"reached only through the customer|private seller", re.I)),
-    ("person_decides", "a booking, cost or change that needs a yes", None),
     ("person_decides", "safety or a car that must not be driven", re.compile(
         r"\bred\b[^.]{0,40}warning|warning[^.]{0,40}\bred\b|(had|have|in|reports?|report a) (a |an )?(serious )?accident|accident (on|with)|"
         r"(car|vehicle) (was|has been) hit|reversed into|collision|injur|\bhurt\b(?<!nobody is hurt)|ambulance|\b112\b|stolen|"
         r"broken into|break-in|smashed|wrong fuel|filled a \w+ car with|fever|unwell|dizzy|\bsick\b|no plates|deregistered|"
         r"must not be driven|cut near the sidewall|sidewall", re.I)),
 ]
-
-
-# Read in the agent's own conclusion only: finishing alone while booking, paying or changing something.
-COMMITMENT = re.compile(
-    r"\b(re)?book(ed|ing)?\b|\bpurchas|\bbuy\b|\bhotel|\btow(ed|ing)?\b|locksmith|\brepair|reassign|replacement driver|"
-    r"new (pickup )?slot|chang(e|ed|ing) the (date|slot|promise|delivery)|waiting pay|\brefund|\bdeduction|approve", re.I)
 
 
 def safety_net(record, trace):
@@ -142,19 +150,16 @@ def safety_net(record, trace):
     if finish.get("confidence", "high") != "high":
         reasons.append(f"agent confidence {finish.get('confidence')}")
         level = "person_decides"
-    if trace["violations"]:
-        reasons.append("agent tried a forbidden action")
-        level = level or "person_decides"
+    # A forbidden tool call is blocked and already counted as a fault; on its own it does not move the case.
     replies = [str(s["result"].get("reply") or "") for s in trace["steps"] if isinstance(s.get("result"), dict)]
     # Policies and rules quoted as facts say what applies, not what happens: leave them out.
     facts = [f["fact"] for f in record["test"]["given"]["facts"] if not re.search(r"policy|rule|guide", f["source"], re.I)]
-    text = " ".join([record["summary"] or "", *facts,
-                     *(m["text"] or "" for m in record["timeline"]), *replies,
-                     finish.get("summary") or "", *finish.get("actions", [])])
+    # Only what the case says and what people replied: the agent's own wording ("only red warnings stop a
+    # car", "the carrier rebooked it") would trigger false alarms.
+    text = " ".join([record["summary"] or "", *facts, *(m["text"] or "" for m in record["timeline"]), *replies])
     text = text.replace("nobody is hurt", "").replace("Nobody is hurt", "")
-    conclusion = " ".join([finish.get("summary") or "", *finish.get("actions", [])])
     for target, why, pattern in SAFETY_NET:
-        found = (COMMITMENT.search(conclusion) if pattern is None else pattern.search(text))
+        found = pattern.search(text)
         if found:
             reasons.append(f"{why} ('{found.group(0)}')")
             level = "person_only" if target == "person_only" else (level or target)
