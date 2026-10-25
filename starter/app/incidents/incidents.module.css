@@ -307,3 +307,10 @@ p .label { display: inline; margin: 0; max-width: none; }
 .toolbar [role="status"] { margin-left: auto; font-size: 12px; color: var(--muted); }
 .raw { margin: 0 0 8px; }
 @media (max-width: 900px) { .access { border-radius: 16px; } .heroTools { justify-content: flex-start; } .toolbar .label { flex-basis: 100%; } .toolbar [role="status"] { margin-left: 0; } }
+
+.verdict { display: grid; gap: 8px; margin: 4px 0 8px; padding: 12px 14px; border-radius: 10px; background: var(--tray); border-left: 4px solid var(--sand); }
+.verdict div { display: grid; gap: 2px; }
+.verdict dt { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.verdict dd { margin: 0; font-size: 13px; }
+.verdict[data-kind="agent"] { border-left-color: var(--green); }
+.verdict[data-kind="person"] { border-left-color: var(--orange); }

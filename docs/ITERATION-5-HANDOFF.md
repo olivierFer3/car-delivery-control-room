@@ -135,6 +135,12 @@ Branch `integration/iteration-5` (local only, not pushed, not merged into main).
 - Headless Chromium walkthrough against `next start` on 127.0.0.1:3111 with the isolated DB (127.0.0.1:15441, `controlroom_iter5`): unlock with the operator token; queue counts; Tab order with visible 2px outlines and Enter on a queue link; orders filter and search; unsupported order → human handoff; scripted demo propose v1 → reject → propose v2 → approve v2 → apply → reload (1 execution, no apply button left: no duplicate); waiting incident (seeded locally with the simulated tools, as in `voice-server.test.ts`) → voice unavailable, start disabled → text reply → recorded, "resume" offered; 390px layouts for workspace, orders, incident and waiting pages, reduced motion on; no page errors.
 - Not exercised in the browser: a real model run or resume (no provider configured, on purpose), real ElevenLabs voice, "request alternative" leading to a third proposal (the scripted engine has no further option and waits, as designed). Historical live evidence is the earlier runs, not this walkthrough.
 
+**Follow-up changes (same day, after user review):**
+- Workspace tabs: **Needs a person** (decisions, waiting for information, paused investigations, technical review, unsupported/human handling) and **Handled by the agent** (solved by the agent, investigating right now). Arrow keys switch tabs.
+- An LLM investigation with no run in progress is shown as **paused, resume needed** (it was wrongly shown as "the agent is running its checks").
+- Orders page opens on **Investigated** orders only (All orders · 100 stays one click away). Each incident shows **Problem** (the signal that started it), **Agent decision** in plain words (solved, proposed and awaiting approval, handed to a person, or no decision yet) and its status.
+- Plainer provider notice when no Groq/Gemini key is set. The local preview now has `GROQ_API_KEY` in the ignored `starter/.env` (model `openai/gpt-oss-120b`), so investigations started from the preview make real Groq calls on the free tier. The browser checks above were run before the key was added.
+
 **Known limitations:** no "skip to content" link (7 navigation links before the main content); one 10px label remains on the incident page; the agent conversation and diagnostics are unchanged; the demo label maps only `ord-00603` to its reference.
 
 **Start the preview:**

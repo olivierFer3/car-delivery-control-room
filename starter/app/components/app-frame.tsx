@@ -1,6 +1,5 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { BahnLogo } from "./bahn-logo"
 import { fmtDateTime } from "@/lib/present/time"
 
 export type Section = "board" | "incidents" | "inbox" | "customers" | "drivers" | "sites"
@@ -21,7 +20,7 @@ const GROUPS: { label: string; links: { section: Section; href: string; label: s
 export function AppFrame({ children, section, snapshotAt, board = false }: { children: ReactNode; section: Section; snapshotAt?: string | null; board?: boolean }) {
   return <div className={`app${board ? " app-board" : ""}`}>
     <header className="topbar">
-      <Link href="/" className="wordmark" aria-label="Bahn Control Room home"><BahnLogo className="wordmark-logo" /><span className="wordmark-sub">control room</span></Link>
+      <Link href="/" className="wordmark" aria-label="Bahn Control Room home">{/* eslint-disable-next-line @next/next/no-img-element */}<img className="wordmark-logo" src="/bahn-logo.png" width={512} height={512} alt="Bahn" /><span className="wordmark-sub">control room</span></Link>
       <nav className="topnav" aria-label="Main navigation">
         {GROUPS.flatMap((group) => group.links).map((link) => <Link key={link.section} href={link.href} className={`topnav-link${section === link.section ? " active" : ""}`} aria-current={section === link.section ? "page" : undefined}>{link.label}</Link>)}
       </nav>

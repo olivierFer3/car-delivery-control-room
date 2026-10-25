@@ -9,7 +9,7 @@ import { fmtDateTime, fmtMoney } from "@/lib/present/time"
 import { commandIncident } from "../actions"
 import { LiveAgentControls } from "../live-agent-controls"
 import { OperatorAccess } from "../operator-access"
-import { StatusBadge, incidentStatus, responsible } from "../status"
+import { StatusBadge, incidentStatus, paused, responsible } from "../status"
 import styles from "../incidents.module.css"
 
 const toolLabels: Record<string, string> = { get_order_context: "Read the order and linked records", ask_driver: "Asked the simulated driver for an ETA", search_travel_options: "Compared fictional ferry alternatives", check_option_constraints: "Checked ferry timing and constraints", check_booking_constraints: "Checked original booking against driver ETA, safety and blockers", receive_driver_reply: "Received a new simulated driver reply", create_proposal: "Prepared a proposal for review", wait: "Paused for missing information", close_disproved_alert: "Closed the disproved alert" }
@@ -76,7 +76,7 @@ export default function IncidentPage() {
     {incident && <>
       <header className={styles.hero}><div><p className={styles.eyebrow}>{incident.workflow==="human_review"?"Human handoff":"Ferry risk"} · {incident.workflow==="human_review"?"no automated investigation":incident.mode === "llm" ? "real model investigation" : "scripted demo investigation"}</p><h1>{incident.orderId === "ord-00603" ? "CD-420603" : incident.orderId}</h1><p>{incident.summary}</p><p className={styles.heroNote}>Fictional actions only. Decisions do not change the recorded delivery status.</p></div><div className={styles.heroTools}><StatusBadge status={incidentStatus(incident)} /><Link className={styles.secondary} href={`/orders/${incident.orderId}`}>Open original order →</Link></div></header>
       <div className={styles.columns}><div className={styles.stack}>
-      <div aria-live="polite" className={styles.next}><p className={styles.eyebrow}>What happens next</p><p>{incident.nextStep}</p><p className={styles.who}><strong>Who acts:</strong> {responsible(incident)}</p>{busy && <p role="status">{busy}</p>}
+      <div aria-live="polite" className={styles.next}><p className={styles.eyebrow}>What happens next</p><p>{paused(incident) ? `The agent stopped after its last check (${incident.nextStep.toLowerCase()}). Resume the investigation below to let it continue.` : incident.nextStep}</p><p className={styles.who}><strong>Who acts:</strong> {responsible(incident)}</p>{busy && <p role="status">{busy}</p>}
         {canPrepare && <button disabled={!!busy} className={styles.primary} onClick={() => act({ command: "mock_proposal" }, "Preparing mock proposal…")}>{proposal ? "Prepare another mock proposal" : "Prepare mock proposal"}</button>}
       </div>
       {incident.mode === "llm" && <LiveAgentControls incident={incident} busy={!!busy} act={act} />}

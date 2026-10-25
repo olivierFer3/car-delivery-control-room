@@ -8,7 +8,7 @@ import { SIMULATION_TIME, type PublicIncident } from "@/lib/incidents/contracts"
 import { createDemoIncident } from "./actions"
 import { LiveAgentLauncher } from "./live-agent-controls"
 import { OperatorAccess } from "./operator-access"
-import { StatusBadge, incidentStatus, responsible } from "./status"
+import { StatusBadge, incidentStatus, paused, responsible } from "./status"
 import type { OperationalOrder } from "@/lib/incidents/operational"
 import styles from "./incidents.module.css"
 
@@ -46,10 +46,11 @@ export default function IncidentsPage() {
   const groups = [
     { id: "decisions", title: "Decisions needed", note: "A change is proposed. Nothing is booked or paid until you approve this exact version, then apply it.", urgent: true, rows: incidents?.filter(i => !human(i) && ["needs_decision", "approved"].includes(i.state)) ?? [] },
     { id: "waiting", title: "Waiting for information", note: "The case needs a fact first, usually a reply from the simulated driver (voice or text).", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "waiting") ?? [] },
-    { id: "investigating", title: "Investigating", note: "The agent is checking the facts.", rows: incidents?.filter(i => !human(i) && i.state === "investigating") ?? [] },
+    { id: "paused", title: "Paused · resume needed", note: "The agent stopped between checks. Open the incident and resume the investigation.", urgent: true, rows: incidents?.filter(i => !human(i) && paused(i)) ?? [] },
+    { id: "investigating", title: "Investigating", note: "The agent is checking the facts right now.", rows: incidents?.filter(i => !human(i) && i.state === "investigating" && !paused(i)) ?? [] },
     { id: "technical", title: "Technical review", note: "A provider or storage problem stopped the run. Nothing was changed; check and resume.", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "technical_error") ?? [] },
-    { id: "unsupported", title: "Unsupported · human handling", note: "Outside what the agent may handle. An operator takes these by hand.", rows: incidents?.filter(i => human(i) && i.state !== "resolved") ?? [] },
-    { id: "resolved", title: "Resolved incidents", note: "The incident is closed. Delivery status is tracked separately.", rows: incidents?.filter(i => i.state === "resolved") ?? [] },
+    { id: "unsupported", title: "Unsupported · human handling", note: "Outside what the agent may handle. An operator takes these by hand.", rows: incidents?.filter(human) ?? [] },
+    { id: "resolved", title: "Solved by the agent", note: "The agent found the solution and the incident is closed (any booking change was approved by a person first). Delivery status is tracked separately.", rows: incidents?.filter(i => !human(i) && i.state === "resolved") ?? [] },
   ]
   const unchecked = orders?.filter(o => o.checkStatus === "Not checked").length
   const renderGroup = (group: (typeof groups)[number]) => <section key={group.id} id={group.id} aria-labelledby={`${group.id}-title`} className={styles.section}><div className={styles.sectionHead}><h2 id={`${group.id}-title`}>{group.title} <span className={styles.count}>{group.rows.length}</span></h2><p>{group.note}</p></div>
@@ -64,7 +65,7 @@ export default function IncidentsPage() {
       <Link href="/incidents/orders?check=Not+checked"><strong>{unchecked ?? "–"}</strong><span>Orders not checked</span></Link>
     </nav>}
     {incidents && <div className={styles.console}>
-      <div className={styles.consoleMain}>{["decisions", "technical", "waiting"].map(id => groups.find(g => g.id === id)!).map(renderGroup)}</div>
+      <div className={styles.consoleMain}>{["decisions", "technical", "waiting", "paused"].map(id => groups.find(g => g.id === id)!).map(renderGroup)}</div>
       <aside className={styles.consoleSide} aria-label="Agent activity and other cases">{["investigating", "unsupported", "resolved"].map(id => groups.find(g => g.id === id)!).map(renderGroup)}</aside>
     </div>}
     <p className={styles.footnote}>Orders without an investigation stay <strong>Not checked</strong>. A quiet queue is not proof that every order is safe.</p>
