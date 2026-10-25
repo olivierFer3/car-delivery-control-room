@@ -1,0 +1,220 @@
+{
+  "created_at": "2026-10-25T10:39:48",
+  "from_run": "live-20261025-103419-A",
+  "model": "openai/gpt-oss-20b",
+  "source_case_ids": [
+    "syn-00179",
+    "syn-00013",
+    "syn-00479",
+    "syn-00225",
+    "syn-00425",
+    "syn-00134",
+    "syn-00319",
+    "syn-00528",
+    "syn-00271",
+    "syn-00091",
+    "syn-00640",
+    "syn-00721",
+    "syn-00682",
+    "syn-00999",
+    "syn-00802",
+    "syn-00761",
+    "syn-00949",
+    "syn-01015",
+    "syn-01247",
+    "syn-00377",
+    "syn-00587",
+    "syn-01101",
+    "syn-01291",
+    "syn-01515",
+    "syn-01159",
+    "syn-01369",
+    "syn-01461",
+    "syn-01090",
+    "syn-00860",
+    "syn-01315",
+    "syn-01652",
+    "syn-01419",
+    "syn-01815",
+    "syn-01764",
+    "syn-01711",
+    "syn-01975",
+    "syn-01924",
+    "syn-01890",
+    "syn-01607",
+    "syn-02016",
+    "syn-02128",
+    "syn-02053",
+    "syn-02455",
+    "syn-02376",
+    "syn-02405",
+    "syn-02157",
+    "syn-02319",
+    "syn-02277",
+    "syn-02638",
+    "syn-02718",
+    "syn-02574",
+    "syn-02776",
+    "syn-01584",
+    "syn-02669",
+    "syn-02523",
+    "syn-02211",
+    "syn-02905",
+    "syn-02833",
+    "syn-03088",
+    "syn-03211",
+    "syn-02872",
+    "syn-03185",
+    "syn-03028",
+    "syn-03383",
+    "syn-03343",
+    "syn-03124",
+    "syn-03262",
+    "syn-03746",
+    "syn-03554",
+    "syn-02952",
+    "syn-03534",
+    "syn-03787",
+    "syn-03637",
+    "syn-03849",
+    "syn-03430",
+    "syn-03671",
+    "syn-03493"
+  ],
+  "rules": [
+    "Handle minor vehicle warnings or mileage discrepancies independently by documenting the status.",
+    "Handle cases where site documentation is available in the system to resolve release refusals.",
+    "Handle trade-in vehicle pickups independently by confirming readiness, documentation, and instructing the driver.",
+    "Handle address discrepancies independently by providing the correct location and verifying the delivery window.",
+    "Handle cases where the release authority name differs from the driver but the site accepts the job confirmation.",
+    "Resolve multiple driver acceptances by assigning the earliest booking and cancelling the others.",
+    "Monitor driver app connectivity issues by requesting location updates and restarting the app.",
+    "Escalate to a person for any changes to scheduled pickup windows or delivery dates.",
+    "Escalate to a person for all accidents, vehicle thefts, or incidents requiring legal or insurance coordination.",
+    "Escalate to a person for any transport disruptions, ferry issues, or route closures requiring additional costs.",
+    "Escalate to a person when key handover requires written consent or an authorized receiver is unavailable.",
+    "Escalate to a person when documentation is missing, insufficient, or requires buyer signature.",
+    "Escalate to a person for order cancellations occurring while a driver is in transit.",
+    "Escalate to a person for duplicate orders or missing identification data like VIN or plate numbers.",
+    "Escalate to a person for roadside service requests or fuel-related issues requiring cost approval.",
+    "Escalate to a person for customer requests regarding invoices or personalized communication."
+  ],
+  "proposed": [
+    {
+      "case_id": "syn-00179",
+      "rule": "When a yellow washer fluid warning appears, the agent should handle the case alone, because it is not a stop signal and can be addressed by the driver at the service area."
+    },
+    {
+      "case_id": "syn-00479",
+      "rule": "When a delay results in a change to a scheduled pickup window, hand off to person_decides, because any modification to time slots requires human approval."
+    },
+    {
+      "case_id": "syn-00225",
+      "rule": "When a vehicle is involved in an accident, use person_decides, because the incident may require customer notification or impact the delivery schedule."
+    },
+    {
+      "case_id": "syn-00319",
+      "rule": "When the driver app fails to provide a position for an extended period, ask the driver for their location and ETA, have them restart the app, record their statement, and continue monitoring."
+    },
+    {
+      "case_id": "syn-00528",
+      "rule": "When a driver misses the ferry terminal check‑in, hand the case to a person for decision, because the agent must obtain approval for rebooking and any change fee and update the delivery promise accordingly."
+    },
+    {
+      "case_id": "syn-00721",
+      "rule": "When a scheduled transport disruption is announced, prepare an alternative transport option and seek approval, because it ensures the driver arrives on time and the customer experience is maintained."
+    },
+    {
+      "case_id": "syn-00377",
+      "rule": "When a vehicle’s current tyres satisfy all legal requirements for the destination and travel dates, the agent should handle the case alone, because no further action is required."
+    },
+    {
+      "case_id": "syn-00587",
+      "rule": "When a customer’s flight is cancelled and the next available flight is costly, hand the case to a person to decide after confirming pickup site availability, because the agent must evaluate whether to book the expensive flight or seek a later handover."
+    },
+    {
+      "case_id": "syn-01291",
+      "rule": "When a pickup site is closed on a public holiday requiring a schedule change, prepare the new pickup and delivery plan for human decision, because modifying time slots requires human approval."
+    },
+    {
+      "case_id": "syn-01652",
+      "rule": "When no written agreement authorizes leaving keys unattended, hand off to person_decides, because the customer must provide written consent or a named receiver before keys can be dropped."
+    },
+    {
+      "case_id": "syn-01419",
+      "rule": "When the named receiver is not present, request an alternate authorized person, have the driver wait, and hand over only to that authorized person, because keys must be given to an authorized individual only."
+    },
+    {
+      "case_id": "syn-01815",
+      "rule": "When the seller will not release the vehicle until the buyer signs an arrival confirmation, hand off to person, because the document must be obtained directly from the buyer."
+    },
+    {
+      "case_id": "syn-01890",
+      "rule": "When evidence is insufficient and the driver has already moved on, use person_decides, because a human must decide whether to accept alternative or weaker evidence."
+    },
+    {
+      "case_id": "syn-02157",
+      "rule": "When an order lacks identification data like a VIN or plate for an imminent pickup, leave it to a person only because the site cannot identify the car and external parties must be contacted."
+    },
+    {
+      "case_id": "syn-02319",
+      "rule": "When multiple new orders share the same VIN and route, person_only, because the customer must be contacted to confirm if duplicate orders are intended before proceeding."
+    },
+    {
+      "case_id": "syn-02638",
+      "rule": "When a driver is locked out and a roadside service is needed, prepare the booking for a person because cost and delay require human approval."
+    },
+    {
+      "case_id": "syn-02776",
+      "rule": "When a major route is closed indefinitely due to severe weather and alternatives cause missed delivery windows, route to person_decides, because human approval is required for costs like hotels or ferries and to coordinate delays with the customer."
+    },
+    {
+      "case_id": "syn-02669",
+      "rule": "When a driver reports incorrect fuel without starting the engine, use person_decides to obtain approval for a mobile fuel drain service and cost before proceeding."
+    },
+    {
+      "case_id": "syn-02523",
+      "rule": "When a vehicle is reported stolen, prepare a decision for a person to coordinate police reporting and customer communication, because immediate human intervention is required for legal and insurance steps."
+    },
+    {
+      "case_id": "syn-02211",
+      "rule": "When a customer requests a delivery date change that conflicts with the assigned driver's schedule, prepare options and hand over to a person, because management decision is needed to reassign the delivery or decline the request."
+    },
+    {
+      "case_id": "syn-02872",
+      "rule": "When a ferry crossing has no car space, hand to a person for decision after preparing the next sailing with space and a hotel night, because the agent must seek approval for the additional cost and delivery estimate."
+    },
+    {
+      "case_id": "syn-03185",
+      "rule": "When a minor mileage discrepancy is identified, the agent should complete the case alone by documenting the actual reading, because small increases are expected after listing and do not require human escalation."
+    },
+    {
+      "case_id": "syn-03028",
+      "rule": "When a site refuses to release a vehicle despite the required documentation being available in the system, provide the document to the site and instruct the driver to proceed, because the issue can be resolved using existing records."
+    },
+    {
+      "case_id": "syn-03383",
+      "rule": "When multiple drivers accept the same job, assign the earliest acceptance and cancel the later booking, because it respects the first-come priority and avoids unnecessary cancellations."
+    },
+    {
+      "case_id": "syn-03262",
+      "rule": "When the release authority lists a different driver than the one at the desk, but the site accepts the job confirmation with the current driver’s name, the agent should finish the case alone, because no human intervention is required."
+    },
+    {
+      "case_id": "syn-03746",
+      "rule": "When a customer requests the invoice for a delivered vehicle, handoff to a person, because confirming invoice details requires human verification and personalized response."
+    },
+    {
+      "case_id": "syn-03554",
+      "rule": "When a trade‑in vehicle is ready for pickup, the agent should handle the case alone, confirming readiness, photographing, checking keys and documents, and instructing the driver, because the agent can complete the return leg without escalation."
+    },
+    {
+      "case_id": "syn-03534",
+      "rule": "When a driver is at an incorrect location, use agent_alone to provide the correct address and verify the delivery window, because the agent can resolve address discrepancies independently."
+    },
+    {
+      "case_id": "syn-03637",
+      "rule": "When an order is cancelled while a driver is travelling to pickup, notify the driver to stop and prepare a decision for a person, because cancellation payouts and return travel arrangements require human approval."
+    }
+  ]
+}

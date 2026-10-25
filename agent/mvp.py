@@ -327,29 +327,93 @@ RATE_LIMIT_RETRIES = 12
 # gpt-oss models reason before answering and those tokens count against the quota. "low" keeps them short;
 # a call can ask for more (the judge does). GROQ_REASONING_EFFORT changes the default.
 REASONING_EFFORT = os.environ.get("GROQ_REASONING_EFFORT", "low")
-# Models to switch to when one hits its rate limit, and when each is usable again.
+# POOL: the models the agent may answer with, MODEL first. HELPER_POOL: the models simulated people, search,
+# judge and rule writing may use, in order; the agent's models come last for helpers.
 POOL = []
+HELPER_POOL = []
 COOLDOWN = {}
 _cooldown_lock = threading.Lock()
 
+# Free-tier limits per model: requests and tokens per minute (Groq console and Google AI Studio, 2026-10-24).
+# Calls are paced to stay under them, which avoids 429 answers that can impose 20-60 s waits.
+RATE_LIMITS = {
+    "openai/gpt-oss-120b": (30, 8_000), "openai/gpt-oss-20b": (30, 8_000),
+    GEMINI_PREFIX + "gemini-3.1-flash-lite": (15, 250_000), GEMINI_PREFIX + "gemini-3.5-flash-lite": (15, 250_000),
+    GEMINI_PREFIX + "gemma-4-26b-a4b-it": (30, 16_000), GEMINI_PREFIX + "gemini-3-flash-preview": (5, 250_000),
+    GEMINI_PREFIX + "gemini-3.5-flash": (5, 250_000), GEMINI_PREFIX + "gemini-3.6-flash": (5, 250_000),
+}
+SAFETY = 0.9  # use every request per minute, but only 90 % of the tokens (token counts are estimates)
+_window = {}  # model -> [(time, tokens)] over the last 60 s
 
-def next_model(wanted):
-    """The wanted model if it is not cooling down, else the first ready model of the pool.
-    Returns (model, seconds to wait); waits only when every model is cooling down."""
-    # A Gemini helper tries the rest of the Gemini pool first. Helpers then fall back on the other Groq
-    # models before the agent's own, to leave the agent its quota.
-    gemini = [name for name in GEMINI_POOL if name != wanted] if wanted.startswith(GEMINI_PREFIX) else []
-    order = [wanted] + gemini + [name for name in POOL if name not in (wanted, MODEL)] + ([MODEL] if MODEL != wanted else [])
+# Fast mode: the agent runs on the two Gemini Flash Lite models (15 requests per minute each, 250k tokens),
+# which lets 77 cases finish in minutes; helpers use Groq gpt-oss-20b and Gemma, so the agent keeps its quota.
+FAST_AGENT = [GEMINI_PREFIX + "gemini-3.1-flash-lite", GEMINI_PREFIX + "gemini-3.5-flash-lite"]
+FAST_HELPERS = ["openai/gpt-oss-20b", GEMINI_PREFIX + "gemma-4-26b-a4b-it"]
+
+
+def configure(mode="groq"):
+    """Set the agent's models and the helper pool. Returns the first helper model.
+
+    groq: agent on Groq gpt-oss-120b; helpers on the Gemini pool when a Gemini key is set, else gpt-oss-20b.
+    fast: agent on the Gemini Flash Lite models; helpers on gpt-oss-20b, then Gemma, then other Gemini models."""
+    global MODEL, POOL, HELPER_POOL
+    if mode == "fast":
+        if not gemini_key():
+            raise SystemExit("Fast mode needs a Gemini key in gemini_api_key.txt.")
+        gemini_model()  # fills GEMINI_POOL with the models this key lists
+        listed = set(GEMINI_POOL)
+        try:
+            groq = set(available_models())
+        except SystemExit:
+            groq = set()
+        POOL = [name for name in FAST_AGENT if name in listed] or [GEMINI_POOL[0]]
+        MODEL = POOL[0]
+        HELPER_POOL = [name for name in FAST_HELPERS if name in groq or name in listed] \
+            + [name for name in GEMINI_POOL if name not in POOL and name not in FAST_HELPERS]
+        return HELPER_POOL[0]
+    MODEL = None
+    pick_model()
+    helper = other_model()
+    HELPER_POOL = (GEMINI_POOL if helper.startswith(GEMINI_PREFIX) else []) + [name for name in POOL if name != MODEL]
+    return helper
+
+
+def _reserve(model, tokens):
+    """Seconds to wait before this model can take a request of about `tokens`; 0 means it was reserved."""
+    rpm, tpm = RATE_LIMITS.get(model, (60, 1_000_000))
+    now = time.monotonic()
+    window = [(t, n) for t, n in _window.get(model, []) if now - t < 60]
+    if len(window) < rpm and sum(n for _, n in window) + tokens <= tpm * SAFETY:
+        window.append((now, tokens))
+        _window[model] = window
+        return 0.0
+    _window[model] = window
+    return max(0.2, 60 - (now - window[0][0])) if window else 0.2
+
+
+def next_model(wanted, tokens=0):
+    """The first model, in order, that is not cooling down and has room under its per-minute limits.
+    Returns (model, seconds to wait); the wait is non-zero only when no model has room."""
+    if wanted in POOL:  # the agent: its own models only
+        order = [wanted] + [name for name in POOL if name != wanted]
+    else:  # a helper: its pool first, the agent's models last
+        order = [wanted] + [name for name in HELPER_POOL if name != wanted] + [name for name in POOL if name != wanted]
     with _cooldown_lock:
         now = time.monotonic()
         usable = [name for name in order if COOLDOWN.get(name, 0) != float("inf")]
         if not usable:
-            raise SystemExit("Every Groq model hit its daily limit; try tomorrow.")
-        ready = [name for name in usable if COOLDOWN.get(name, 0) <= now]
-        if ready:
-            return ready[0], 0.0
-        soonest = min(usable, key=lambda name: COOLDOWN[name])
-        return soonest, COOLDOWN[soonest] - now
+            raise SystemExit("Every model hit its daily limit; try tomorrow.")
+        waits = []
+        for name in usable:
+            if COOLDOWN.get(name, 0) > now:
+                waits.append((COOLDOWN[name] - now, name))
+                continue
+            wait = _reserve(name, tokens)
+            if wait == 0:
+                return name, 0.0
+            waits.append((wait, name))
+        wait, name = min(waits)
+        return name, wait
 
 
 def cool_down(model, seconds):
@@ -358,27 +422,34 @@ def cool_down(model, seconds):
 
 
 def chat(messages, tools=None, model=None, **options):
-    """One Groq call. Returns (assistant message, call stats including the model that answered).
+    """One model call (Groq, or Gemini for "gemini:" models). Returns (assistant message, call stats
+    including the model that answered).
 
     model is the preferred model for this call (e.g. a helper model with its own quota), MODEL by default.
     options go into the request body as they are, e.g. temperature or response_format.
-    When a model hits its per-minute limit, the call switches to the next ready model of POOL; it only
-    waits when all of them are limited. A model at its daily limit is dropped for the rest of the run."""
+    Calls are paced under each model's per-minute limits; a model that still refuses (rate limit, invalid
+    tool call, server error, timeout) is rested and the next one of its pool is used. A model at its daily
+    limit is dropped for the rest of the run."""
     wanted = model or MODEL
     body = {"model": wanted, "messages": messages, "temperature": 0.2, **options}
     if tools:
         body["tools"] = tools
         body["tool_choice"] = "auto"
-    for attempt in range(RATE_LIMIT_RETRIES):
-        body["model"], wait = next_model(wanted)
+    tokens = len(json.dumps(body, ensure_ascii=False)) // 4 + int(options.get("max_completion_tokens", 600))
+    attempt, deadline = 0, time.monotonic() + 600
+    while attempt < RATE_LIMIT_RETRIES:
+        body["model"], wait = next_model(wanted, tokens)
+        if wait > 0:
+            if time.monotonic() > deadline:
+                raise SystemExit("No model had room for 10 minutes.")
+            time.sleep(min(wait, 5))
+            continue  # waiting for room is not a failed attempt
+        attempt += 1
         # Only gpt-oss models take reasoning_effort; the model can change between attempts.
         if body["model"].startswith("openai/gpt-oss"):
             body["reasoning_effort"] = options.get("reasoning_effort", REASONING_EFFORT)
         else:
             body.pop("reasoning_effort", None)
-        if wait > 0:
-            print(f"  · all models rate limited, waiting {wait:.0f}s")
-            time.sleep(min(wait, 60))
         started = time.perf_counter()
         try:
             if body["model"].startswith(GEMINI_PREFIX):
@@ -400,7 +471,7 @@ def chat(messages, tools=None, model=None, **options):
             }
         except urllib.error.HTTPError as error:
             detail = error.read().decode(errors="replace")[:300]
-            if error.code in (500, 502, 503, 504) and attempt < RATE_LIMIT_RETRIES - 1:
+            if error.code in (500, 502, 503, 504):
                 cool_down(body["model"], 30)
                 print(f"  · {body['model']} unavailable ({error.code}), switching model")
                 continue
@@ -411,25 +482,21 @@ def chat(messages, tools=None, model=None, **options):
                 cool_down(body["model"], pause)
                 print(f"  · {body['model']} {'daily limit reached, dropped' if daily else f'rate limited for {pause:.0f}s'}, switching model")
                 continue
-            # Groq rejects a malformed tool call from the model (tool_use_failed, or "Tool call validation
-            # failed"); the next sample is usually well formed, so ask again.
-            if error.code == 400 and ("tool_use_failed" in detail or "tool call validation failed" in detail.lower()) and attempt < 3:
-                # The same model often repeats the same bad call: rest it briefly so the next try uses another one.
-                if len(POOL) > 1:
+            # A malformed tool call from the model (Groq tool_use_failed, or "Tool call validation failed"):
+            # the same model often repeats it, so rest it briefly and let the next one answer.
+            if error.code == 400 and ("tool_use_failed" in detail or "tool call validation failed" in detail.lower()) and attempt <= 3:
+                if len(POOL) > 1 or wanted not in POOL:
                     cool_down(body["model"], 15)
                     print(f"  · {body['model']} produced an invalid tool call, switching model")
                 continue
-            if "model_not_found" in detail:
-                raise SystemExit(f"Groq has no model {body['model']!r} for this key. See the list with: python3 agent/mvp.py --models")
-            raise SystemExit(f"Groq error {error.code}: {detail}")
+            if "model_not_found" in detail or error.code == 404:
+                raise SystemExit(f"No model {body['model']!r} for this key. See the list with: python3 agent/mvp.py --models")
+            raise SystemExit(f"Model error {error.code}: {detail}")
         except (TimeoutError, urllib.error.URLError) as error:
             # No answer in time (overloaded model) or a network hiccup: rest this model, try another.
-            if attempt < RATE_LIMIT_RETRIES - 1:
-                cool_down(body["model"], 60)
-                print(f"  · {body['model']} did not answer ({type(error).__name__}), switching model")
-                continue
-            raise SystemExit(f"No answer from {body['model']}: {error}")
-    raise SystemExit("Groq kept refusing the request.")
+            cool_down(body["model"], 60)
+            print(f"  · {body['model']} did not answer ({type(error).__name__}), switching model")
+    raise SystemExit("The models kept refusing the request.")
 
 
 # ---------------------------------------------------------------- loop

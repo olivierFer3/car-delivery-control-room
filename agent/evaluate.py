@@ -1,36 +1,31 @@
 """Evaluate the agent on test cases and write a web report.
 
-    python3 agent/evaluate.py                                   # the 31 hand-written cases
-    python3 agent/evaluate.py --file synthetic --per-type 2     # 2 cases of each of the 77 types
-    python3 agent/evaluate.py --file synthetic --per-type 1 --no-judge --workers 1
-    GROQ_MODEL=... GROQ_HELPER_MODEL=... python3 agent/evaluate.py
-    python3 agent/evaluate.py --rescore agent/eval_results/main-10cas   # recompute an earlier run, no API call
+    python3 agent/evaluate.py --file synthetic --per-type 1 --split A --mode fast --learn   # 77 cases, then learn rules
+    python3 agent/evaluate.py --file synthetic --per-type 1 --split B --mode fast --rules   # 77 other cases, with the rules
+    python3 agent/evaluate.py --file synthetic --per-type 1 --split B --mode fast           # same cases, without (control)
+    python3 agent/evaluate.py --rescore agent/eval_results/<run>                            # recompute, no API call
 
-Headline metrics, both to minimise, the first above all:
+Headline measures, both to minimise, the first above all:
   - handled alone although a person had to handle it (rate over the cases that needed a person);
-  - sent to a person although the agent should have handled it alone (rate over the cases the agent should solve).
-  The weighted error counts the first 3 times (--weight). An agent that ends without a conclusion counts as
-  sent to a person.
+  - sent to a person although the agent should have handled it (rate over the cases the agent should handle).
+The weighted error counts the first 3 times (--weight). An agent that ends without a conclusion counts as
+sent to a person. Both are given for the agent alone and after the safety net (case_agent.safety_net).
 
-Each case is scored on:
-  1. the ending (automatic): did the agent finish alone, hand a decision to a person, or leave it to a person
-     only, as expected? A wrong ending is an over-escalation (a person bothered for nothing) or an
-     under-escalation (the agent kept something a person had to decide), the more serious of the two;
-  2. trap tools (automatic): any call to message the customer, book or pay, or change the promise fails the case;
-  3. must / must_not (a judge model reads the trace), unless --no-judge.
-A case passes when the ending is right, no trap was called and the judge found no must_not broken.
-Results are averaged per problem type first, so 50 variants of one situation count as one type.
+Also per case: trap tools (any call to message the customer, book or pay, change the promise is a fault) and,
+with --judge, must / must_not read by a judge model. Averages are per problem type.
 
-Writes agent/eval_results/<time>/results.jsonl, summary.json and report.html (open it in a browser).
-Uses the Groq key of agent/mvp.py.
+--mode fast runs the agent on the Gemini Flash Lite models (77 cases in minutes), --mode groq on gpt-oss-120b.
+--split A|B|C takes different cases of each type; --rules applies agent/rules/learned_rules.json and is refused
+on the cases the rules came from. Writes agent/eval_results/<run>/results.jsonl, summary.json and report.html.
 """
 
 import json
 import os
 import random
 import sys
+import time
 from collections import Counter, defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
@@ -40,6 +35,7 @@ sys.path.insert(0, str(HERE))
 import case_agent  # noqa: E402
 import mvp  # noqa: E402
 import report  # noqa: E402
+import rules as learned  # noqa: E402
 
 FILES = {
     "hand": HERE / "problems" / "data" / "test_cases.jsonl",
@@ -47,6 +43,8 @@ FILES = {
     "generated": HERE / "problems" / "data" / "test_cases_generated.jsonl",
 }
 RESULTS = HERE / "eval_results"
+# What the current run used, written into its summary so runs can be compared.
+RUN_SETTINGS = {}
 # The two errors that matter for triage, both to minimise:
 #   auto_when_human: the agent finished alone a case a person had to handle (risk) - the main one;
 #   human_when_auto: the agent sent a person a case it should have finished alone (cost).
@@ -71,13 +69,23 @@ def load(name):
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-def sample(records, per_type, limit, seed=7):
+SPLITS = {"A": 0, "B": 1, "C": 2}
+
+
+def sample(records, per_type, limit, seed=7, split="A"):
+    """per_type cases of every problem type. Splits A, B and C take disjoint cases of each type, so rules
+    learned on one split can be tested on cases they never saw."""
     if per_type:
         by_type = defaultdict(list)
         for record in records:
             by_type[record["problem_type"]].append(record)
-        rng = random.Random(seed)
-        records = [r for group in by_type.values() for r in rng.sample(group, min(per_type, len(group)))]
+        start = SPLITS.get(split, 0) * per_type
+        picked = []
+        for code, group in by_type.items():
+            group = sorted(group, key=lambda r: r["id"])
+            random.Random(f"{seed}-{code}").shuffle(group)
+            picked += group[start:start + per_type] or group[:per_type]
+        records = picked
     if limit and not per_type:
         # Spread a small sample over the three expected endings, in a fixed order.
         by_handoff = defaultdict(list)
@@ -117,26 +125,37 @@ def judge(record, trace):
         return {"error": str(error), "must": [], "must_not": []}
 
 
+def ending_of(expected, got, error):
+    if error:
+        return "error"
+    if got == expected:
+        return "correct"
+    if got == "none":
+        return "no_ending"
+    if expected == "agent_alone":
+        return "over_escalation"
+    if got == "agent_alone":
+        return "under_escalation"
+    return "wrong_person_kind"
+
+
+# The safety net is part of the system: by default the score uses the handoff after it. The agent's own
+# handoff is kept as got_raw and scored too, so the net's effect is visible on the same run.
+USE_SAFETY_NET = True
+
+
 def score(record, trace, verdict):
     expected = record["test"]["expected"]["handoff"]
-    got = trace["finish"]["handoff"] if trace["finish"] else "none"
-    if trace["error"]:
-        ending = "error"
-    elif got == expected:
-        ending = "correct"
-    elif got == "none":
-        ending = "no_ending"
-    elif expected == "agent_alone":
-        ending = "over_escalation"
-    elif got == "agent_alone":
-        ending = "under_escalation"
-    else:
-        ending = "wrong_person_kind"
+    got_raw = trace["finish"]["handoff"] if trace["finish"] else "none"
+    net = trace.get("safety_net") or {}
+    got = net.get("handoff", got_raw) if USE_SAFETY_NET else got_raw
+    ending = ending_of(expected, got, trace["error"])
     broken = [item for item in (verdict or {}).get("must_not", []) if item.get("violated")]
     met = [item for item in (verdict or {}).get("must", []) if item.get("met")]
     total_must = len((verdict or {}).get("must", []))
     return {
-        "expected": expected, "got": got, "ending": ending,
+        "expected": expected, "got": got, "got_raw": got_raw, "ending": ending,
+        "ending_raw": ending_of(expected, got_raw, trace["error"]), "safety_net_reasons": net.get("reasons", []),
         "trap_violations": [v["tool"] for v in trace["violations"]],
         "must_not_broken": [item.get("item") for item in broken],
         "must_coverage": round(len(met) / total_must, 2) if total_must else None,
@@ -154,17 +173,18 @@ def should_be_alone(result):
     return result["score"]["expected"] == "agent_alone"
 
 
-def handled_alone(result):
+def handled_alone(result, key="got"):
     # An agent that ends without a conclusion leaves the case to a person in practice.
-    return result["score"]["got"] == "agent_alone"
+    return result["score"].get(key, result["score"]["got"]) == "agent_alone"
 
 
-def triage_errors(results):
-    """The two triage errors, as counts, rates over the cases concerned, and one weighted score."""
+def triage_errors(results, key="got"):
+    """The two triage errors, as counts, rates over the cases concerned, and one weighted score.
+    key "got" scores the handoff after the safety net, "got_raw" the agent's own handoff."""
     must_be_human = [r for r in results if not should_be_alone(r)]
     must_be_alone = [r for r in results if should_be_alone(r)]
-    auto_wrong = [r for r in must_be_human if handled_alone(r)]
-    human_wrong = [r for r in must_be_alone if not handled_alone(r)]
+    auto_wrong = [r for r in must_be_human if handled_alone(r, key)]
+    human_wrong = [r for r in must_be_alone if not handled_alone(r, key)]
     rate = lambda part, whole: round(len(part) / len(whole), 3) if whole else None
     return {
         "auto_when_human": {"count": len(auto_wrong), "out_of": len(must_be_human), "rate": rate(auto_wrong, must_be_human),
@@ -173,7 +193,7 @@ def triage_errors(results):
                             "cases": [r["case"]["id"] for r in human_wrong]},
         "weight": WEIGHT,
         "weighted_error": round((WEIGHT * len(auto_wrong) + len(human_wrong)) / len(results), 3) if results else None,
-        "person_kind_mixups": sum(r["score"]["ending"] == "wrong_person_kind" for r in results),
+        "person_kind_mixups": sum(r["score"].get("ending" if key == "got" else "ending_raw", r["score"]["ending"]) == "wrong_person_kind" for r in results),
     }
 
 
@@ -204,6 +224,9 @@ def summarise(all_results):
         "not_evaluated": [{"id": r["case"]["id"], "type": r["case"]["problem_type"], "error": r["trace"]["error"][:200]}
                           for r in all_results if r["trace"]["error"]],
         **errors,
+        "agent_only": triage_errors(results, "got_raw"),
+        "safety_net_changes": sum(r["score"].get("got_raw", r["score"]["got"]) != r["score"]["got"] for r in results),
+        "settings": RUN_SETTINGS,
         "pass_rate_by_type": round(sum(t["pass_rate"] for t in types) / len(types), 2) if types else 0,
         "pass_rate_cases": round(sum(r["score"]["passed"] for r in results) / n, 2) if n else 0,
         "ending_accuracy": round(sum(r["score"]["ending"] == "correct" for r in results) / n, 2) if n else 0,
@@ -227,6 +250,10 @@ def print_triage(summary):
     print(f"\nHandled alone, should have gone to a person: {show(a)}   <- minimise first")
     print(f"Sent to a person, should have been handled alone: {show(h)}")
     print(f"Weighted error (first x{summary['weight']}): {summary['weighted_error']}")
+    raw = summary.get("agent_only")
+    if raw:
+        print(f"Agent alone, before the safety net: {show(raw['auto_when_human'])} kept alone wrongly · "
+              f"{show(raw['human_when_auto'])} sent to a person wrongly · net changed {summary.get('safety_net_changes', 0)} cases")
 
 
 def judge_model():
@@ -255,46 +282,93 @@ def rescore(folder):
     print_triage(summary)
 
 
-def main(argv):
-    global JUDGE_MODEL, WEIGHT
-    def option(name, default=None):
-        return argv[argv.index(name) + 1] if name in argv else default
-    WEIGHT = float(option("--weight", WEIGHT))
-    if "--rescore" in argv:
-        return rescore(option("--rescore"))
-    source = option("--file", "hand")
-    records = sample(load(source), int(option("--per-type", 0)), int(option("--limit", 0)))
-    use_judge = "--no-judge" not in argv
-    mvp.pick_model()
-    case_agent.HELPER_MODEL = mvp.other_model()
+def prepare(source="hand", per_type=0, limit=0, split="A", mode="fast", context="lean", rules=False, judge=False, weight=3):
+    """Configure models, context, rules and settings for a run, and return its cases."""
+    global JUDGE_MODEL, WEIGHT, RUN_SETTINGS
+    records = sample(load(source), per_type, limit, split=split)
+    case_agent.HELPER_MODEL = mvp.configure(mode)
+    case_agent.CONTEXT_LEVEL = context
     JUDGE_MODEL = judge_model()
-    print(f"Fallback models when one is rate limited: {', '.join(mvp.POOL)}")
-    print(f"{len(records)} cases from {source} · agent {mvp.MODEL} · simulated people and search {case_agent.HELPER_MODEL} · judge {JUDGE_MODEL} · "
-          f"judge {'on' if use_judge else 'off'}")
+    WEIGHT = float(weight)
+    case_agent.LEARNED_RULES = []
+    rules_info = None
+    if rules:
+        document = learned.load()
+        if not document or not document.get("rules"):
+            raise SystemExit("No learned rules yet: run with --learn first.")
+        overlap = {r["id"] for r in records} & set(document["source_case_ids"])
+        if overlap:
+            raise SystemExit(f"{len(overlap)} of these cases taught the rules (run {document['from_run']}); "
+                             "use another split so the rules are tested on cases they never saw.")
+        case_agent.LEARNED_RULES = document["rules"]
+        rules_info = {"count": len(document["rules"]), "from_run": document["from_run"]}
+    RUN_SETTINGS = {"source": source, "per_type": per_type, "limit": limit, "split": split if per_type else None, "mode": mode,
+                    "agent_models": list(mvp.POOL), "helpers": [case_agent.HELPER_MODEL] + [m for m in mvp.HELPER_POOL if m != case_agent.HELPER_MODEL],
+                    "context": context, "rules": rules_info, "judge": judge, "weight": WEIGHT, "safety_net": USE_SAFETY_NET}
+    return records
+
+
+def run_all(records, judge=False, workers=8, on_result=None, stop=None):
+    """Run the cases in parallel; on_result(result) is called as each one finishes."""
     results = []
-    with ThreadPoolExecutor(max_workers=int(option("--workers", 2))) as pool:
-        for result in pool.map(lambda record: run_one(record, use_judge), records):
-            s = result["score"]
-            status = "ERR " if result["trace"]["error"] else ("PASS" if s["passed"] else "FAIL")
-            print(f"  {status}  {result['case']['id']:<12} {result['case']['problem_type']:<34} "
-                  f"expected {s['expected']:<15} got {s['got']:<15} {', '.join(s['trap_violations'])}")
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(run_one, record, judge) for record in records]
+        for future in as_completed(futures):
+            if future.cancelled():
+                continue
+            result = future.result()
             results.append(result)
+            if on_result:
+                on_result(result)
+            if stop is not None and stop():
+                for pending in futures:
+                    pending.cancel()
+    return results
+
+
+def save(results, out, started, banner=None, lang="en"):
     summary = summarise(results)
-    summary.update(source=str(source), judge=use_judge, finished_at=datetime.now().isoformat(timespec="seconds"))
-    out = Path(option("--out") or RESULTS / datetime.now().strftime("%Y%m%d-%H%M%S"))
+    summary.update(source=RUN_SETTINGS.get("source"), judge=RUN_SETTINGS.get("judge"), minutes=round((time.time() - started) / 60, 1),
+                   finished_at=datetime.now().isoformat(timespec="seconds"))
+    out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     with (out / "results.jsonl").open("w", encoding="utf-8") as handle:
         for result in results:
             handle.write(json.dumps(result, ensure_ascii=False) + "\n")
     (out / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
-    (out / "report.html").write_text(report.render(summary, results, banner=option("--banner")), encoding="utf-8")
+    (out / "report.html").write_text(report.render(summary, results, banner=banner, lang=lang), encoding="utf-8")
+    return summary
+
+
+def main(argv):
+    def option(name, default=None):
+        return argv[argv.index(name) + 1] if name in argv else default
+    if "--rescore" in argv:
+        global WEIGHT
+        WEIGHT = float(option("--weight", WEIGHT))
+        return rescore(option("--rescore"))
+    use_judge = "--no-judge" not in argv and "--judge" in argv
+    records = prepare(option("--file", "hand"), int(option("--per-type", 0)), int(option("--limit", 0)), option("--split", "A"),
+                      option("--mode", "fast"), option("--context", "lean"), "--rules" in argv, use_judge, option("--weight", 3))
+    print(f"{len(records)} cases · agent {', '.join(mvp.POOL)} · helpers {case_agent.HELPER_MODEL} · "
+          f"rules {RUN_SETTINGS['rules'] or 'off'} · judge {'on' if use_judge else 'off'}")
+    started = time.time()
+
+    def show(result):
+        s = result["score"]
+        status = "ERR " if result["trace"]["error"] else ("PASS" if s["passed"] else "FAIL")
+        print(f"  {status}  {result['case']['id']:<12} {result['case']['problem_type']:<34} expected {s['expected']:<15} "
+              f"agent {s['got_raw']:<15} final {s['got']:<15} {', '.join(s['trap_violations'])}", flush=True)
+    results = run_all(records, use_judge, int(option("--workers", 8)), show)
+    out = Path(option("--out") or RESULTS / datetime.now().strftime("%Y%m%d-%H%M%S"))
+    summary = save(results, out, started, option("--banner"), option("--lang", "en"))
     if summary["not_evaluated"]:
         print(f"\n{len(summary['not_evaluated'])} cases not evaluated (API errors), left out of the rates.")
     print_triage(summary)
-    print(f"\nPass rate {summary['pass_rate_by_type']:.0%} (mean over {summary['types']} types) · endings right "
-          f"{summary['ending_accuracy']:.0%} · sent to a person {summary['sent_to_person']['agent']} (expected "
-          f"{summary['sent_to_person']['expected']}) · traps called {sum(summary['trap_violations'].values())}")
-    print(f"Report: {out / 'report.html'}")
+    print(f"Minutes: {summary['minutes']} · report: {out / 'report.html'}")
+    if "--learn" in argv:
+        document = learned.learn(results, case_agent.HELPER_MODEL, out.name)
+        print(f"\n{len(document['rules'])} rules learned from {len(document['source_case_ids'])} cases -> {learned.RULES_FILE}")
 
 
 if __name__ == "__main__":

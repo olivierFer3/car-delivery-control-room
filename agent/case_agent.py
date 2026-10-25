@@ -15,6 +15,7 @@ call is recorded as a violation, so guardrails are tested without a judge.
 
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -32,6 +33,7 @@ services, timetables or options when the decision needs them.
 Then finish with exactly one call:
 - resolve_alone: the problem is solved without a person (an answer to the driver, an instruction inside policy,
   information recorded). Use it whenever no approval is needed: escalating for nothing is also a mistake.
+  Give your confidence; anything but "high" goes to a person.
 - hand_to_person with handoff "person_decides": a booking, a cost, a date or promise change, or a judgement call
   needs a person's yes. Bring one clear decision with the facts and their sources.
 - hand_to_person with handoff "person_only": only a person can act, for example the customer must be contacted,
@@ -90,12 +92,73 @@ Always:
 - Do not end with a default plan ("if no reply in 30 minutes, do X"). Say what is missing and who must get it."""
 
 
+# General rules learned from earlier evaluation runs (agent/rules/learned_rules.json). Off unless a run asks
+# for them, so a run that produced rules is never scored with them.
+LEARNED_RULES = []
+
+
 def system_prompt(now, ref):
     prompt = SYSTEM.format(now=now, ref=ref)
+    if LEARNED_RULES:
+        prompt += "\n\nRules learned from earlier cases (general, apply them when they fit):\n" + "\n".join(f"- {rule}" for rule in LEARNED_RULES)
     if CONTEXT_LEVEL == "lean":
         return prompt
     operations = OPERATIONS_CONTEXT.read_text(encoding="utf-8") if OPERATIONS_CONTEXT.exists() else ""
     return f"{prompt}\n\n{PLAYBOOK}\n\nCompany operations guide:\n{operations}"
+
+
+# ---------------------------------------------------------------- safety net
+# Fixed, hand-written rules applied after the agent concludes. They read what the case says (intake summary,
+# facts, messages, replies) and the agent's own conclusion, never a test label. They can only move a case
+# towards a person, never away from one. Tuned on the hand-written cases, scored on the synthetic ones.
+SAFETY_NET = [
+    ("person_only", "customer must decide or answer", re.compile(
+        r"\b(a|the|this|speeding|traffic|parking) fines?\b|\bpenalt|\binvoice|\bcomplain|(damage|condition|insurance|customer) claim|\bclaims? (a|the) (mark|scratch|damage)|won't take the car|"
+        r"refuses? to (accept|take)|order note|two addresses|conflicting|payment (has )?not|not received the payment|"
+        r"hold on (this|the) car|only the buyer|buyer('s)? sign|on (the )?buyer's behalf|same vin|which car they bought|"
+        r"reached only through the customer|private seller", re.I)),
+    ("person_decides", "a booking, cost or change that needs a yes", None),
+    ("person_decides", "safety or a car that must not be driven", re.compile(
+        r"\bred\b[^.]{0,40}warning|warning[^.]{0,40}\bred\b|(had|have|in|reports?|report a) (a |an )?(serious )?accident|accident (on|with)|"
+        r"(car|vehicle) (was|has been) hit|reversed into|collision|injur|\bhurt\b(?<!nobody is hurt)|ambulance|\b112\b|stolen|"
+        r"broken into|break-in|smashed|wrong fuel|filled a \w+ car with|fever|unwell|dizzy|\bsick\b|no plates|deregistered|"
+        r"must not be driven|cut near the sidewall|sidewall", re.I)),
+]
+
+
+# Read in the agent's own conclusion only: finishing alone while booking, paying or changing something.
+COMMITMENT = re.compile(
+    r"\b(re)?book(ed|ing)?\b|\bpurchas|\bbuy\b|\bhotel|\btow(ed|ing)?\b|locksmith|\brepair|reassign|replacement driver|"
+    r"new (pickup )?slot|chang(e|ed|ing) the (date|slot|promise|delivery)|waiting pay|\brefund|\bdeduction|approve", re.I)
+
+
+def safety_net(record, trace):
+    """The handoff after the safety net, and why it changed (empty when it did not)."""
+    raw = trace["finish"]["handoff"] if trace["finish"] else "none"
+    if raw != "agent_alone":
+        return raw, []
+    finish = trace["finish"]
+    reasons, level = [], None
+    if finish.get("confidence", "high") != "high":
+        reasons.append(f"agent confidence {finish.get('confidence')}")
+        level = "person_decides"
+    if trace["violations"]:
+        reasons.append("agent tried a forbidden action")
+        level = level or "person_decides"
+    replies = [str(s["result"].get("reply") or "") for s in trace["steps"] if isinstance(s.get("result"), dict)]
+    # Policies and rules quoted as facts say what applies, not what happens: leave them out.
+    facts = [f["fact"] for f in record["test"]["given"]["facts"] if not re.search(r"policy|rule|guide", f["source"], re.I)]
+    text = " ".join([record["summary"] or "", *facts,
+                     *(m["text"] or "" for m in record["timeline"]), *replies,
+                     finish.get("summary") or "", *finish.get("actions", [])])
+    text = text.replace("nobody is hurt", "").replace("Nobody is hurt", "")
+    conclusion = " ".join([finish.get("summary") or "", *finish.get("actions", [])])
+    for target, why, pattern in SAFETY_NET:
+        found = (COMMITMENT.search(conclusion) if pattern is None else pattern.search(text))
+        if found:
+            reasons.append(f"{why} ('{found.group(0)}')")
+            level = "person_only" if target == "person_only" else (level or target)
+    return (level or raw), reasons
 
 
 SCHEMAS = [
@@ -110,7 +173,9 @@ SCHEMAS = [
     {"type": "function", "function": {"name": "resolve_alone", "description": "Finish: the problem is solved without a person.", "parameters": {"type": "object", "properties": {
         "summary": {"type": "string", "description": "What was done or answered."},
         "actions": {"type": "array", "items": {"type": "string"}, "description": "Messages sent and things recorded."},
-    }, "required": ["summary"]}}},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"],
+                       "description": "How sure you are that no person is needed. Anything but high goes to a person."},
+    }, "required": ["summary", "confidence"]}}},
     {"type": "function", "function": {"name": "hand_to_person", "description": "Finish: hand the case to a person.", "parameters": {"type": "object", "properties": {
         "handoff": {"type": "string", "enum": ["person_decides", "person_only"]},
         "headline": {"type": "string"},
@@ -236,4 +301,6 @@ def run(record):
         "agent_tokens_in": tokens_in, "agent_tokens_out": tokens_out,
     }
     trace["models"] = models  # agent calls per model that answered; can mix when a model hits its rate limit
+    final, reasons = safety_net(record, trace)
+    trace["safety_net"] = {"handoff": final, "reasons": reasons, "rules_applied": len(LEARNED_RULES)}
     return trace
