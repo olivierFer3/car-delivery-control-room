@@ -3,6 +3,7 @@
   "types": 9,
   "model": "openai/gpt-oss-120b",
   "helper_model": "openai/gpt-oss-20b",
+  "judge_model": null,
   "not_evaluated": [
     {
       "id": "test-0011",
@@ -10,6 +11,23 @@
       "error": "Groq error 400: {\"error\":{\"message\":\"Tool call validation failed: tool call validation failed: attempted to call tool 'json' which was not in request.tools\",\"type\":\"invalid_request_error\",\"code\":\"tool"
     }
   ],
+  "auto_when_human": {
+    "count": 1,
+    "out_of": 6,
+    "rate": 0.167,
+    "cases": [
+      "test-0027"
+    ]
+  },
+  "human_when_auto": {
+    "count": 0,
+    "out_of": 3,
+    "rate": 0.0,
+    "cases": []
+  },
+  "weight": 3.0,
+  "weighted_error": 0.333,
+  "person_kind_mixups": 1,
   "pass_rate_by_type": 0.78,
   "pass_rate_cases": 0.78,
   "ending_accuracy": 0.78,
@@ -60,22 +78,26 @@
   "avg_llm_calls": 3.9,
   "by_type": [
     {
-      "type": "DELIVERY_ADDRESS_CONFLICT",
-      "domain": "delivery_handover",
-      "cases": 1,
-      "pass_rate": 0.0,
-      "ending_rate": 0.0,
-      "violations": 0,
-      "avg_seconds": 34.8
-    },
-    {
       "type": "SPEEDING_FINE_FORWARDED",
       "domain": "costs",
       "cases": 1,
       "pass_rate": 0.0,
       "ending_rate": 0.0,
       "violations": 0,
-      "avg_seconds": 20.3
+      "avg_seconds": 20.3,
+      "auto_when_human": 1,
+      "human_when_auto": 0
+    },
+    {
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 34.8,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     },
     {
       "type": "AFTER_HOURS_KEY_BOX",
@@ -84,7 +106,9 @@
       "pass_rate": 1.0,
       "ending_rate": 1.0,
       "violations": 0,
-      "avg_seconds": 23.4
+      "avg_seconds": 23.4,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     },
     {
       "type": "DELIVERY_PHOTOS_MISSING",
@@ -93,7 +117,9 @@
       "pass_rate": 1.0,
       "ending_rate": 1.0,
       "violations": 0,
-      "avg_seconds": 7.9
+      "avg_seconds": 7.9,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     },
     {
       "type": "DRIVER_UNWELL_EN_ROUTE",
@@ -102,7 +128,9 @@
       "pass_rate": 1.0,
       "ending_rate": 1.0,
       "violations": 0,
-      "avg_seconds": 62.3
+      "avg_seconds": 62.3,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     },
     {
       "type": "MISSED_TRAIN_CONNECTION",
@@ -111,7 +139,9 @@
       "pass_rate": 1.0,
       "ending_rate": 1.0,
       "violations": 0,
-      "avg_seconds": 43.4
+      "avg_seconds": 43.4,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     },
     {
       "type": "OFFER_NOT_TAKEN",
@@ -120,7 +150,9 @@
       "pass_rate": 1.0,
       "ending_rate": 1.0,
       "violations": 0,
-      "avg_seconds": 1.6
+      "avg_seconds": 1.6,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     },
     {
       "type": "SELLER_WANTS_VAT_CONFIRMATION",
@@ -129,7 +161,9 @@
       "pass_rate": 1.0,
       "ending_rate": 1.0,
       "violations": 0,
-      "avg_seconds": 32.4
+      "avg_seconds": 32.4,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     },
     {
       "type": "TYRE_PUNCTURE",
@@ -138,7 +172,9 @@
       "pass_rate": 1.0,
       "ending_rate": 1.0,
       "violations": 0,
-      "avg_seconds": 16.2
+      "avg_seconds": 16.2,
+      "auto_when_human": 0,
+      "human_when_auto": 0
     }
   ],
   "source": "hand",

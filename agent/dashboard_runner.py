@@ -16,9 +16,12 @@ def main():
     if "solution" in record or "expected" in record.get("test", {}):
         raise ValueError("Reference answers must not be passed to the investigator")
     with contextlib.redirect_stdout(sys.stderr):
-        mvp.RATE_LIMIT_RETRIES = 2
+        # Enough attempts to switch models a few times under Groq's free per-minute quota.
+        mvp.RATE_LIMIT_RETRIES = 6
         case_agent.MAX_STEPS = 10
         mvp.pick_model()
+        # Simulated driver, site and search use the second model, keeping the agent's quota for the agent.
+        case_agent.HELPER_MODEL = mvp.other_model()
         trace = case_agent.run(record)
     # Do not echo provider error bodies (which may include request content).
     if trace.get("error"):

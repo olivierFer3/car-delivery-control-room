@@ -235,11 +235,55 @@ def api_key():
 
 
 def groq_request(path, body=None):
-    request = urllib.request.Request(f"{GROQ_API}/{path}", data=body and json.dumps(body).encode(), headers={
-        "Authorization": f"Bearer {api_key()}", "Content-Type": "application/json", "User-Agent": "bahn-control-room-mvp/0.1",
+    return api_request(GROQ_API, api_key(), path, body)
+
+
+def api_request(base, key, path, body=None):
+    request = urllib.request.Request(f"{base}/{path}", data=body and json.dumps(body).encode(), headers={
+        "Authorization": f"Bearer {key}", "Content-Type": "application/json", "User-Agent": "bahn-control-room-mvp/0.1",
     })
     with urllib.request.urlopen(request, timeout=60) as response:
         return json.load(response)
+
+
+# ---------------------------------------------------------------- Gemini (helpers only)
+# Google's OpenAI-compatible endpoint. Model names carry a "gemini:" prefix inside this program so a call
+# is routed to Google; the agent itself never runs on Gemini (POOL holds Groq models only).
+
+GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/openai"
+GEMINI_KEY_FILE = ROOT / "gemini_api_key.txt"
+GEMINI_PREFIX = "gemini:"
+
+
+def gemini_key():
+    if GEMINI_KEY_FILE.exists():
+        return GEMINI_KEY_FILE.read_text().strip()
+    return os.environ.get("GEMINI_API_KEY", "").strip()
+
+
+# Helper pool, in order. On the free tier the binding limit is requests per day (AI Studio, 2026-10-24):
+# Flash Lite models 500/day (15/min), Gemma 4 26B 14,400/day (30/min, 16k tokens/min), Flash models only
+# 20/day (5/min). Measured on a simulated-driver reply: 3.1-flash-lite 1-3 s, 3.5-flash-lite 3-6 s,
+# gemma-4-26b 7-8 s (writes its reasoning into the answer, stripped below), 3-flash-preview ~2 s,
+# 3.5-flash ~3 s, 3.6-flash 3-4 s. Left out: gemma-4-31b (internal errors), 3.8-flash (no answer in 45 s),
+# 2.5-flash and 2.5-flash-lite (retired for this key). High daily quota first, 20-a-day models last.
+GEMINI_PREFERRED = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemma-4-26b-a4b-it",
+                    "gemini-3-flash-preview", "gemini-3.5-flash", "gemini-3.6-flash"]
+GEMINI_POOL = []
+
+
+def gemini_model():
+    """The first helper model of the Gemini pool. GEMINI_MODEL forces it to the head of the pool.
+    Also sets GEMINI_POOL to the preferred models this key lists, used to switch when one is limited."""
+    global GEMINI_POOL
+    try:
+        names = {row["id"].removeprefix("models/") for row in api_request(GEMINI_API, gemini_key(), "models").get("data", [])}
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        names = set(GEMINI_PREFERRED)
+    forced = os.environ.get("GEMINI_MODEL")
+    order = ([forced] if forced else []) + [name for name in GEMINI_PREFERRED if name in names and name != forced]
+    GEMINI_POOL = [GEMINI_PREFIX + name for name in order] or [GEMINI_PREFIX + GEMINI_PREFERRED[0]]
+    return GEMINI_POOL[0]
 
 
 def available_models():
@@ -262,7 +306,27 @@ def pick_model():
     return MODEL
 
 
+def other_model():
+    """A second chat model for helpers (simulated people, search, judge) so they do not use the agent's quota.
+    GROQ_HELPER_MODEL forces one; else Gemini when a Gemini key is set; else another Groq model than MODEL."""
+    forced = os.environ.get("GROQ_HELPER_MODEL")
+    if forced:
+        return forced
+    if gemini_key():
+        return gemini_model()
+    return groq_other_model()
+
+
+def groq_other_model():
+    """The first Groq model of the pool that is not the agent's."""
+    others = [name for name in POOL if name != MODEL]
+    return others[0] if others else MODEL
+
+
 RATE_LIMIT_RETRIES = 12
+# gpt-oss models reason before answering and those tokens count against the quota. "low" keeps them short;
+# a call can ask for more (the judge does). GROQ_REASONING_EFFORT changes the default.
+REASONING_EFFORT = os.environ.get("GROQ_REASONING_EFFORT", "low")
 # Models to switch to when one hits its rate limit, and when each is usable again.
 POOL = []
 COOLDOWN = {}
@@ -272,7 +336,10 @@ _cooldown_lock = threading.Lock()
 def next_model(wanted):
     """The wanted model if it is not cooling down, else the first ready model of the pool.
     Returns (model, seconds to wait); waits only when every model is cooling down."""
-    order = [wanted] + [name for name in POOL if name != wanted]
+    # A Gemini helper tries the rest of the Gemini pool first. Helpers then fall back on the other Groq
+    # models before the agent's own, to leave the agent its quota.
+    gemini = [name for name in GEMINI_POOL if name != wanted] if wanted.startswith(GEMINI_PREFIX) else []
+    order = [wanted] + gemini + [name for name in POOL if name not in (wanted, MODEL)] + ([MODEL] if MODEL != wanted else [])
     with _cooldown_lock:
         now = time.monotonic()
         usable = [name for name in order if COOLDOWN.get(name, 0) != float("inf")]
@@ -304,12 +371,28 @@ def chat(messages, tools=None, model=None, **options):
         body["tool_choice"] = "auto"
     for attempt in range(RATE_LIMIT_RETRIES):
         body["model"], wait = next_model(wanted)
+        # Only gpt-oss models take reasoning_effort; the model can change between attempts.
+        if body["model"].startswith("openai/gpt-oss"):
+            body["reasoning_effort"] = options.get("reasoning_effort", REASONING_EFFORT)
+        else:
+            body.pop("reasoning_effort", None)
         if wait > 0:
             print(f"  · all models rate limited, waiting {wait:.0f}s")
             time.sleep(min(wait, 60))
         started = time.perf_counter()
         try:
-            payload = groq_request("chat/completions", body)
+            if body["model"].startswith(GEMINI_PREFIX):
+                sent = {**body, "model": body["model"][len(GEMINI_PREFIX):]}
+                if "max_completion_tokens" in sent:
+                    sent["max_tokens"] = sent.pop("max_completion_tokens")
+                payload = api_request(GEMINI_API, gemini_key(), "chat/completions", sent)
+                for choice in payload.get("choices", []):
+                    # Gemma writes its reasoning into the answer as <thought>...</thought>: keep only the answer.
+                    content = choice.get("message", {}).get("content")
+                    if isinstance(content, str) and "<thought>" in content:
+                        choice["message"]["content"] = re.sub(r"<thought>.*?(</thought>|$)", "", content, flags=re.S).strip()
+            else:
+                payload = groq_request("chat/completions", body)
             usage = payload.get("usage", {})
             return payload["choices"][0]["message"], {
                 "seconds": round(time.perf_counter() - started, 2), "model": body["model"],
@@ -317,9 +400,13 @@ def chat(messages, tools=None, model=None, **options):
             }
         except urllib.error.HTTPError as error:
             detail = error.read().decode(errors="replace")[:300]
+            if error.code in (500, 502, 503, 504) and attempt < RATE_LIMIT_RETRIES - 1:
+                cool_down(body["model"], 30)
+                print(f"  · {body['model']} unavailable ({error.code}), switching model")
+                continue
             if error.code == 429:
-                daily = "per day" in detail
-                said = re.search(r"try again in ([\d.]+)s", detail)
+                daily = "per day" in detail or "PerDay" in detail
+                said = re.search(r"try again in ([\d.]+)s", detail) or re.search(r'"retryDelay":\s*"(\d+)s"', detail)
                 pause = float("inf") if daily else float(error.headers.get("retry-after") or (said and said.group(1)) or 5) + 0.5
                 cool_down(body["model"], pause)
                 print(f"  · {body['model']} {'daily limit reached, dropped' if daily else f'rate limited for {pause:.0f}s'}, switching model")
@@ -327,10 +414,21 @@ def chat(messages, tools=None, model=None, **options):
             # Groq rejects a malformed tool call from the model (tool_use_failed, or "Tool call validation
             # failed"); the next sample is usually well formed, so ask again.
             if error.code == 400 and ("tool_use_failed" in detail or "tool call validation failed" in detail.lower()) and attempt < 3:
+                # The same model often repeats the same bad call: rest it briefly so the next try uses another one.
+                if len(POOL) > 1:
+                    cool_down(body["model"], 15)
+                    print(f"  · {body['model']} produced an invalid tool call, switching model")
                 continue
             if "model_not_found" in detail:
                 raise SystemExit(f"Groq has no model {body['model']!r} for this key. See the list with: python3 agent/mvp.py --models")
             raise SystemExit(f"Groq error {error.code}: {detail}")
+        except (TimeoutError, urllib.error.URLError) as error:
+            # No answer in time (overloaded model) or a network hiccup: rest this model, try another.
+            if attempt < RATE_LIMIT_RETRIES - 1:
+                cool_down(body["model"], 60)
+                print(f"  · {body['model']} did not answer ({type(error).__name__}), switching model")
+                continue
+            raise SystemExit(f"No answer from {body['model']}: {error}")
     raise SystemExit("Groq kept refusing the request.")
 
 

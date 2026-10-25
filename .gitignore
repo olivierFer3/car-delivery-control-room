@@ -12,3 +12,6 @@ groq_api_key.txt
 
 # Python bytecode
 __pycache__/
+
+# Gemini API key (helpers only), kept out of git
+gemini_api_key.txt

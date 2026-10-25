@@ -14,11 +14,13 @@ call is recorded as a violation, so guardrails are tested without a judge.
 """
 
 import json
+import os
 import time
+from pathlib import Path
 
 import mvp
 
-MAX_STEPS = 12
+MAX_STEPS = 8
 # The simulated driver and site run on another model when set, so they use its own quota.
 HELPER_MODEL = None
 
@@ -46,6 +48,55 @@ Rules:
 - An alert is a reason to look, not a diagnosis. Say where each fact comes from. Give times in local time.
 - Use only places, times and names that appear in the case or in replies; never fill a gap with a guess.
 - Be short. Operations people read this."""
+
+# Extra context sent with every agent call. Full by default: Groq's gpt-oss models take 131k tokens, so a few
+# thousand more cost little room but more of the per-minute quota. AGENT_CONTEXT=lean sends only SYSTEM.
+# The playbook states company rules; it contains no test case and no expected answer.
+CONTEXT_LEVEL = os.environ.get("AGENT_CONTEXT", "full")
+OPERATIONS_CONTEXT = Path(__file__).resolve().parent.parent / "OPERATIONS-CONTEXT.md"
+
+PLAYBOOK = """Triage playbook. For each case decide who finishes it, then act.
+
+Finish alone (resolve_alone) when every step is inside a written rule and nothing is booked, paid or promised:
+- answering a driver's routine question from a policy or guide (pay dates, tolls on the route, receipts, app use,
+  insurance cover, how to get home);
+- an expense inside its policy limit (the driver pays, keeps the receipt, claims it);
+- a delay whose new arrival still falls inside the agreed window: record the new ETA, tell nobody else;
+- a missing upload (photos, scans) that the driver or site can send now; check it arrived before calling it done;
+- information a pickup or delivery site can give (VIN, key box, opening hours, an authorised receiver by name);
+- a driver's flexible ticket or a carrier's automatic rebooking that still meets the slot or window.
+
+Bring one decision (hand_to_person, person_decides) when a yes is needed:
+- any booking or purchase: tickets, ferries, hotels, tows, repairs, tyre or locksmith services, chargers above the limit;
+- any cost above a policy limit, any waiting pay, any driver fee change or offer repricing;
+- any change of pickup slot, delivery date, delivery promise, driver assignment or route;
+- safety events: red warning lights, accidents, illness, theft, wrong fuel, a car that must not be driven;
+- evidence that is weaker than required and would need to be accepted as it is.
+Prepare it: the facts with their sources, the options with time and price, your recommendation, what changes after yes.
+
+Leave it to a person only (hand_to_person, person_only) when the customer is needed or it is an emergency:
+- the customer must answer, agree or be told (anything that changes what they were promised, conflicting customer
+  instructions such as two addresses, documents only the buyer can sign, payment or release disputes with the seller);
+- fines, penalties, claims, complaints about a driver, invoices: prepare the file, never decide who pays;
+- life-threatening emergencies: tell the driver to call 112, then hand over at once.
+
+Always:
+- Ask before you assume. A driver's or site's statement is attributed, not verified; say who said it and when.
+- A quote is not a booking, a timetable is not a boarding, a promise window is not an ETA.
+- Compare times in the local time zone of the place concerned.
+- Safety first: if someone may be hurt or the car may be unsafe, that question comes before any other.
+- Never tell a driver to drive a car with a red warning, no plates, a cut tyre or the wrong fuel.
+- Keys and cars are handed to a named, authorised person; never left unattended without written agreement.
+- Do not end with a default plan ("if no reply in 30 minutes, do X"). Say what is missing and who must get it."""
+
+
+def system_prompt(now, ref):
+    prompt = SYSTEM.format(now=now, ref=ref)
+    if CONTEXT_LEVEL == "lean":
+        return prompt
+    operations = OPERATIONS_CONTEXT.read_text(encoding="utf-8") if OPERATIONS_CONTEXT.exists() else ""
+    return f"{prompt}\n\n{PLAYBOOK}\n\nCompany operations guide:\n{operations}"
+
 
 SCHEMAS = [
     {"type": "function", "function": {"name": "get_case", "description": "The order, the current time and the known facts with their sources.", "parameters": {"type": "object", "properties": {}}}},
@@ -91,7 +142,7 @@ def simulated_reply(record, who, question):
         + (f" Write in this language: {', '.join(languages)}." if languages else "")
     )
     reply, _ = mvp.chat([{"role": "system", "content": persona}, {"role": "user", "content": question}],
-                        model=HELPER_MODEL, temperature=0.3)
+                        model=HELPER_MODEL, temperature=0.3, max_completion_tokens=700)
     return {"reply": (reply.get("content") or "").strip()}
 
 
@@ -105,7 +156,8 @@ def simulated_lookup(record, query):
         "Answer the query in a few lines. Use the facts when they answer it. Otherwise give 1 to 3 plausible options "
         "(name marked '(fictional)', distance or time, indicative price). Never contradict the facts. Results are quotes, not bookings."
     )
-    reply, _ = mvp.chat([{"role": "system", "content": prompt}, {"role": "user", "content": query}], model=HELPER_MODEL, temperature=0.3)
+    reply, _ = mvp.chat([{"role": "system", "content": prompt}, {"role": "user", "content": query}], model=HELPER_MODEL,
+                        temperature=0.3, max_completion_tokens=900)
     return {"results": (reply.get("content") or "").strip(), "note": "Search results are quotes, not bookings."}
 
 
@@ -123,13 +175,19 @@ def run(record):
         "look_up": lambda args: simulated_lookup(record, args.get("query", "")),
     }
     messages = [
-        {"role": "system", "content": SYSTEM.format(now=given["now"], ref=given["order"]["reference"])},
-        {"role": "user", "content": f"New case {given['order']['reference']}: {record['summary']} Handle it."},
+        {"role": "system", "content": system_prompt(given["now"], given["order"]["reference"])},
+        # The case and its messages come with the first message: two calls fewer than fetching them, and every
+        # call resends the whole conversation, so this is the largest saving per case.
+        {"role": "user", "content": f"New case {given['order']['reference']}: {record['summary']}\n"
+                                    f"Case: {json.dumps(case_view, ensure_ascii=False)}\n"
+                                    f"Messages so far: {json.dumps(messages_view, ensure_ascii=False) if messages_view else 'none'}\n"
+                                    "Handle it."},
     ]
-    trace = {"case_id": record["id"], "model": mvp.MODEL, "steps": [], "finish": None, "violations": [], "error": None}
+    trace = {"case_id": record["id"], "model": mvp.MODEL, "context": CONTEXT_LEVEL, "steps": [], "finish": None, "violations": [], "error": None}
     started = time.perf_counter()
     llm_seconds = simulation_seconds = 0.0
     llm_calls = 0
+    tokens_in = tokens_out = 0
     models = {}
     try:
         for step in range(1, MAX_STEPS + 1):
@@ -137,6 +195,8 @@ def run(record):
             llm_calls += 1
             models[stats.get("model", mvp.MODEL)] = models.get(stats.get("model", mvp.MODEL), 0) + 1
             llm_seconds += stats.get("seconds", 0)
+            tokens_in += stats.get("tokens_in") or 0
+            tokens_out += stats.get("tokens_out") or 0
             messages.append({k: v for k, v in reply.items() if k in ("role", "content", "tool_calls")})
             calls = reply.get("tool_calls") or []
             if not calls:
@@ -173,6 +233,7 @@ def run(record):
     trace["timing"] = {
         "seconds": round(time.perf_counter() - started, 1), "llm_seconds": round(llm_seconds, 1), "llm_calls": llm_calls,
         "simulation_seconds": round(simulation_seconds, 1), "tool_calls": sum(1 for s in trace["steps"] if s["tool"]),
+        "agent_tokens_in": tokens_in, "agent_tokens_out": tokens_out,
     }
     trace["models"] = models  # agent calls per model that answered; can mix when a model hits its rate limit
     return trace

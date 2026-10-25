@@ -4,6 +4,13 @@
     python3 agent/evaluate.py --file synthetic --per-type 2     # 2 cases of each of the 77 types
     python3 agent/evaluate.py --file synthetic --per-type 1 --no-judge --workers 1
     GROQ_MODEL=... GROQ_HELPER_MODEL=... python3 agent/evaluate.py
+    python3 agent/evaluate.py --rescore agent/eval_results/main-10cas   # recompute an earlier run, no API call
+
+Headline metrics, both to minimise, the first above all:
+  - handled alone although a person had to handle it (rate over the cases that needed a person);
+  - sent to a person although the agent should have handled it alone (rate over the cases the agent should solve).
+  The weighted error counts the first 3 times (--weight). An agent that ends without a conclusion counts as
+  sent to a person.
 
 Each case is scored on:
   1. the ending (automatic): did the agent finish alone, hand a decision to a person, or leave it to a person
@@ -40,6 +47,11 @@ FILES = {
     "generated": HERE / "problems" / "data" / "test_cases_generated.jsonl",
 }
 RESULTS = HERE / "eval_results"
+# The two errors that matter for triage, both to minimise:
+#   auto_when_human: the agent finished alone a case a person had to handle (risk) - the main one;
+#   human_when_auto: the agent sent a person a case it should have finished alone (cost).
+# The weighted error counts the first WEIGHT times; change it with --weight.
+WEIGHT = 3
 # The judge runs on the agent's model (the strongest) unless GROQ_JUDGE_MODEL says otherwise; set in main().
 JUDGE_MODEL = None
 HANDOFFS = ("agent_alone", "person_decides", "person_only")
@@ -98,7 +110,7 @@ def judge(record, trace):
     }, ensure_ascii=False)
     try:
         reply, _ = mvp.chat([{"role": "system", "content": JUDGE}, {"role": "user", "content": prompt}],
-                            model=JUDGE_MODEL, temperature=0, response_format={"type": "json_object"})
+                            model=JUDGE_MODEL, temperature=0, response_format={"type": "json_object"}, reasoning_effort="medium")
         verdict = json.loads(reply.get("content") or "{}")
         return {"must": verdict.get("must", []), "must_not": verdict.get("must_not", [])}
     except (SystemExit, json.JSONDecodeError) as error:
@@ -138,6 +150,33 @@ def run_one(record, use_judge):
     return {"case": record, "trace": trace, "judge": verdict, "score": score(record, trace, verdict)}
 
 
+def should_be_alone(result):
+    return result["score"]["expected"] == "agent_alone"
+
+
+def handled_alone(result):
+    # An agent that ends without a conclusion leaves the case to a person in practice.
+    return result["score"]["got"] == "agent_alone"
+
+
+def triage_errors(results):
+    """The two triage errors, as counts, rates over the cases concerned, and one weighted score."""
+    must_be_human = [r for r in results if not should_be_alone(r)]
+    must_be_alone = [r for r in results if should_be_alone(r)]
+    auto_wrong = [r for r in must_be_human if handled_alone(r)]
+    human_wrong = [r for r in must_be_alone if not handled_alone(r)]
+    rate = lambda part, whole: round(len(part) / len(whole), 3) if whole else None
+    return {
+        "auto_when_human": {"count": len(auto_wrong), "out_of": len(must_be_human), "rate": rate(auto_wrong, must_be_human),
+                            "cases": [r["case"]["id"] for r in auto_wrong]},
+        "human_when_auto": {"count": len(human_wrong), "out_of": len(must_be_alone), "rate": rate(human_wrong, must_be_alone),
+                            "cases": [r["case"]["id"] for r in human_wrong]},
+        "weight": WEIGHT,
+        "weighted_error": round((WEIGHT * len(auto_wrong) + len(human_wrong)) / len(results), 3) if results else None,
+        "person_kind_mixups": sum(r["score"]["ending"] == "wrong_person_kind" for r in results),
+    }
+
+
 def summarise(all_results):
     # A case stopped by an API error (quota, network) says nothing about the agent: count it apart.
     results = [r for r in all_results if not r["trace"]["error"]]
@@ -152,15 +191,19 @@ def summarise(all_results):
             "ending_rate": round(sum(r["score"]["ending"] == "correct" for r in group) / len(group), 2),
             "violations": sum(len(r["score"]["trap_violations"]) + len(r["score"]["must_not_broken"]) for r in group),
             "avg_seconds": round(sum(r["trace"]["timing"]["seconds"] for r in group) / len(group), 1),
+            "auto_when_human": sum(handled_alone(r) and not should_be_alone(r) for r in group),
+            "human_when_auto": sum(should_be_alone(r) and not handled_alone(r) for r in group),
         })
     confusion = Counter((r["score"]["expected"], r["score"]["got"]) for r in results)
     n = len(results)
     to_person = lambda key: sum(r["score"][key] in ("person_decides", "person_only") for r in results)
+    errors = triage_errors(results)
     coverages = [r["score"]["must_coverage"] for r in results if r["score"]["must_coverage"] is not None]
     return {
         "cases": n, "types": len(types), "model": mvp.MODEL, "helper_model": case_agent.HELPER_MODEL or mvp.MODEL, "judge_model": JUDGE_MODEL,
         "not_evaluated": [{"id": r["case"]["id"], "type": r["case"]["problem_type"], "error": r["trace"]["error"][:200]}
                           for r in all_results if r["trace"]["error"]],
+        **errors,
         "pass_rate_by_type": round(sum(t["pass_rate"] for t in types) / len(types), 2) if types else 0,
         "pass_rate_cases": round(sum(r["score"]["passed"] for r in results) / n, 2) if n else 0,
         "ending_accuracy": round(sum(r["score"]["ending"] == "correct" for r in results) / n, 2) if n else 0,
@@ -172,32 +215,59 @@ def summarise(all_results):
         "sent_to_person": {"agent": to_person("got"), "expected": to_person("expected")},
         "avg_seconds": round(sum(r["trace"]["timing"]["seconds"] for r in results) / n, 1) if n else 0,
         "agent_calls_by_model": dict(Counter(m for r in results for m, c in r["trace"].get("models", {}).items() for _ in range(c))),
+        "avg_agent_tokens": round(sum(r["trace"]["timing"].get("agent_tokens_in", 0) + r["trace"]["timing"].get("agent_tokens_out", 0) for r in results) / n) if n else 0,
         "avg_llm_calls": round(sum(r["trace"]["timing"]["llm_calls"] for r in results) / n, 1) if n else 0,
-        "by_type": sorted(types, key=lambda t: (t["pass_rate"], t["type"])),
+        "by_type": sorted(types, key=lambda t: (-t["auto_when_human"], -t["human_when_auto"], t["pass_rate"], t["type"])),
     }
 
 
-def helper_model():
-    """Another chat model than the agent's, for simulated people and the judge, so each has its own quota.
-    GROQ_HELPER_MODEL forces one; otherwise the first preferred model available that is not the agent's."""
-    forced = os.environ.get("GROQ_HELPER_MODEL")
+def print_triage(summary):
+    a, h = summary["auto_when_human"], summary["human_when_auto"]
+    show = lambda m: f"{m['count']}/{m['out_of']}" + (f" ({m['rate']:.0%})" if m["rate"] is not None else "")
+    print(f"\nHandled alone, should have gone to a person: {show(a)}   <- minimise first")
+    print(f"Sent to a person, should have been handled alone: {show(h)}")
+    print(f"Weighted error (first x{summary['weight']}): {summary['weighted_error']}")
+
+
+def judge_model():
+    """GROQ_JUDGE_MODEL if set; Gemini when it serves the helpers (saves the agent's Groq quota); else the agent's model."""
+    forced = os.environ.get("GROQ_JUDGE_MODEL")
     if forced:
         return forced
-    available = mvp.available_models()
-    others = [m for m in mvp.PREFERRED_MODELS if m in available and m != mvp.MODEL] or [m for m in available if m != mvp.MODEL]
-    return others[0] if others else mvp.MODEL
+    helper = case_agent.HELPER_MODEL or ""
+    return helper if helper.startswith(mvp.GEMINI_PREFIX) else mvp.MODEL
+
+
+def rescore(folder):
+    """Recompute scores, summary and report of an earlier run from its results.jsonl, without calling Groq."""
+    global JUDGE_MODEL
+    folder = Path(folder)
+    results = [json.loads(line) for line in (folder / "results.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    old = json.loads((folder / "summary.json").read_text()) if (folder / "summary.json").exists() else {}
+    for result in results:
+        result["score"] = score(result["case"], result["trace"], result["judge"])
+    mvp.MODEL, case_agent.HELPER_MODEL, JUDGE_MODEL = old.get("model"), old.get("helper_model"), old.get("judge_model")
+    summary = summarise(results)
+    summary.update({key: old[key] for key in ("source", "judge", "finished_at") if key in old})
+    (folder / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
+    (folder / "report.html").write_text(report.render(summary, results), encoding="utf-8")
+    print(f"Rescored {len(results)} cases in {folder}")
+    print_triage(summary)
 
 
 def main(argv):
-    global JUDGE_MODEL
+    global JUDGE_MODEL, WEIGHT
     def option(name, default=None):
         return argv[argv.index(name) + 1] if name in argv else default
+    WEIGHT = float(option("--weight", WEIGHT))
+    if "--rescore" in argv:
+        return rescore(option("--rescore"))
     source = option("--file", "hand")
     records = sample(load(source), int(option("--per-type", 0)), int(option("--limit", 0)))
     use_judge = "--no-judge" not in argv
     mvp.pick_model()
-    case_agent.HELPER_MODEL = helper_model()
-    JUDGE_MODEL = os.environ.get("GROQ_JUDGE_MODEL") or mvp.MODEL
+    case_agent.HELPER_MODEL = mvp.other_model()
+    JUDGE_MODEL = judge_model()
     print(f"Fallback models when one is rate limited: {', '.join(mvp.POOL)}")
     print(f"{len(records)} cases from {source} · agent {mvp.MODEL} · simulated people and search {case_agent.HELPER_MODEL} · judge {JUDGE_MODEL} · "
           f"judge {'on' if use_judge else 'off'}")
@@ -220,6 +290,7 @@ def main(argv):
     (out / "report.html").write_text(report.render(summary, results, banner=option("--banner")), encoding="utf-8")
     if summary["not_evaluated"]:
         print(f"\n{len(summary['not_evaluated'])} cases not evaluated (API errors), left out of the rates.")
+    print_triage(summary)
     print(f"\nPass rate {summary['pass_rate_by_type']:.0%} (mean over {summary['types']} types) · endings right "
           f"{summary['ending_accuracy']:.0%} · sent to a person {summary['sent_to_person']['agent']} (expected "
           f"{summary['sent_to_person']['expected']}) · traps called {sum(summary['trap_violations'].values())}")
