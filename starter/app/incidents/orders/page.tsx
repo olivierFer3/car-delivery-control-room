@@ -27,12 +27,12 @@ export default function OperationalOrders(){
  {!rows&&!error&&<p role="status">Loading orders and investigation history…</p>}
  {rows&&<p role="status">{rows.filter(matches).length} of {rows.length} supplied orders shown · snapshot time {SIMULATION_TIME}</p>}
  {rows&&<div className={styles.chips} role="group" aria-label="Filter by check status"><button aria-pressed={!check} onClick={()=>setCheck('')}>All · {rows.length}</button>{Object.entries(counts).map(([k,n])=><button key={k} aria-pressed={check===k} onClick={()=>setCheck(check===k?'':k)}>{k} · {n}</button>)}</div>}
- <ul className={styles.cards}>{rows?.filter(matches).map(o=>{const signal=o.signals.find(s=>s.id===selected[o.id])??o.signals[0];return <li key={o.id} className={`${styles.panel} ${styles.orderRow}`} data-order-id={o.id}>
+ <ul className={`${styles.cards} ${styles.rows}`}>{rows?.filter(matches).map(o=>{const signal=o.signals.find(s=>s.id===selected[o.id])??o.signals[0];return <li key={o.id} className={`${styles.panel} ${styles.orderRow}`} data-order-id={o.id}>
  <div className={styles.cardTop}><h3><Link href={`/orders/${o.id}`}>{o.reference}</Link></h3><StatusBadge status={checkStatus(o.checkStatus)}/></div><p>Recorded delivery state: {o.status}</p>
  <label className={styles.label}>Signal to investigate <select aria-label={`Source for ${o.reference}`} value={signal.id} onChange={e=>setSelected(x=>({...x,[o.id]:e.target.value}))}>{o.signals.map(s=><option key={s.id} value={s.id}>{s.summary}</option>)}</select></label>
  <p>{signal.reason}</p><p className={styles.source}>Raised {new Date(signal.at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'})} UTC{signal.supported?'':' · unsupported: a person handles it'}</p><details><summary className={styles.source}>Source record</summary><p className={styles.source}>{signal.id}</p></details>
  {o.incidents.map(i=><p key={i.id}><Link href={`/incidents/${i.id}`}>Open existing incident</Link> <StatusBadge status={incidentStatus({state:i.state as never,workflow:undefined})}/></p>)}
- <button className={styles.primary} disabled={!!busy||(signal.supported&&!providers.find(p=>p.name===provider)?.configured)} onClick={()=>open(o,signal.id)}>{busy===o.id?'Opening…':signal.supported?'Open investigation':'Hand to human review'}</button>
+ <button className={signal.supported?styles.primary:styles.secondary} disabled={!!busy||(signal.supported&&!providers.find(p=>p.name===provider)?.configured)} onClick={()=>open(o,signal.id)}>{busy===o.id?'Opening…':signal.supported?'Open investigation':'Hand to human review'}</button>
  </li>})}</ul>
  {rows&&!rows.some(matches)&&<p className={styles.empty}>No matching orders. <button className={styles.secondary} onClick={()=>{setQuery('');setCheck('')}}>Clear filters</button></p>}
  </main></AppFrame>

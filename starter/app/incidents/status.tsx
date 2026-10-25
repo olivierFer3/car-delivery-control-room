@@ -8,7 +8,7 @@ const INCIDENT: Record<PublicIncident["state"], { label: string; glyph: string; 
   needs_decision: { label: "Needs your decision", glyph: "◆", tone: "decision" },
   approved: { label: "Approved · apply separately", glyph: "✓", tone: "ready" },
   investigating: { label: "Investigating", glyph: "◔", tone: "active" },
-  waiting: { label: "Waiting for information", glyph: "⏸", tone: "waiting" },
+  waiting: { label: "Waiting for information", glyph: "‖", tone: "waiting" },
   technical_error: { label: "Technical review", glyph: "!", tone: "technical" },
   resolved: { label: "Incident resolved", glyph: "✓", tone: "done" },
 }
