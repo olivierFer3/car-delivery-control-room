@@ -1,29 +1,54 @@
-/* Railway operations layer: warm white surfaces on a warm grey ground, one brand red used sparingly
-   (wordmark, active navigation, primary action). Status colours keep one meaning each. No decoration. */
+/* Bahn Express operations layer. Warm greige ground, off-white work surfaces, charcoal structure,
+   pill controls and a wide heavy display face, taken from the public Bahn Express site.
+   Signal colours: coral = needs a person, rust = technical, sky = agent working, ochre = waiting, green = clear. */
 
 body { background: var(--canvas); }
-:focus-visible { outline-color: var(--ink); }
-::selection { background: #f4c7cd; }
+:focus-visible { outline-color: var(--ink); outline-offset: 2px; }
+::selection { background: #f2c9bd; }
+* { scrollbar-width: thin; scrollbar-color: var(--sand) transparent; }
 
-.sidebar { background: var(--birch); border-right: 1px solid var(--hair); padding-top: 18px; }
-.wordmark { margin: 0 4px; padding: 11px 12px; background: var(--brand); color: #fff; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.01em; line-height: 1.1; }
-.nav-label { margin-bottom: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
-.nav-link { position: relative; border-radius: 2px; font-weight: 500; }
-.nav-link:hover { background: var(--tray); }
-.nav-link.active { background: var(--canvas); color: var(--ink); font-weight: 600; }
-.nav-link.active::before { content: ""; position: absolute; left: -14px; top: 0; bottom: 0; width: 4px; background: var(--brand); }
-.nav-link.active .icon { color: var(--brand); }
-.sidebar-foot { padding: 12px 10px 0; border-top: 1px solid var(--hair); }
-.sidebar-foot::before { content: "Simulation"; display: block; width: max-content; margin-bottom: 6px; padding: 2px 7px; border-radius: 2px; font-size: 11px; font-weight: 600; color: var(--orange-ink); background: var(--orange-bg); border: 1px solid #e8c98a; }
+/* Shell: charcoal top bar with pill navigation */
+.app { display: flex; flex-direction: column; min-height: 100dvh; }
+.app-board { height: 100dvh; overflow: hidden; }
+.main { flex: 1; min-height: 0; min-width: 0; border-top: 0; }
+.app-board .main { height: auto; }
+.topbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 22px; flex: none; padding: 10px 20px; background: var(--char); color: var(--on-char); }
+.wordmark { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 0; background: none; color: var(--on-char); font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: -0.04em; text-transform: none; text-decoration: none; white-space: nowrap; }
+.wordmark-mark { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--on-char); color: var(--char); font-size: 16px; letter-spacing: 0; }
+.wordmark-sub { margin-left: 4px; padding-left: 12px; border-left: 1px solid var(--char-2); color: var(--on-char-muted); font-family: var(--font-body); font-weight: 500; font-size: 12px; letter-spacing: 0; }
+.topnav { display: flex; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; }
+.topnav-link { padding: 7px 15px; border-radius: 999px; color: var(--on-char-muted); font-size: 13.5px; font-weight: 500; text-decoration: none; white-space: nowrap; transition: background-color 0.12s ease, color 0.12s ease; }
+.topnav-link:hover { color: var(--on-char); background: var(--char-2); }
+.topnav-link.active { background: var(--birch); color: var(--ink); font-weight: 600; }
+.topbar :focus-visible { outline-color: var(--on-char); }
+.topbar-meta { display: flex; align-items: center; gap: 12px; flex: none; font-size: 12px; color: var(--on-char-muted); white-space: nowrap; }
+.sim-chip { padding: 3px 10px; border-radius: 999px; border: 1px solid #6d5b3a; background: #3a3022; color: #f0c477; font-weight: 600; font-size: 11.5px; }
 
-.main { border-top: 4px solid var(--brand); }
-.board-head { background: var(--birch); border-bottom: 1px solid var(--hair); }
-.board-title h1 { font-size: 22px; font-weight: 700; }
-.lane { background: transparent; }
-.lane-head h2 { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.card { transition: box-shadow 0.12s ease; }
+/* Orders board */
+.board-head { background: transparent; padding: 18px var(--gutter) 12px; border-bottom: 0; }
+.board-title h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+.search, .toggle { border-radius: 999px; background: var(--birch); }
+.board { gap: 12px; padding: 0 var(--gutter) 14px; }
+.lane { background: #e4dfd5; border-radius: 20px; border: 0; padding-bottom: 6px; }
+.lane-head { padding: 12px 14px 8px; }
+.lane-head h2 { font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.lane-attention { color: var(--orange-ink); font-weight: 600; }
+.card { border-radius: 14px; background: var(--birch); box-shadow: 0 0 0 1px var(--hair); transition: box-shadow 0.12s ease; }
+.card:hover { box-shadow: 0 0 0 2px var(--ink); }
+.card:has(.tray-line.tone-danger) { box-shadow: inset 4px 0 0 var(--orange), 0 0 0 1px var(--hair); }
+.card:has(.tray-line.tone-danger):hover { box-shadow: inset 4px 0 0 var(--orange), 0 0 0 2px var(--ink); }
+.card:has(.tray-line.tone-warn):not(:has(.tray-line.tone-danger)) { box-shadow: inset 4px 0 0 #d9a441, 0 0 0 1px var(--hair); }
+.card-tray { border-radius: 0 0 14px 14px; }
+.cover { border-radius: 24px; box-shadow: none; }
+.panel, .tile { border-radius: 16px; }
+.chip { border-radius: 999px; }
 
 @media (max-width: 900px) {
-  .nav-link.active::before { left: 0; top: auto; bottom: 0; right: 0; width: auto; height: 3px; }
-  .wordmark { padding: 8px 10px; font-size: 13px; }
+  .app-board { height: auto; overflow: visible; }
+  .topbar { flex-wrap: wrap; gap: 8px 14px; padding: 10px 14px; }
+  .topnav { order: 3; flex-basis: 100%; }
+  .topbar-meta .snapshot { display: none; }
+  .wordmark-sub { display: none; }
+  .app-board .main { height: auto; }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

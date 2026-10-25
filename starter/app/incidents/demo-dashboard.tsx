@@ -52,18 +52,21 @@ export default function IncidentsPage() {
     { id: "resolved", title: "Resolved incidents", note: "The incident is closed. Delivery status is tracked separately.", rows: incidents?.filter(i => i.state === "resolved") ?? [] },
   ]
   const unchecked = orders?.filter(o => o.checkStatus === "Not checked").length
+  const renderGroup = (group: (typeof groups)[number]) => <section key={group.id} id={group.id} aria-labelledby={`${group.id}-title`} className={styles.section}><div className={styles.sectionHead}><h2 id={`${group.id}-title`}>{group.title} <span className={styles.count}>{group.rows.length}</span></h2><p>{group.note}</p></div>
+      {group.rows.length === 0 ? <p className={styles.empty}>Nothing in this queue.</p> : <ul className={`${styles.cards} ${styles.rows}`}>{group.rows.map(i => <li key={i.id}><Link className={styles.card} href={`/incidents/${i.id}`}><div className={styles.cardTop}><span className={styles.reference}>{i.orderId === "ord-00603" ? "CD-420603" : i.orderId}</span><StatusBadge status={incidentStatus(i)} /></div><p className={styles.source}>{human(i) ? "Unsupported case · human handling" : i.mode === "llm" ? "Real model investigation · simulated services" : "Preserved scripted demo"}</p><h3>{i.summary}</h3><p>{i.nextStep}</p><p className={styles.who}><strong>Next:</strong> {responsible(i)}</p><span className={styles.open}>Open incident →</span></Link></li>)}</ul>}
+    </section>
   return <AppFrame section="incidents" snapshotAt={SIMULATION_TIME}><main className={styles.page}>
-    <header className={styles.hero}><div><p className={styles.eyebrow}>Control room · fictional simulation</p><h1>Operations workspace</h1><p>What needs you now, what the agent is doing, and what is still unchecked. No real messages, bookings or payments are made.</p></div><Link className={styles.secondary} href="/incidents/orders">All {orders?.length ?? 100} orders →</Link></header>
-    <OperatorAccess />
+    <header className={styles.hero}><div><p className={styles.eyebrow}>Control room · fictional simulation</p><h1>Operations workspace</h1><p>What needs you now, what the agent is doing, and what is still unchecked. No real messages, bookings or payments are made.</p></div><div className={styles.heroTools}><OperatorAccess /><Link className={styles.secondary} href="/incidents/orders">All {orders?.length ?? 100} orders →</Link></div></header>
     {error && <div className={styles.error} role="alert">{error}<button className={styles.secondary} onClick={() => setRefresh(n => n + 1)}>Try again</button></div>}
     {!incidents && !error && <p role="status" aria-busy="true" className={styles.panel}>Loading incidents…</p>}
     {incidents && <nav aria-label="Queues" className={styles.queueSummary}>
       {groups.map(g => <a key={g.id} href={`#${g.id}`} data-urgent={g.urgent && g.rows.length > 0}><strong>{g.rows.length}</strong><span>{g.title}</span></a>)}
       <Link href="/incidents/orders?check=Not+checked"><strong>{unchecked ?? "–"}</strong><span>Orders not checked</span></Link>
     </nav>}
-    {incidents && groups.map(group => <section key={group.id} id={group.id} aria-labelledby={`${group.id}-title`} className={styles.section}><div className={styles.sectionHead}><h2 id={`${group.id}-title`}>{group.title} <span className={styles.count}>{group.rows.length}</span></h2><p>{group.note}</p></div>
-      {group.rows.length === 0 ? <p className={styles.empty}>Nothing in this queue.</p> : <ul className={`${styles.cards} ${styles.rows}`}>{group.rows.map(i => <li key={i.id}><Link className={styles.card} href={`/incidents/${i.id}`}><div className={styles.cardTop}><span className={styles.reference}>{i.orderId === "ord-00603" ? "CD-420603" : i.orderId}</span><StatusBadge status={incidentStatus(i)} /></div><p className={styles.source}>{human(i) ? "Unsupported case · human handling" : i.mode === "llm" ? "Real model investigation · simulated services" : "Preserved scripted demo"}</p><h3>{i.summary}</h3><p>{i.nextStep}</p><p className={styles.who}><strong>Next:</strong> {responsible(i)}</p><span className={styles.open}>Open incident →</span></Link></li>)}</ul>}
-    </section>)}
+    {incidents && <div className={styles.console}>
+      <div className={styles.consoleMain}>{["decisions", "technical", "waiting"].map(id => groups.find(g => g.id === id)!).map(renderGroup)}</div>
+      <aside className={styles.consoleSide} aria-label="Agent activity and other cases">{["investigating", "unsupported", "resolved"].map(id => groups.find(g => g.id === id)!).map(renderGroup)}</aside>
+    </div>}
     <p className={styles.footnote}>Orders without an investigation stay <strong>Not checked</strong>. A quiet queue is not proof that every order is safe.</p>
     <details className={styles.raw}><summary>Earlier demos (kept for comparison)</summary>
       <div className={styles.notice}><strong>Scripted iteration-1 demo</strong><span>The original ferry-delay demo, with mock reasoning. No real messages or bookings are made.</span><button className={styles.primary} disabled={busy || !incidents} onClick={openDemo}>{busy ? "Opening incident…" : "Open ferry-delay demo"}</button></div>

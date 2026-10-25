@@ -1,7 +1,6 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { fmtDateTime } from "@/lib/present/time"
-import { Icon } from "./icons"
 
 export type Section = "board" | "incidents" | "inbox" | "customers" | "drivers" | "sites"
 
@@ -20,18 +19,13 @@ const GROUPS: { label: string; links: { section: Section; href: string; label: s
 
 export function AppFrame({ children, section, snapshotAt, board = false }: { children: ReactNode; section: Section; snapshotAt?: string | null; board?: boolean }) {
   return <div className={`app${board ? " app-board" : ""}`}>
-    <aside className="sidebar">
-      <Link href="/" className="wordmark" aria-label="Control Room home">Control Room</Link>
-      <nav className="sidebar-nav" aria-label="Main navigation">
-        {GROUPS.map((group) => <div className="nav-group" key={group.label}>
-          <div className="nav-label">{group.label}</div>
-          {group.links.map((link) => <Link key={link.section} href={link.href} className={`nav-link${section === link.section ? " active" : ""}`} aria-current={section === link.section ? "page" : undefined}>
-            <Icon name={link.icon} size={15} />{link.label}
-          </Link>)}
-        </div>)}
+    <header className="topbar">
+      <Link href="/" className="wordmark" aria-label="Bahn Control Room home"><span className="wordmark-mark" aria-hidden="true">b</span>bahn<span className="wordmark-sub">control room</span></Link>
+      <nav className="topnav" aria-label="Main navigation">
+        {GROUPS.flatMap((group) => group.links).map((link) => <Link key={link.section} href={link.href} className={`topnav-link${section === link.section ? " active" : ""}`} aria-current={section === link.section ? "page" : undefined}>{link.label}</Link>)}
       </nav>
-      <div className="sidebar-foot">{snapshotAt ? `Snapshot ${fmtDateTime(snapshotAt)}` : "Fictional snapshot"}<br />Fictional data · simulated actions</div>
-    </aside>
+      <div className="topbar-meta"><span className="sim-chip">Simulation</span><span className="snapshot">{snapshotAt ? `Snapshot ${fmtDateTime(snapshotAt)}` : "Fictional snapshot"}</span></div>
+    </header>
     <div className="main">{children}</div>
   </div>
 }

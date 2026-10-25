@@ -17,16 +17,17 @@ export default function OperationalOrders(){
  const counts=rows?.reduce<Record<string,number>>((c,o)=>({...c,[o.checkStatus]:(c[o.checkStatus]??0)+1}),{})??{}
  async function open(order:OperationalOrder,id:string){setBusy(order.id);setError('');try{const result=await openOrderInvestigation(order.id,id,provider);if(!result.incident)throw Error(result.error);router.push(`/incidents/${result.incident.id}`)}catch(e){setError(e instanceof Error?e.message:'Could not open investigation')}finally{setBusy('')}}
  return <AppFrame section="incidents" snapshotAt={SIMULATION_TIME}><main className={styles.page}>
- <header className={styles.hero}><div><p className={styles.eyebrow}>Control room · synthetic operations</p><h1>All supplied orders</h1><p>Every order stays here, checked or not. Pick the signal to investigate, or hand an unsupported case to a person.</p></div><Link href="/incidents?view=workspace" className={styles.secondary}>Decisions and waiting cases →</Link></header>
- <OperatorAccess/>
+ <header className={styles.hero}><div><p className={styles.eyebrow}>Control room · synthetic operations</p><h1>All supplied orders</h1><p>Every order stays here, checked or not. Pick the signal to investigate, or hand an unsupported case to a person.</p></div><div className={styles.heroTools}><OperatorAccess/><Link href="/incidents?view=workspace" className={styles.secondary}>Decisions and waiting cases →</Link></div></header>
  <div className={styles.notice}><strong>Real agent · fictional services</strong><span>Driver replies arrive as explicit simulated events. No real messages or bookings. Incident resolution never means delivery.</span></div>
  <details className={styles.raw}><summary>Model configuration</summary><label>Provider <select aria-label="Investigation provider" value={provider} onChange={e=>setProvider(e.target.value)}>{providers.filter(p=>['groq','gemini'].includes(p.name)).map(p=><option key={p.name} value={p.name}>{p.name} · {p.configured?p.model:'not configured'}</option>)}</select></label><p>Credentials remain on the server. No mock reasoning is substituted.</p></details>
  {rows&&!providers.some(p=>p.configured&&['groq','gemini'].includes(p.name))&&<p role="alert" className={styles.error}>No real agent provider is configured. Set private Groq or Gemini credentials and an allowed model on the server. Human handoff and existing records remain accessible.</p>}
- <label className={styles.label}>Find an order <input aria-label="Find an order" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Order reference, ID or status"/></label>
  {error&&<div role="alert" className={styles.error}>{error}<button className={styles.secondary} onClick={()=>setRefresh(n=>n+1)}>Try again</button></div>}
  {!rows&&!error&&<p role="status">Loading orders and investigation history…</p>}
- {rows&&<p role="status">{rows.filter(matches).length} of {rows.length} supplied orders shown · snapshot time {SIMULATION_TIME}</p>}
+ <div className={styles.toolbar}>
+ <label className={styles.label}>Find an order <input aria-label="Find an order" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Order reference, ID or status"/></label>
  {rows&&<div className={styles.chips} role="group" aria-label="Filter by check status"><button aria-pressed={!check} onClick={()=>setCheck('')}>All · {rows.length}</button>{Object.entries(counts).map(([k,n])=><button key={k} aria-pressed={check===k} onClick={()=>setCheck(check===k?'':k)}>{k} · {n}</button>)}</div>}
+ {rows&&<p role="status">{rows.filter(matches).length} of {rows.length} supplied orders shown · snapshot time {SIMULATION_TIME}</p>}
+ </div>
  <ul className={`${styles.cards} ${styles.rows}`}>{rows?.filter(matches).map(o=>{const signal=o.signals.find(s=>s.id===selected[o.id])??o.signals[0];return <li key={o.id} className={`${styles.panel} ${styles.orderRow}`} data-order-id={o.id}>
  <div className={styles.cardTop}><h3><Link href={`/orders/${o.id}`}>{o.reference}</Link></h3><StatusBadge status={checkStatus(o.checkStatus)}/></div><p>Recorded delivery state: {o.status}</p>
  <label className={styles.label}>Signal to investigate <select aria-label={`Source for ${o.reference}`} value={signal.id} onChange={e=>setSelected(x=>({...x,[o.id]:e.target.value}))}>{o.signals.map(s=><option key={s.id} value={s.id}>{s.summary}</option>)}</select></label>
