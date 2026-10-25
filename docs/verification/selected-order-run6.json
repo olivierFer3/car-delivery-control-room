@@ -1,0 +1,129 @@
+{
+  "verified_at": "2026-10-25T07:14:01.115708+00:00",
+  "status": "passed_scoped_live_waiting",
+  "head": "d23341d2c9311a27bc2f42bb4b8d6a9846ece358",
+  "product_sha256": {
+    "starter/app/api/incidents/orders/route.ts": "0b7133bb35f56d3a9c8335bb211e1440309dbcd11f5572be45f38ceed3e58c00",
+    "starter/app/api/incidents/route.ts": "61e922b273db20b0607836bcb5211f9da004e999a8571d5124e4c4c18dfd6cdf",
+    "starter/app/incidents/[id]/page.tsx": "e59419c263490ccc6d7368da5f51ed431ffb723e4905188ca0082edcf4eac0a7",
+    "starter/app/incidents/actions.ts": "842cfd8a3607d4afccd6ca25eee9b8881bfedf641cfb5957140f81b377270434",
+    "starter/app/incidents/dataset-dashboard.tsx": "31168e4e9606504720a25f706d74100b7518ff83712e42c73434d09ba9facdee",
+    "starter/app/incidents/demo-dashboard.tsx": "a3450941e8760d689b059a30a5e3ea115cebb37b038691f75ad63e2f607bb7a1",
+    "starter/app/incidents/live-agent-controls.tsx": "bdce011d144ce6b454cde86e83c454c2cf57e30b33712dfad0fbe14f0c18a41e",
+    "starter/app/incidents/orders/page.tsx": "8665561b26054d633169302df4e777b8d105587fadc1bd6ffe1642296f5c3b57",
+    "starter/lib/incidents/contracts.ts": "29652177bca3bdd3b5f2796f660fe06aeb90caa7bb131f9684bbc3c472ab7d5f",
+    "starter/lib/incidents/engine.ts": "c92bd60f91cb2a65c2e5f5ca9fc4f72c953ded88193769d943a10c6caa0ac4ee",
+    "starter/lib/incidents/fixtures.ts": "5d280fa1e6caadd157f5c17926bed155ca5cdd0ac1500a6929826ecc0aed0da5",
+    "starter/lib/incidents/operational.ts": "4b6967e94ab2713869a5a9c34b3029c818aaa46e55806ef11dbc71399c1cd42b",
+    "starter/lib/incidents/service.ts": "9f1ddb54eed496d413163184c2cb276e78df7ba885fa1060954b34337af40275",
+    "starter/lib/incidents/store.ts": "c2ba80b3aa63c46ad25f51bf57e47f12d94cd393817cc9750f2ae2008e8cb929",
+    "starter/scripts/tests/operational-persistence.test.ts": "6ce1c1164837cd34b9358ba953ec534777688321a9aa05486100233afab079f4",
+    "starter/scripts/tests/operational.test.ts": "5cd2ae12d6f3d0f5be0c50b1e4d256a818301290a731d974df1c0a99c6593906"
+  },
+  "incidentId": "524f86b5-f8a8-428f-a799-4d888664dfd6",
+  "url": "http://127.0.0.1:3107/incidents/524f86b5-f8a8-428f-a799-4d888664dfd6",
+  "orderId": "ord-00324",
+  "sourceId": "res-x0c658361818f4c47",
+  "normal_path": "Browser order list -> select CD-420324 reservation -> authenticated Server Action create -> Run -> normal service/provider/tools -> persisted waiting -> reload",
+  "provider": "gemini",
+  "actual_model": "gemini-3.5-flash-lite",
+  "live_requests": 2,
+  "http_statuses": [
+    200,
+    200
+  ],
+  "retries": 0,
+  "fallback_requests": 0,
+  "model_selected_turns": [
+    {
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "actualModel": "gemini-3.5-flash-lite",
+      "responseId": "EardatvHOqPs7M8P86Cj6QY",
+      "selected": {
+        "args": {},
+        "tool": "get_order_context"
+      },
+      "result": {
+        "orderId": "ord-00324",
+        "reservationIds": [
+          "res-x0c658361818f4c47"
+        ],
+        "alertIds": [],
+        "sources": "Order-scoped snapshot records and clearly labelled simulated quotes; full result retained in incident history"
+      }
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "actualModel": "gemini-3.5-flash-lite",
+      "responseId": "EqrdavXAMrWpkdUPr-za2Qg",
+      "selected": {
+        "args": {
+          "question": "What is your current terminal ETA, and do you have any safety concerns or blockers?"
+        },
+        "tool": "ask_driver"
+      },
+      "result": {
+        "status": "no_response",
+        "question": "What is your current terminal ETA, and do you have any safety concerns or blockers?"
+      }
+    }
+  ],
+  "state": "waiting",
+  "driverReplies": 0,
+  "proposals": 0,
+  "decisions": 0,
+  "executions": 0,
+  "evidence_isolated": true,
+  "source_order_unchanged": true,
+  "prior_incidents_preserved": 26,
+  "reload_preserved": true,
+  "mock_reasoning": false,
+  "preloads": "Existing persistent request/output-token limiter plus metadata observer delegating to real fetch; browser receives no provider credentials",
+  "budget": {
+    "before": {
+      "runs": 5,
+      "requests": 28,
+      "run_ceiling": 5,
+      "request_ceiling": 30
+    },
+    "after": {
+      "runs": 6,
+      "requests": 30,
+      "run_ceiling": 6,
+      "request_ceiling": 34
+    },
+    "per_run_request_cap": 6,
+    "output_tokens_per_request": 2048,
+    "previous_run_records_unchanged": true,
+    "coding_and_controller_counters_preserved": true,
+    "attempts_preserved": true,
+    "remaining_requests": 4,
+    "remaining_runs": 0,
+    "no_further_live_run_authorized": true
+  },
+  "config_sha256": "509109170450b60ede9724217b7bd49db49e7c5c9b1b9694a5adf38a4de6b87d",
+  "provider_config_sha256": "78431ee3794e3e26b90a67733cf4bc233f02719dab695c814578e66d943bca37",
+  "raw_evidence_sha256": {
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/before.json": "fd039fbd13258dc31c5bc287b604262ab0ae7c39a14696325f4014d0aeb65cec",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/fingerprints.json": "3935d85e8f7eb33d989d0efe1098971c1f5be972ca17ad8c5b24475c9dd0a3b9",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/transport.jsonl": "bf025be1a32fefffd69e1b6c8ed5af8db4cb58412df1b17939559e5b02b51c1f",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/created.json": "d8d57102ae6117785e8c0009a26db53cc04ca5212cda37dc29533d85a5da5548",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/result.json": "e951a261229a1a8aff1d38fbb0d4648035d452552c76a811cac3fb800bac146e",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/summary.json": "64395a657e597807fa10cd1d9aefc81cf2800999aa667112df8ba187b5269bd0",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/status.json": "b397569ddd9a059d81a3335f4278c28874fd8cd026251162a0ce9e91a46f0c64",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/selected-order-run6/browser.log": "e4dc5846880b12bd2d02a33c6ff56859d6f301e1c0762c6dd4b3a96dfeccc669"
+  },
+  "controller_tests": {
+    "passed": 25,
+    "transport_budget_tests": "mocked; not live evidence"
+  },
+  "runner": "stopped",
+  "limitations": [
+    "This live check stops at unanswered-driver waiting; no reply, resume, new-order late proposal or execution was attempted",
+    "Late proposal and revision on other orders retain automated-provider-double evidence and historical original-case live evidence",
+    "Four global requests remain but no further run is authorized; ledger marks run6 passed and closed",
+    "A fresh local Git clone validates committed application bytes, not a GitHub remote/network clone"
+  ]
+}

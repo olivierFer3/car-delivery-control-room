@@ -1,0 +1,9 @@
+{
+  "task": "smoke-iteration2",
+  "base_head": "485802d800ccac5b790cb88d946d4eabe11e12f9",
+  "automated_gates": "passed",
+  "heldout": "passed",
+  "fresh_business_calls": 0,
+  "limitations": "Bounded tests are not proof of bug-freedom",
+  "commit_after_checks": true
+}

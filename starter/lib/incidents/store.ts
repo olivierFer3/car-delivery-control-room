@@ -3,8 +3,18 @@ import { simulatedTravelOptions } from "./fixtures"
 import type { Incident } from "./contracts"
 import type { Context, RecordRow, ToolsData } from "./engine"
 import { WorkflowError } from "./engine"
+import { orderSignals, orderCheckStatus, type OperationalOrder } from "./operational"
 let connection: ReturnType<typeof postgres> | undefined
-function sql() { if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL required"); return connection ??= postgres(process.env.DATABASE_URL, { max: 5 }) }
+function sql() {
+  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL required")
+  return connection ??= postgres(process.env.DATABASE_URL, {
+    max: 5,
+    connect_timeout: 3,
+    // Server-side cancellation also releases locks and aborts failed transactions.
+    // A caller-side Promise race would leave the database operation running.
+    connection: { lock_timeout: 1500, statement_timeout: 3000 },
+  })
+}
 export async function initializeStore() {
   await sql()`CREATE TABLE IF NOT EXISTS control_room_incidents (id text PRIMARY KEY, body jsonb NOT NULL)`
   // Repair earlier double-encoded JSON while preserving every incident history.
@@ -52,7 +62,7 @@ export const toolsData: ToolsData = {
     ])
     const records = (name: string) => related.filter(r => r.collection === name).map(r => r.details as RecordRow)
     // Preserve full snapshot relationships alongside the focused travel tools.
-    return { order: order.details, alerts: alerts.map(r => r.details), messages: messages.map(r => r.details), reservations: records("travel_reservations"), options: [...records("travel_options"), ...simulatedTravelOptions(orderId)], related: Object.fromEntries([...new Set(related.map(r => r.collection))].map(name => [name, records(name)])) } as Context
+    return { order: order.details, alerts: alerts.map(r => r.details), messages: messages.map(r => r.details), reservations: records("travel_reservations"), options: [...records("travel_options"), ...simulatedTravelOptions(orderId, records("travel_reservations"))], related: Object.fromEntries([...new Set(related.map(r => r.collection))].map(name => [name, records(name)])) } as Context
   },
   async similar(query, exceptId) { return (await listIncidents(query)).filter(i => i.id !== exceptId).slice(0, 5).map(i => ({ id: i.id, orderId: i.orderId, summary: i.summary, state: i.state, nextStep: i.nextStep })) },
 }
@@ -61,4 +71,13 @@ export const toolsData: ToolsData = {
 export async function saveAgentCheckpoint(i: Incident, leaseId: string) {
   const rows = await sql()`UPDATE control_room_incidents SET body = ${sql().json(JSON.parse(JSON.stringify(i)))} WHERE id = ${i.id} AND body->'activeRun'->>'id' = ${leaseId} RETURNING id`
   if (!rows.length) throw new WorkflowError("Agent lease expired or replaced; refresh the incident")
+}
+
+/** Read-only order coverage. Snapshot status and investigation status remain separate. */
+export async function operationalOrders():Promise<OperationalOrder[]> {
+  const [orders,alerts,reservations,incidents]=await Promise.all([sql()`SELECT details FROM orders ORDER BY id`,sql()`SELECT order_id,details FROM alerts`,sql()`SELECT order_id,details FROM related_records WHERE collection='travel_reservations'`,listIncidents()])
+  return orders.map(row=>{const order=row.details as RecordRow,own=incidents.filter(i=>i.orderId===order.id&&i.workflow)
+    const context={order,alerts:alerts.filter(r=>r.order_id===order.id).map(r=>r.details),reservations:reservations.filter(r=>r.order_id===order.id).map(r=>r.details),messages:[],options:[]} as Context
+    return {id:order.id,reference:String(order.reference??order.id),status:String(order.status),checkStatus:orderCheckStatus(own),signals:orderSignals(context),incidents:own.map(i=>({id:i.id,state:i.state}))}
+  })
 }

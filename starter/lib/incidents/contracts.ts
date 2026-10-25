@@ -10,6 +10,8 @@ export type Execution = { version: number; status: "succeeded" | "failed"; at: s
 export type DriverReply = { id: string; terminalEta: string; safe: boolean; blockers: string[]; text: string; at: string }
 export type ModelTurn = { id: string; provider: string; model: string; responseId?: string; actualModel?: string; endpoint?: string; purpose: "investigate" | "explain"; at: string; selected?: ToolCall; result?: unknown; error?: string }
 export type Incident = {
+  /** Operational cases retain the selected source, separate from legacy demo replays. */
+  workflow?: "ferry_delay" | "human_review"
   mode?: "llm" | "mock"
   preferredProvider?: "groq" | "gemini"
   driverReplies?: DriverReply[]

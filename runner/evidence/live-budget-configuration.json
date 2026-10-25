@@ -1,0 +1,24 @@
+{
+  "change": "Bounded real-agent verification configuration",
+  "max_runs": 3,
+  "requests_per_run": 6,
+  "global_requests": 18,
+  "max_output_tokens_per_request": 2048,
+  "requests_include": "Successful, failed, retry and fallback transports; reserved before sending",
+  "verification_scope": "One real incident per attempt, scheduled delay/disproved/no_response; no scripted tool sequence",
+  "provider": "Existing AGENT_PROVIDER or adapter default gemini; current Gemini model gemini-3.5-flash-lite",
+  "credentials": "Imported filtered settings into external mode-0600 file; no secrets in repository",
+  "coding_reported_token_ceiling": 200000,
+  "cached_tokens": "Included in input_tokens, not added twice",
+  "on_exhaustion": "Persist not_live_verified for affected HEAD/changes and block validation/commit",
+  "tests": {
+    "controller": 16,
+    "result": "passed",
+    "network": "Mocked transport only; no fresh provider requests",
+    "typechecks": [
+      "starter tsc --noEmit --incremental false passed",
+      "runner/live-check.ts explicit Node types and ES2023 typecheck passed"
+    ]
+  },
+  "overnight_started": false
+}

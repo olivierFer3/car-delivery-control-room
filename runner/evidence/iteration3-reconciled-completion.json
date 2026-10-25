@@ -1,0 +1,129 @@
+{
+  "task": "iteration3",
+  "status": "completed",
+  "method": "Evidence reconciliation only; no acceptance gate skipped or rerun",
+  "head": "f070bc3cfd0ce9371235365423b6963ce418b1fc",
+  "product_sha256": {
+    "starter/lib/incidents/booking-check.ts": "0e7ab452081fb56c15d0dc07518fc9f0fa83bd784dd40dffb5cc17fe57fcc061",
+    "starter/lib/incidents/contracts.ts": "bc5e94e974f3e5959b8e6068dc4faf644fc8591ef7ad2bd6d6365d756f4def3c",
+    "starter/lib/incidents/dataset-contracts.ts": "c5a6ae01c924dfe278f452a5e1787b459c7a8e09caa1c4de6238d1029ec54554",
+    "starter/lib/incidents/dataset-input.ts": "446fdc6f3beee6d90b1d41c7ecf67dda513ff73d749d0e5e854cd561a850f8bb",
+    "starter/lib/incidents/dataset-review.ts": "a00c2171c9dcb8d490706a460408c0246efa38fa130b711ab3d551bc030210d6",
+    "starter/lib/incidents/dataset-runs.ts": "537ad9136d22a9e79bcf7f44686d1c632744fdef3aae9a5dba1361ceba652f19",
+    "starter/lib/incidents/dataset.ts": "30a919f20d008547922727bcf70d28e03e5d54c102dcb70a43e1aa4fc7694c4a",
+    "starter/lib/incidents/engine.ts": "0eb191b81965df7b86129418fd6dbd4d4aff85c2e51c7422fdfca9c40f83b795",
+    "starter/lib/incidents/fixtures.ts": "bc2632b4bc10209a402819fca1c8791beba85b4a76532e66278105b43cdd644c",
+    "starter/lib/incidents/http.ts": "5b4bd61c2695b5ba416b8b38d63221eef797c2ca3d9a9c1cbcb7455c1af91582",
+    "starter/lib/incidents/mock.ts": "7a67625f264cd6f7deddc77a3b375591036b132b422a08948a2bd27441e3c019",
+    "starter/lib/incidents/operator-session.ts": "724ef4db98ba3a28de85536fd82868fa301052a58dc659dfc66a986cb68c05f2",
+    "starter/lib/incidents/proposal-contract.ts": "5bbf39b87759098937a8e7dd1b86edd4bdb23f2b4129db30bb36e939db9b9a7d",
+    "starter/lib/incidents/providers.ts": "7d80f33894ef67d00bc96893921d6c553d2ba6024d26f268d3e63d149bbba0e4",
+    "starter/lib/incidents/service.ts": "a9965df233657caaebda5e3ace48c1ed3b514a5404cd61a68439b5bc9f89ae4c",
+    "starter/lib/incidents/store.ts": "30e3d73c3e471c264b32bdccbd36972480c11b3791b3ea836ab533861d9a1f34"
+  },
+  "configuration": {
+    "run4_configuration_matches_current": false,
+    "explanation": "Run4 retains its original configuration attestation; current config matches run5. Product/provider/runtime bytes match run4. Current ceilings do not invalidate observed recovery.",
+    "current_runner_config_sha256": "d87e03c5c140cf26b1eb4bd3e4cef03a7f54dcb829c646a28cae493d6cb9e68d",
+    "provider_config_matches_run4": true,
+    "runtime_config_matches_run4": true
+  },
+  "criteria": [
+    {
+      "criterion": "Expired-worker fencing and interrupted waiting/reply recovery pass against isolated PostgreSQL",
+      "evidence": [
+        "development_gate.jsonl: stale lease/checkpoint rejected",
+        "regression-overnight-wait-resume.test.jsonl: 5 passed, 0 skipped, includes real child-process restart with PostgreSQL and mocked provider",
+        "no-response-run-4-summary.json: actual Gemini, separate application processes, waiting and same-case resume, six requests"
+      ]
+    },
+    {
+      "criterion": "Concurrent execution yields one receipt; unapproved/stale attempts fail",
+      "evidence": [
+        "development_gate.jsonl: concurrent PostgreSQL mutations yield one execution receipt; unauthorized HTTP command 401",
+        "incidents.jsonl: rejection, alternative/stale approval, unapproved action and duplicate execution tests",
+        "no-response-run-4-summary.json: unapproved execution rejected; no decisions/executions"
+      ]
+    },
+    {
+      "criterion": "Database and provider failures terminate within configured limits and remain technical",
+      "evidence": [
+        "regression-overnight-db-bounds.test.jsonl: PostgreSQL lock cancellation, statement cancellation, rollback and recovery; no skips",
+        "incidents.jsonl: provider failure/fallback, iteration limit and execution failure stay technical; mocked provider",
+        "product store.ts: connect 3s, lock 1.5s, statement 3s; engine.ts: bounded provider and loop execution"
+      ]
+    }
+  ],
+  "latest_recorded_commands": {
+    "incidents": {
+      "at": "2026-10-24T20:27:52Z",
+      "exit_code": 0
+    },
+    "iteration2": {
+      "at": "2026-10-24T20:27:53Z",
+      "exit_code": 0
+    },
+    "development_gate": {
+      "at": "2026-10-24T20:28:05Z",
+      "exit_code": 0
+    },
+    "heldout": {
+      "at": "2026-10-24T20:28:05Z",
+      "exit_code": 0
+    },
+    "build": {
+      "at": "2026-10-24T20:24:05Z",
+      "exit_code": 0
+    },
+    "regression-overnight-db-bounds.test": {
+      "at": "2026-10-24T20:28:01Z",
+      "exit_code": 0
+    },
+    "regression-overnight-wait-resume.test": {
+      "at": "2026-10-24T20:28:02Z",
+      "exit_code": 0
+    }
+  },
+  "external_artifacts": {
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/no-response-run-4-fingerprints.json": "1ffbbcd8146c48b9e7902ab1b455eafcb10062b3d04afb3f59d8b93ece502fce",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/no-response-run-4-summary.json": "4e7df86cc9eee0c1f303d04cda615048fc59ab73682ce702e2d10530902b3dbc",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/no-response-run-4-status.json": "1d93ac730e14ba0b5a96226c8f781eaa5c836d4164ac42d1797d4c38a818bbc2",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/no-response-run-4-transport.jsonl": "153e93067079f4963bd399e00aa0b38e1759e206c7a5019e3c25de14c9d9f2d5",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/regression-overnight-wait-resume.test.jsonl": "84f2619bba71bf6b4e742e56eef8d8e143cfad5dfdbfd8db0f553655555237b1",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/regression-overnight-db-bounds.test.jsonl": "005a2b0748e5030b976aefd06c472af429870499540ec865049e8634320b505c",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/development_gate.jsonl": "7abd4ee44fdea23a9119855b158d8ac9b0018ca0d71212c4cc1b1b0d08164c1d",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/incidents.jsonl": "ffd81f646daaadbaf57aeb0cfc5689e3b0365f5b33002f7b7ccf7bf8e43f2979",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/iteration2.jsonl": "e1714f66d1cfc9ec527d03c81fda5966152156417fe0cbcc1966de2d6aaa6463",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/heldout.jsonl": "fe26f28a576fdb9c384da39eddf5802f2b496f7ce077f594fb21a5b1c63766df",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/state/build.jsonl": "e2c2bfd5fae9e5097a1f62d7a0e2cc908926c3349532d5584d998f8f4ade31b8"
+  },
+  "tracked_evidence": [
+    "docs/overnight/database-bounds.md",
+    "docs/overnight/no-response-live-run-4.md",
+    "runner/evidence/iteration2-cycle-4.json"
+  ],
+  "counters_preserved": {
+    "cycles": 6,
+    "elapsed": 358.52,
+    "coding_sessions": 1,
+    "coding_tokens": 749646,
+    "coding_usage_unknown": false,
+    "business_api_calls": 28,
+    "live_verification_runs": 5
+  },
+  "task_attempts_preserved": {
+    "iteration2": 3,
+    "iteration3": 3,
+    "iteration5": 0,
+    "iteration4": 0
+  },
+  "business_ledger_sha256": "114081304bb057e569483aafdb27d022e94118bf1e826deee54a02dddbbcffad",
+  "additional_runs_requests_sessions_attempts": 0,
+  "limitations": [
+    "No claim of exhaustive hard-kill timing or arbitrary callback/pool-wait deadline coverage",
+    "Provider fault injection uses test doubles, not a live provider outage",
+    "Run4 is scoped live recovery evidence, not live verification of every failure path",
+    "Passing bounded tests does not prove bug-freedom"
+  ],
+  "runner_remains_stopped": true
+}

@@ -1,0 +1,101 @@
+{
+  "passed": true,
+  "clone": "/home/matrix/home/projects/car-delivery-control-room-fresh-validation-20261025",
+  "commit": "d23341d2c9311a27bc2f42bb4b8d6a9846ece358",
+  "literal_independent_git_directory": true,
+  "no_alternates": true,
+  "no_node_modules_or_env_copied": true,
+  "git_status": "",
+  "steps": [
+    {
+      "step": "npm-ci",
+      "exit_code": 0
+    },
+    {
+      "step": "create-db",
+      "exit_code": 0
+    },
+    {
+      "step": "create-attachments",
+      "exit_code": 0
+    },
+    {
+      "step": "schema",
+      "exit_code": 0
+    },
+    {
+      "step": "seed",
+      "exit_code": 0
+    },
+    {
+      "step": "incidents-init",
+      "exit_code": 0
+    },
+    {
+      "step": "attachments-seed",
+      "exit_code": 0
+    },
+    {
+      "step": "typecheck",
+      "exit_code": 0
+    },
+    {
+      "step": "build",
+      "exit_code": 0
+    },
+    {
+      "step": "attachments-smoke",
+      "exit_code": 0
+    },
+    {
+      "step": "all-orders-smoke",
+      "exit_code": 0
+    }
+  ],
+  "database": "new controlroom_fresh_pg volume / loopback15439",
+  "attachments": "new controlroom_fresh_attachments volume / loopback19019",
+  "application": "3108, stopped after tests",
+  "orders": 100,
+  "source_records": 4366,
+  "attachment_files_seeded": 58,
+  "download_formats_verified": 2,
+  "all_orders_smoke": "passed",
+  "restart_persisted_handoff": true,
+  "model_credentials": "none",
+  "provider_calls": 0,
+  "limitations": [
+    "Local Git clone, not a GitHub/network clone",
+    "Baseline dependency audit findings and Next attachment tracing warning retained; see logs",
+    "Fresh clone verifies committed app; unrelated uncommitted runner changes were not copied"
+  ],
+  "raw_evidence_sha256": {
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/all-orders-smoke.log": "f7b922f4f42095ee017808bd4fc94e745c5a1e1f4c3022c0da9799b635a15b94",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/application.log": "a2f8b8fe5a4e4ee4a9e461366c7badb213a7d5abb4fa8804762662ab8b2525d2",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/attachments-seed.log": "cf1e9e0c84b24800e781d8bd6cdf601239d6ff7920519906996c27f2d30cb5f1",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/attachments-smoke.log": "00217bbd3a75af5f510cd0e9988de2a99cb89a038f6dc20cb3017610ce6af880",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/build.log": "cc11045615cdea1594c6b78a46036a95090aecce083908fd01a1591158570de7",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/create-attachments.log": "acf150fa57900f7ed9089b2a4581a10cb7a590734d7afe8ee79fa365b8636b2c",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/create-db.log": "2cc134003a29612d3a9f1a7886cc5f73311a41eedeb0bcaaa09edcaaa3e5423e",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/incidents-init.log": "9c6905bd6a2326dea7424e5f30e1ce8a460601de77eb5815b100b28db2a833ac",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/npm-ci.log": "00666c5cc77e937c0f3e542321042745bfd91356210b730ee2c3bf30ad65cd66",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/restart.log": "5cac9366630e7ae1b14e9768dc2a4f3c4464bc6fccb0699001f9bb95c7ef6078",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/schema.log": "229249ddd5a5c5c2591bab277f06c540182b18911fc67286c9b689fd694fb21f",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/seed.log": "63642f40c14eb950d1d19f412b17ea4bf84f7baf4722a69bab0bbdf19e59968e",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/fresh-clone-validation/typecheck.log": "8d116b008b078d8ef7cdf3b6f4d2c7bc9357b5f200ec4b05cd92728302b20ad1"
+  },
+  "api_summary": {
+    "passed": true,
+    "orders": 100,
+    "eligible": 6,
+    "initially_all_not_checked": true,
+    "missing_credentials_fail_closed": true,
+    "unauthorized_rejected": true,
+    "human_handoff": "e44a8599-0ac6-4a44-8779-d5e9835c32a8",
+    "no_model_requests": true
+  },
+  "known_setup_findings": [
+    "4 moderate npm audit vulnerabilities in existing lockfile",
+    "npm warned about deprecated esbuild-kit packages and unreviewed install scripts; no approval bypass was used",
+    "Existing Next attachment filesystem tracing warning remains; build and real attachment downloads passed"
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "scope": "Operational selected-order ferry workflow; memory/routing deferred by owner",
+  "product_commit": "91a128d",
+  "iteration3_receipt": "runner/evidence/iteration3-reconciled-completion.json",
+  "status": "automated_verified_not_live_verified",
+  "product_and_test_sha256": {
+    "starter/app/api/incidents/orders/route.ts": "0b7133bb35f56d3a9c8335bb211e1440309dbcd11f5572be45f38ceed3e58c00",
+    "starter/app/api/incidents/route.ts": "61e922b273db20b0607836bcb5211f9da004e999a8571d5124e4c4c18dfd6cdf",
+    "starter/app/incidents/[id]/page.tsx": "e59419c263490ccc6d7368da5f51ed431ffb723e4905188ca0082edcf4eac0a7",
+    "starter/app/incidents/actions.ts": "842cfd8a3607d4afccd6ca25eee9b8881bfedf641cfb5957140f81b377270434",
+    "starter/app/incidents/dataset-dashboard.tsx": "31168e4e9606504720a25f706d74100b7518ff83712e42c73434d09ba9facdee",
+    "starter/app/incidents/demo-dashboard.tsx": "a3450941e8760d689b059a30a5e3ea115cebb37b038691f75ad63e2f607bb7a1",
+    "starter/app/incidents/live-agent-controls.tsx": "bdce011d144ce6b454cde86e83c454c2cf57e30b33712dfad0fbe14f0c18a41e",
+    "starter/app/incidents/orders/page.tsx": "8665561b26054d633169302df4e777b8d105587fadc1bd6ffe1642296f5c3b57",
+    "starter/lib/incidents/contracts.ts": "29652177bca3bdd3b5f2796f660fe06aeb90caa7bb131f9684bbc3c472ab7d5f",
+    "starter/lib/incidents/engine.ts": "c92bd60f91cb2a65c2e5f5ca9fc4f72c953ded88193769d943a10c6caa0ac4ee",
+    "starter/lib/incidents/fixtures.ts": "5d280fa1e6caadd157f5c17926bed155ca5cdd0ac1500a6929826ecc0aed0da5",
+    "starter/lib/incidents/operational.ts": "4b6967e94ab2713869a5a9c34b3029c818aaa46e55806ef11dbc71399c1cd42b",
+    "starter/lib/incidents/service.ts": "9f1ddb54eed496d413163184c2cb276e78df7ba885fa1060954b34337af40275",
+    "starter/lib/incidents/store.ts": "c2ba80b3aa63c46ad25f51bf57e47f12d94cd393817cc9750f2ae2008e8cb929",
+    "starter/scripts/tests/operational-persistence.test.ts": "6ce1c1164837cd34b9358ba953ec534777688321a9aa05486100233afab079f4",
+    "starter/scripts/tests/operational.test.ts": "5cd2ae12d6f3d0f5be0c50b1e4d256a818301290a731d974df1c0a99c6593906"
+  },
+  "verification": {
+    "focused_unit_tests": {
+      "passed": 4
+    },
+    "regression_files": {
+      "passed": 5,
+      "files": [
+        "incidents.test.ts",
+        "dataset.test.ts",
+        "iteration2.test.ts",
+        "overnight-proposal-contract.test.ts",
+        "operational.test.ts"
+      ]
+    },
+    "persistence_integration": {
+      "passed": true,
+      "database": "controlroom_operational_test on isolated 127.0.0.1:15438",
+      "transport": "local provider double; zero real model requests",
+      "phases": [
+        "wait: distinct selected orders, 401, missing config, source mismatch, stable reopen, provider failure then recovery",
+        "resume in new process: same history, duplicate reply, safe closure, late proposal, read-only explanation, rejection, revision, stale approval, approve with no effect, duplicate-safe separate execution"
+      ],
+      "skipped": 0
+    },
+    "typecheck": "passed",
+    "production_build": "passed; existing attachment tracing warning retained",
+    "browser": {
+      "passed": true,
+      "normal_http_application": true,
+      "checks": [
+        "100 supplied orders",
+        "Not checked vs checked/no action",
+        "human handoff and no automated controls",
+        "missing provider configuration fails closed",
+        "source citations and receipt persist after reload",
+        "normal selected-order launch with test-only failed transport remains technical; no business conclusion"
+      ]
+    },
+    "attachments": {
+      "seeded": 58,
+      "downloaded_formats_verified": 2,
+      "storage": "own labelled RustFS container bahn-operational-attachments, loopback 19009, own volume",
+      "source_packet_check": "100 orders / 4366 records / 58 attachments passed"
+    }
+  },
+  "external_artifact_sha256": {
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/schema.log": "abae93a8de30b84c23cc3e630dacef8891974fc5826b638ccbace85e3431e0fb",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/seed.log": "3429d1b85ec12c5026303aec87b8fcf32224c21436354f26c3987bd67a5cda79",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/operational-persistence.log": "379a8f76e33662304ef8adcef8bd93de477959bef9d482e64d4b8916c73996c1",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/attachment-seed.log": "1b92ab5c3c85c22412689b06e8bf6216c596131f232608866ed6c4a9ab40e1d3",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/build.log": "007b7a0e172d76110ceab252c20486e2c4cc8419ba5366d41cfd00a1c0171e9f",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/attachment-access.log": "9cce3377f733e7b92a184fdddf78c69abf63f3497e3b9b26c2177a240cfd7dee",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/browser.json": "cb944f5b94e49069e0c131cb56c52dc7ca915ae77f16672d64a8130e56947912",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/normal-launch-browser.json": "73df963c083415114e070c325e4e7a4d67dd10b35b8fc926321b3e622679b044",
+    "/home/matrix/home/.local/state/car-delivery-overnight-validation/operational/normal-launch-browser.log": "fd5bd2c35d99b4bf651a1dfb348af2946ca293257b420ea92f8a5244b971baf3"
+  },
+  "counters_preserved": {
+    "cycles": 6,
+    "elapsed": 358.52,
+    "coding_sessions": 1,
+    "coding_tokens": 749646,
+    "coding_usage_unknown": false,
+    "business_api_calls": 28,
+    "live_verification_runs": 5
+  },
+  "attempts_preserved": {
+    "iteration2": 3,
+    "iteration3": 3,
+    "iteration5": 0,
+    "iteration4": 0
+  },
+  "business_ledger_unchanged": true,
+  "live_verification": {
+    "status": "not_live_verified",
+    "reason": "New selected-order eligibility/context/quote path changed after historical live artifacts; no new provider allowance authorized",
+    "minimum_proposed_new_allowance": {
+      "late_non_demo_case": {
+        "runs": 1,
+        "model_requests_max": 6
+      },
+      "additional_early_case_if_live_multi_case_evidence_required": {
+        "runs": 1,
+        "model_requests_max": 4
+      },
+      "extra_task_attempts_or_coding_sessions_for_verification": 0
+    },
+    "allowance_changed": false,
+    "provider_calls_this_work": 0
+  },
+  "limitations": [
+    "The full selected-order extension has mocked-provider integration and real browser/DB evidence, not current live-provider verification",
+    "No literal fresh Git clone on another machine; isolated empty schema/seed/store setup and real attachment downloads were verified",
+    "Human handoff is persistent but full manual ownership/closure is not implemented",
+    "No general incident automation, repeated evolving driver updates, production multi-user identity, streaming or background scheduler",
+    "Known Next attachment tracing warning; standalone .next distribution not verified",
+    "Passing tests does not prove absence of bugs"
+  ],
+  "runner": "stopped; no CLI coding worker or overnight cycle launched",
+  "historical_queue_iteration5": "pending: original memory criteria deferred, not silently marked complete",
+  "remaining_human_submission_tasks": [
+    "Review commits and current live-evidence gap",
+    "If desired authorize scoped live verification; no allowance increased here",
+    "Record/review 2\u20133 minute video",
+    "Review public repository and publish/submit links yourself"
+  ]
+}

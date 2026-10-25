@@ -69,3 +69,7 @@ If port 5438 or 9009 is already in use on your computer, change it in
 - The starter's board of lanes is how people have worked so far. It is not the
   answer.
 - Questions: our channel on the event Discord, or our booth.
+
+## Participant operational incident workflow
+
+Browse supplied orders at `/incidents/orders`, investigate supported ferry risks with the real configured LLM, and hand unsupported sources to a human. Driver replies, quotes and booking effects remain simulated. See [the operating guide](docs/operations/OPERATING-GUIDE.md) for isolated/fresh-checkout setup, credentials, normal waiting/review/execution flows, verification limits and attachment checks. [Video outline](docs/operations/VIDEO-OUTLINE.md).

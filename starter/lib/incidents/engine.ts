@@ -1,5 +1,6 @@
 import { bookingConstraints, latestDriver } from "./booking-check"
 import { ProviderFailure } from "./providers"
+import { proposalArgsSchema } from "./proposal-contract"
 import { randomUUID } from "node:crypto"
 import { SIMULATION_TIME, type Incident, type Scenario, type ToolCall, type Provider, type Proposal, type Command, type DriverReply, type ModelTurn } from "./contracts"
 
@@ -18,6 +19,20 @@ function strings(a: Record<string, unknown>, key: string) { const v = a[key]; re
 function argsOnly(a: Record<string, unknown>, keys: string[]) { requireThat(a && !Array.isArray(a) && Object.keys(a).every(k => keys.includes(k)), "Unexpected tool argument") }
 function current(i: Incident) { const p = i.proposals.at(-1); requireThat(p, "No proposal"); return p }
 function editable(i: Incident) { requireThat(!i.executions.length && i.state !== "resolved" && i.state !== "approved", "Incident cannot be revised in this state") }
+/** A recorded unanswered question is an external-event boundary, not a reason
+ * to spend more model calls. Keep any independent checks already completed.
+ */
+function waitForPendingDriver(i: Incident): boolean {
+  if (latestDriver(i) || !i.tasks.some(t => t.tool === "ask_driver" && (t.result as {status?: string})?.status === "no_response")) return false
+  const wasWaiting = i.state === "waiting"
+  i.state = "waiting"
+  i.missing = [...new Set([...i.missing, i.mode === "llm" ? "Current driver reply" : "Current driver ETA"])]
+  i.nextStep = "Await simulated driver response; operator can resume explicitly"
+  i.stopReason = i.nextStep
+  i.lastAgentError = undefined
+  if (!wasWaiting) event(i, "driver_wait", "Driver has not replied; investigation suspended without repeating outreach")
+  return true
+}
 export function checkOption(i: Incident, c: Context, optionId: string) {
   const o = c.options.find(x => x.id === optionId)
   requireThat(o && o.kind === "FERRY", "Unknown ferry option for this order")
@@ -38,7 +53,7 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     case "get_order_context": {
       argsOnly(a, [])
       const c = await data.context(i.orderId); requireThat(c, "Order not found")
-      requireThat(c.alerts.some(x => x.id === i.signalId), "Initial signal not linked to this order")
+      requireThat(c.alerts.some(x => x.id === i.signalId) || (i.workflow === "ferry_delay" && c.reservations.some(x => x.id === i.signalId)), "Initial signal not linked to this order")
       for (const row of [...c.alerts, ...c.messages, ...c.reservations, ...c.options]) {
         if (!i.evidence.some(x => x.id === row.id)) i.evidence.push({ id: row.id, source: `${row.data_origin === "SIMULATED_SERVICE" ? "simulated_service" : "dataset"}:${row.id}`, at: String(row.authored_at ?? row.triggered_at ?? row.checked_at ?? row.booked_at ?? SIMULATION_TIME), text: JSON.stringify(row), kind: row.author_type === "driver" ? "reported" : "record" })
       }
@@ -50,7 +65,7 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
       const reply = latestDriver(i)
       if (reply) return {status:"replied", ...reply, simulated:true}
       const prior = i.tasks.find(t => t.tool === "ask_driver")
-      if (prior) return prior.result // A provider switch or retry does not send again.
+      if (prior) { waitForPendingDriver(i); return prior.result } // Never send again, including after restart.
       result = i.scenario === "no_response" ? { status: "no_response", question } : { status: "replied", question, terminalEta: i.scenario === "disproved" ? "2026-10-21T10:00:00Z" : "2026-10-21T13:00:00Z", text: i.scenario === "disproved" ? "Simulation: queue cleared; terminal ETA 10:00 UTC." : "Simulation: still in queue; terminal ETA 13:00 UTC.", simulated: true }
       if (i.scenario !== "no_response") {
         const r = result as {terminalEta:string; text:string}
@@ -58,7 +73,6 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
         result = {...r,status:"replied",...i.driverReplies.at(-1),simulated:true}
       }
       i.evidence.push({ id: `driver:${i.id}`, source: "simulated_driver", at: stamp(i), text: JSON.stringify(result), kind: "reported" })
-      if (i.scenario === "no_response" && i.mode !== "llm") { i.state = "waiting"; i.missing = ["Current driver ETA"]; i.nextStep = "Await simulated driver response; operator can resume explicitly" }
       if (i.scenario === "contradiction") { i.contradictions = ["Simulated driver ETA 13:00 conflicts with simulated terminal desk ETA 10:00; neither is verified"]; i.evidence.push({ id: `desk:${i.id}`, source: "simulated_terminal_desk", at: stamp(i), text: "Simulation: desk reports ETA 10:00 UTC", kind: "reported" }) }
       break
     }
@@ -77,7 +91,7 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     }
     case "find_similar_incidents": argsOnly(a, ["query"]); result = { warning: "Past resolution is a reference only, not current evidence or authorization", cases: await data.similar(text(a, "query"), i.id) }; break
     case "create_proposal": {
-      argsOnly(a, ["optionId", "reservationId", "summary", "consequences", "evidenceIds"])
+      argsOnly(a, Object.keys(proposalArgsSchema.properties))
       requireThat(!i.contradictions.length, "Resolve contradictions before changing a booking")
       const c = await data.context(i.orderId); requireThat(c, "Order not found")
       const optionId = text(a, "optionId"), reservationId = text(a, "reservationId")
@@ -114,6 +128,7 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     default: throw new WorkflowError("Tool not permitted")
   }
   i.tasks.push({ tool: call.tool, args: a, result, at: stamp(i) }); event(i, "tool", call.tool)
+  if (call.tool === "ask_driver") waitForPendingDriver(i)
   return result
 }
 export function decide(i: Incident, command: Extract<Command, { command: "decide" }>) {
@@ -136,10 +151,18 @@ export function executeApproved(i: Incident, version: number, fail = false) {
   i.executions.push(result); i.state = fail ? "technical_error" : "resolved"; i.nextStep = fail ? "Operator reviews execution failure; approval remains recorded" : "Monitor delivery; incident resolution does not prove delivery"; event(i, "execution", result.reason); return result
 }
 export function receiveDriverReply(i: Incident, input: Extract<Command,{command:"receive_driver_reply"}>) {
-  requireThat(i.mode === "llm" && i.state === "waiting" && i.tasks.some(t => t.tool === "ask_driver") && !i.proposals.length && !i.executions.length, "No pending simulated driver question")
+  requireThat(i.mode === "llm" && i.tasks.some(t => t.tool === "ask_driver"), "No pending simulated driver question")
   requireThat(typeof input.terminalEta === "string" && /Z$/.test(input.terminalEta) && Number.isFinite(Date.parse(input.terminalEta)) && Date.parse(input.terminalEta) >= Date.parse(i.simulationTime), "A valid simulation-time ETA in UTC is required")
   requireThat(typeof input.safe === "boolean" && Array.isArray(input.blockers) && input.blockers.length <= 20 && input.blockers.every(b => typeof b === "string" && b.length <= 500) && typeof input.text === "string" && input.text.length > 0 && input.text.length <= 4000, "Invalid simulated reply")
-  requireThat(!i.driverReplies?.length, "Driver reply already received")
+  const prior = i.driverReplies?.at(-1)
+  if (prior) {
+    // One explicit reply per pending question has a stable incident-local ID.
+    // Exact delivery retries are no-ops even after resume/approval/execution;
+    // conflicting data must never overwrite an already processed report.
+    requireThat(prior.id === `driver:${i.id}:reply` && prior.terminalEta === input.terminalEta && prior.safe === input.safe && prior.text === input.text && JSON.stringify(prior.blockers) === JSON.stringify(input.blockers), "Driver reply already received; conflicting reply rejected")
+    return
+  }
+  requireThat(i.state === "waiting" && !i.proposals.length && !i.executions.length, "No pending simulated driver question")
   const reply: DriverReply = {id:`driver:${i.id}:reply`, terminalEta:input.terminalEta, safe:input.safe, blockers:input.blockers, text:input.text, at:stamp(i)}
   i.driverReplies = [reply]; i.evidence.push({id:reply.id, source:"simulated_driver_reply", at:reply.at, kind:"reported", text:JSON.stringify(reply)})
   i.tasks.push({tool:"receive_driver_reply", args:{}, result:reply, at:stamp(i)})
@@ -148,6 +171,7 @@ export function receiveDriverReply(i: Incident, input: Extract<Command,{command:
 }
 export async function runAgent(i: Incident, data: ToolsData, providers: Provider[], checkpoint: () => Promise<void> = async () => {}) {
   requireThat(["investigating", "waiting", "technical_error"].includes(i.state) && !i.executions.length, "Agent cannot run in this state")
+  if (waitForPendingDriver(i)) { await checkpoint(); return }
   const deadline = AbortSignal.timeout(90_000)
   i.state = "investigating"; i.lastAgentError = undefined; i.stopReason = undefined
   let corrections = 0

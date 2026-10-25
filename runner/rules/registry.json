@@ -1,0 +1,60 @@
+[
+  {
+    "id": "approval-current-version",
+    "status": "validated",
+    "scope": "Incident proposal/execution",
+    "rationale": "Only the reviewed current version grants permission for its exact fictional actions.",
+    "evidence": [
+      "runner/evidence/iteration2-cycle-1.json",
+      "runner/evidence/iteration2-cycle-4.json"
+    ],
+    "tests": [
+      "existing incident approval/version tests",
+      "holdout approval boundary"
+    ],
+    "validation_review": {
+      "status": "requires_revalidation",
+      "reason": "Iteration 2 receipt has zero fresh provider calls and no configuration/code-bound live acceptance. Historical automated evidence retained.",
+      "audit": "docs/overnight/resume-state-audit.md"
+    }
+  },
+  {
+    "id": "one-execution-receipt",
+    "status": "validated",
+    "scope": "Concurrent duplicate execution",
+    "rationale": "Retries return the one persisted receipt rather than performing another action.",
+    "evidence": [
+      "runner/evidence/iteration2-cycle-1.json",
+      "runner/evidence/iteration2-cycle-4.json"
+    ],
+    "tests": [
+      "isolated PostgreSQL duplicate execution"
+    ],
+    "validation_review": {
+      "status": "requires_revalidation",
+      "reason": "Iteration 2 receipt has zero fresh provider calls and no configuration/code-bound live acceptance. Historical automated evidence retained.",
+      "audit": "docs/overnight/resume-state-audit.md"
+    }
+  },
+  {
+    "id": "technical-not-business",
+    "status": "candidate",
+    "scope": "Provider/database/recovery errors",
+    "rationale": "Infrastructure failure cannot establish a missed ferry or successful booking.",
+    "evidence": [],
+    "tests": [
+      "existing provider failure tests",
+      "isolated lease/recovery gate"
+    ]
+  },
+  {
+    "id": "history-is-reference",
+    "status": "candidate",
+    "scope": "Iteration-5 incident memory",
+    "rationale": "A previous resolution is an attributed reference, never current evidence or reusable approval.",
+    "evidence": [],
+    "tests": [
+      "memory provenance gate"
+    ]
+  }
+]
