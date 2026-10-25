@@ -1,0 +1,48 @@
+--- a/runner/config.json
++++ b/runner/config.json
+@@ -17,9 +17,9 @@
+     "reported_coding_tokens": 949646,
+     "task_retries": 2,
+     "command_seconds": 180,
+-    "business_api_calls": 30,
++    "business_api_calls": 34,
+     "max_provider_output_tokens": 2048,
+-    "live_verification_runs": 5,
++    "live_verification_runs": 6,
+     "model_requests_per_run": 6
+   },
+   "optional_iteration4": false,
+--- a/runner/control.py
++++ b/runner/control.py
+@@ -39,7 +39,7 @@
+         if type(v) is not int or v<0: raise Blocked('Limits must be nonnegative integers')
+     if not 1<=c['limits']['cycles']<=100 or not 1<=c['limits']['elapsed_seconds']<=86400: raise Blocked('Invalid cycle/time limit')
+     if c['limits']['coding_sessions']>20 or c['limits']['business_api_calls']>100: raise Blocked('Requested budget exceeds controller ceiling')
+-    if c['limits'].get('live_verification_runs',0)>5 or c['limits'].get('model_requests_per_run',0)>6:raise Blocked('Live verification ceiling is five runs of six requests')
++    if c['limits'].get('live_verification_runs',0)>6 or c['limits'].get('model_requests_per_run',0)>6 or c['limits']['business_api_calls']>34:raise Blocked('Live verification ceiling is six runs, six requests per run and 34 total requests')
+     if c['limits']['business_api_calls']>c['limits'].get('live_verification_runs',0)*c['limits'].get('model_requests_per_run',0):raise Blocked('Global API allowance exceeds per-run limits')
+     return c
+ 
+--- a/runner/tests/test_control.py
++++ b/runner/tests/test_control.py
+@@ -95,16 +95,16 @@
+         env=c.clean_env();env['OVERNIGHT_API_BUDGET']=str(budget)
+         code,_=c.Controller(self.s,self.cfg).command('run-cap',['node','--input-type=module','-e',script,str(self.oldroot/'runner/api-budget.mjs')],env=env)
+         self.assertEqual(code,0);ledger=json.loads(budget.read_text());self.assertEqual(ledger['calls'],6);self.assertEqual(ledger['runs'][0]['calls'],6)
+-    def test_authorized_five_run_configuration_keeps_other_limits(self):
++    def test_authorized_six_run_configuration_keeps_other_limits(self):
+         cfg=c.read_json(self.oldroot/'runner/config.json')
+-        self.assertEqual(cfg['limits']['live_verification_runs'],5)
+-        self.assertEqual(cfg['limits']['business_api_calls'],30)
++        self.assertEqual(cfg['limits']['live_verification_runs'],6)
++        self.assertEqual(cfg['limits']['business_api_calls'],34)
+         self.assertEqual(cfg['limits']['reported_coding_tokens'],949646)
+         self.assertEqual(cfg['limits']['coding_sessions'],2)
+         self.assertEqual(cfg['limits']['coding_session_seconds'],900)
+         c.write_json(self.root/'runner/config.json',cfg)
+         self.assertEqual(c.config(),cfg)
+-        for change in ({'live_verification_runs':6},{'business_api_calls':31},{'model_requests_per_run':7}):
++        for change in ({'live_verification_runs':7},{'business_api_calls':35},{'model_requests_per_run':7}):
+             changed=json.loads(json.dumps(cfg));changed['limits'].update(change)
+             c.write_json(self.root/'runner/config.json',changed)
+             with self.assertRaises(c.Blocked):c.config()
