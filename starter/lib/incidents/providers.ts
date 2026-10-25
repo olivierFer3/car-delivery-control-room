@@ -7,6 +7,8 @@ ask_driver {"question":string}: ask simulated driver for current terminal ETA, s
 check_booking_constraints {"reservationId":string}: deterministically compare latest driver reply with current booked ferry cutoff, safety and blockers.
 search_travel_options {}: retrieve fictional alternative quotes.
 check_option_constraints {"optionId":string}: deterministic timing check of one quoted alternative.
+check_external_conditions {}: REAL live data for the order's pickup and delivery cities, observed now: weather forecast, road disruptions (Germany Autobahn, Finland roads), Finnish passenger trains and recent strike/demonstration news. Each source says ok or unavailable. The incident clock is simulated, so this is context for risk and for questions to the driver, never proof that a booked ferry or the driver is late; it cannot replace check_booking_constraints, driver evidence or quote checks. State real-vs-simulated in any proposal.
+track_flight {"callsign":string}: REAL ADS-B position of one flight from OpenSky; only when a real callsign appears in the evidence. Dataset flights are fictional and have none.
 find_similar_incidents {"query":string}: historical references, not evidence or authorization.
 create_proposal {"optionId":string,"reservationId":string,"summary":string,"consequences":string,"evidenceIds":string[]}: propose only after the current booking check establishes a missed cutoff and an alternative has a feasible check. Cite current driver evidence ID, original reservation and option. Amounts/times come from server records. State remaining uncertainty and that customer promise remains unchanged. A proposal never executes. Do not repeat a rejected option when an alternative was requested.
 wait {"reason":string,"missing":string[],"contradictions":string[]}: stop for missing reply or unresolved evidence. A no_response tool result means no ETA exists; never infer one.
@@ -48,8 +50,8 @@ const callSchema = {
   // Excluding create_proposal here prevents the permissive legacy argument bag
   // from admitting a proposal missing its required fields or mixing tool args.
   {type:"object", additionalProperties:false, required:["tool","args"], properties:{
-    tool:{type:"string",enum:["get_order_context","ask_driver","check_booking_constraints","search_travel_options","check_option_constraints","find_similar_incidents","wait","close_disproved_alert"]}, args:{type:"object",additionalProperties:false,properties:Object.fromEntries([
-      ...["question","reservationId","optionId","summary","consequences","reason","query","answer"].map(k=>[k,{type:"string"}]),
+    tool:{type:"string",enum:["get_order_context","ask_driver","check_booking_constraints","search_travel_options","check_option_constraints","check_external_conditions","track_flight","find_similar_incidents","wait","close_disproved_alert"]}, args:{type:"object",additionalProperties:false,properties:Object.fromEntries([
+      ...["question","reservationId","optionId","summary","consequences","reason","query","answer","callsign"].map(k=>[k,{type:"string"}]),
       ...["evidenceIds","missing","contradictions"].map(k=>[k,{type:"array",items:{type:"string"}}]),
     ])},
   }},

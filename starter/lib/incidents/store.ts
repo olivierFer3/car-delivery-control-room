@@ -64,6 +64,21 @@ export const toolsData: ToolsData = {
     // Preserve full snapshot relationships alongside the focused travel tools.
     return { order: order.details, alerts: alerts.map(r => r.details), messages: messages.map(r => r.details), reservations: records("travel_reservations"), options: [...records("travel_options"), ...simulatedTravelOptions(orderId, records("travel_reservations"))], related: Object.fromEntries([...new Set(related.map(r => r.collection))].map(name => [name, records(name)])) } as Context
   },
+  async places(orderId) {
+    const [row] = await sql()`SELECT details FROM orders WHERE id = ${orderId}`
+    if (!row) return []
+    const d = row.details as Record<string, unknown>
+    const out: { role: "pickup" | "delivery"; city: string; country: string }[] = []
+    for (const role of ["pickup", "delivery"] as const) {
+      // Managed sites carry the city; private handovers only have an address record.
+      const siteId = d[`${role}_site_id`], addressId = d[`${role}_address_id`]
+      const [site] = typeof siteId === "string" ? await sql()`SELECT city, country FROM sites WHERE id = ${siteId}` : []
+      const [address] = !site && typeof addressId === "string" ? await sql()`SELECT city, country FROM addresses WHERE id = ${addressId}` : []
+      const place = site ?? address
+      if (place) out.push({ role, city: String(place.city), country: String(place.country) })
+    }
+    return out
+  },
   async similar(query, exceptId) { return (await listIncidents(query)).filter(i => i.id !== exceptId).slice(0, 5).map(i => ({ id: i.id, orderId: i.orderId, summary: i.summary, state: i.state, nextStep: i.nextStep })) },
 }
 

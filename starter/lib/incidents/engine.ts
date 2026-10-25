@@ -2,13 +2,14 @@ import { bookingConstraints, latestDriver } from "./booking-check"
 import { ProviderFailure } from "./providers"
 import { proposalArgsSchema } from "./proposal-contract"
 import { randomUUID } from "node:crypto"
+import { liveConditions, trackFlight, type SourceResult } from "./external"
 import { SIMULATION_TIME, type Incident, type Scenario, type ToolCall, type Provider, type Proposal, type Command, type DriverReply, type ModelTurn } from "./contracts"
 
 export class WorkflowError extends Error {}
 function requireThat(ok: unknown, message: string): asserts ok { if (!ok) throw new WorkflowError(message) }
 export type RecordRow = Record<string, unknown> & { id: string }
 export interface Context { order: RecordRow; alerts: RecordRow[]; messages: RecordRow[]; reservations: RecordRow[]; options: RecordRow[] }
-export interface ToolsData { context(orderId: string): Promise<Context | null>; similar(query: string, exceptId: string): Promise<unknown[]> }
+export interface ToolsData { context(orderId: string): Promise<Context | null>; similar(query: string, exceptId: string): Promise<unknown[]>; /** Real cities of the order's pickup and delivery sites; used to scope live external lookups. */ places?(orderId: string): Promise<{ role: "pickup" | "delivery"; city: string; country: string }[]>; /** Injectable for tests; defaults to real public APIs. */ live?: { conditions: typeof liveConditions; flight: typeof trackFlight } }
 const stamp = (i: Incident) => i.simulationTime
 function event(i: Incident, type: string, text: string) { i.timeline.push({ type, text, at: stamp(i) }) }
 export function createIncident(orderId: string, signalId: string, scenario: Scenario): Incident {
@@ -42,6 +43,13 @@ export function checkOption(i: Incident, c: Context, optionId: string) {
   const times = [eta, cutoff, o.departure_at, o.arrival_at].map(x => typeof x === "string" ? Date.parse(x) : NaN)
   const feasible = times.every(Number.isFinite) && times[0] >= Date.parse(i.simulationTime) && times[0] <= times[1] && times[1] < times[2] && times[2] < times[3] && o.status === "AVAILABLE_QUOTE" && Number.isInteger(o.quote_cents) && Number(o.quote_cents) >= 0 && typeof o.currency === "string"
   return { optionId, feasible, driverEvidenceId: driver?.id ?? null, terminalEta: eta ?? null, cutoff, limitation: "Timing check uses a simulated driver report. Quote is fictional, not a booking or live capacity guarantee." }
+}
+/** Live data is real and observed now; label it so it is never mistaken for the simulated record. */
+function recordLive(i: Incident, s: SourceResult) {
+  const id = `${s.id}:${s.observedAt}`
+  if (i.evidence.some(x => x.id === id)) return
+  const body = s.status === "ok" ? s.findings.map(f => `[${f.severity}] ${f.text}`).join("; ") : `Source unavailable (${s.reason}); nothing is concluded from it`
+  i.evidence.push({ id, source: `live_external:${s.source} · REAL data observed ${s.observedAt} (incident clock is simulated)`, at: s.observedAt, text: `${s.label}: ${body}`, kind: "reported" })
 }
 export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Promise<unknown> {
   editable(i)
@@ -88,6 +96,23 @@ export async function useTool(i: Incident, call: ToolCall, data: ToolsData): Pro
     }
     case "check_option_constraints": {
       argsOnly(a, ["optionId"]); const c = await data.context(i.orderId); requireThat(c, "Order not found"); result = checkOption(i, c, text(a, "optionId")); break
+    }
+    case "check_external_conditions": {
+      argsOnly(a, [])
+      requireThat(i.tasks.some(t => t.tool === "get_order_context"), "Read context first")
+      const prior = i.tasks.find(t => t.tool === "check_external_conditions" && !(t.result as { error?: string })?.error)
+      if (prior) return prior.result // One live lookup per investigation; repeating adds load, not facts.
+      const places = await data.places?.(i.orderId); requireThat(places && places.length > 0, "No pickup or delivery city is recorded for this order")
+      const live = await (data.live?.conditions ?? liveConditions)(places)
+      for (const s of live.sources) recordLive(i, s)
+      result = live; break
+    }
+    case "track_flight": {
+      argsOnly(a, ["callsign"]); const callsign = text(a, "callsign").trim().toUpperCase()
+      requireThat(/^[A-Z0-9]{3,8}$/.test(callsign), "A flight callsign such as DLH123 is required")
+      const live = await (data.live?.flight ?? trackFlight)(callsign)
+      for (const s of live.sources) recordLive(i, s)
+      result = live; break
     }
     case "find_similar_incidents": argsOnly(a, ["query"]); result = { warning: "Past resolution is a reference only, not current evidence or authorization", cases: await data.similar(text(a, "query"), i.id) }; break
     case "create_proposal": {
