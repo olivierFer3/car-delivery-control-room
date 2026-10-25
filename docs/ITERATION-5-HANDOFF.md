@@ -117,3 +117,29 @@ For fast-eval-rules only, the page command is `python3 agent/live_eval.py --port
 4. Run focused changed-path/safety checks, typecheck/build and a bounded mock-provider UI check after assembly. Existing evidence is version/scenario-bound; do not claim it proves a new combined tree without checking. Existing four moderate npm findings and Next attachment tracing warning remain; no forced upgrades or standalone-.next packaging claims.
 5. List live gaps for owner approval only: one ElevenLabs signed-URL request + one max-120s browser conversation, zero business-model calls to capture/confirm. New-order late reply/proposal still lacks current live evidence; continuing the recorded waiting incident could use one newly authorized run capped at four model requests. No allowances are added by this document.
 6. Finish reproducible setup/help and the 2–3 minute product + coding-agent video using existing receipts/outline; distinguish live traces from mocks. Full manual human-case assignment/closure, multi-user identity, ongoing changing driver reports and background scheduling remain limited. Do not deploy, publish, submit or implement optional NEXT-DAY-IDEAS without instruction.
+
+## Iteration 5 status (Claude, 25 Oct 2026)
+
+Branch `integration/iteration-5` (local only, not pushed, not merged into main). Base: `origin/agent/fast-eval-rules@deb4618`, plus merge of `origin/feature/simulated-driver-voice@e3cd995` (commit `42f60e7`, no conflicts).
+
+**Done (UI polish, no backend changes):**
+- `status.tsx`: one status vocabulary with a word **and** a glyph (readable without colour), plus "who acts next".
+- Workspace (`/incidents?view=workspace`): separate queues (decisions needed, waiting for information, investigating, technical review, unsupported/human handling, resolved), counts as keyboard links, "orders not checked" count. Earlier demos moved into a collapsed section.
+- Orders (`/incidents/orders`): all 100 orders, check-status filter chips with counts (`?check=Not+checked`), status badges, readable dates; raw signal IDs moved into "Source record" details.
+- Incident detail: "What would change" (booked departure now vs proposed departure/arrival, quoted cost) before approval; reservation/option IDs in secondary details; "Who acts" line. Reject, request alternative, version-specific approve and separate apply are unchanged.
+- Voice: readable state names; an explicit "Voice is not available on this server" notice linking to a visible text reply section (`#text-reply`); voice session/conversation IDs moved into technical details. Interactions are labelled as simulated.
+- Styling: charcoal header with faint blue light and orange accents, `prefers-reduced-motion`, no sideways scroll at 390px, larger small text.
+
+**Verified (mocked/local only, no paid model or ElevenLabs calls, no provider keys in `.env`):**
+- `tsc --noEmit` clean; `npm run build` OK; unit tests dataset, incidents, iteration2, operational, voice-client pass.
+- Headless Chromium walkthrough against `next start` on 127.0.0.1:3111 with the isolated DB (127.0.0.1:15441, `controlroom_iter5`): unlock with the operator token; queue counts; Tab order with visible 2px outlines and Enter on a queue link; orders filter and search; unsupported order → human handoff; scripted demo propose v1 → reject → propose v2 → approve v2 → apply → reload (1 execution, no apply button left: no duplicate); waiting incident (seeded locally with the simulated tools, as in `voice-server.test.ts`) → voice unavailable, start disabled → text reply → recorded, "resume" offered; 390px layouts for workspace, orders, incident and waiting pages, reduced motion on; no page errors.
+- Not exercised in the browser: a real model run or resume (no provider configured, on purpose), real ElevenLabs voice, "request alternative" leading to a third proposal (the scripted engine has no further option and waits, as designed). Historical live evidence is the earlier runs, not this walkthrough.
+
+**Known limitations:** no "skip to content" link (7 navigation links before the main content); one 10px label remains on the incident page; the agent conversation and diagnostics are unchanged; the demo label maps only `ord-00603` to its reference.
+
+**Start the preview:**
+```sh
+docker start bahn-iter5-db                                   # Postgres on 127.0.0.1:15441
+cd starter && npm run build && node --env-file=.env node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3111
+# http://127.0.0.1:3111/incidents?view=workspace (operator token: INCIDENT_OPERATOR_TOKEN in starter/.env)
+```
