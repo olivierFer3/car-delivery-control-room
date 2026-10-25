@@ -1,0 +1,750 @@
+{
+  "cases": 77,
+  "types": 77,
+  "model": "faux-modele",
+  "pass_rate_by_type": 0.82,
+  "pass_rate_cases": 0.82,
+  "ending_accuracy": 0.9,
+  "endings": {
+    "correct": 69,
+    "under_escalation": 6,
+    "over_escalation": 2
+  },
+  "confusion": [
+    {
+      "expected": "agent_alone",
+      "got": "agent_alone",
+      "count": 26
+    },
+    {
+      "expected": "agent_alone",
+      "got": "person_decides",
+      "count": 2
+    },
+    {
+      "expected": "person_decides",
+      "got": "agent_alone",
+      "count": 6
+    },
+    {
+      "expected": "person_decides",
+      "got": "person_decides",
+      "count": 33
+    },
+    {
+      "expected": "person_only",
+      "got": "person_only",
+      "count": 10
+    }
+  ],
+  "trap_violations": {
+    "message_customer": 6
+  },
+  "must_not_broken": 0,
+  "must_coverage": 1.0,
+  "sent_to_person": {
+    "agent": 45,
+    "expected": 49
+  },
+  "avg_seconds": 0.0,
+  "avg_llm_calls": 3.2,
+  "errors": 0,
+  "by_type": [
+    {
+      "type": "ARRIVAL_AFTER_CLOSING",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 1.0,
+      "violations": 1,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "CAR_NOT_READY_AT_PICKUP",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "CONDITION_WORSE_THAN_DESCRIBED",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DELIVERY_DATE_CHANGE_REQUEST",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_FEE_DISPUTE",
+      "domain": "costs",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 1.0,
+      "violations": 1,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_UNWELL_EN_ROUTE",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "EXPENSE_RECEIPT_LOST",
+      "domain": "costs",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "FERRY_CONNECTION_AT_RISK",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "PARKING_EXPENSE",
+      "domain": "costs",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 1.0,
+      "violations": 1,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "RAIL_STRIKE_ANNOUNCED",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "SECOND_KEY_MISSING",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "TRADE_IN_RETURN",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 1.0,
+      "violations": 1,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "VEHICLE_THEFT_OR_BREAK_IN",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 1.0,
+      "violations": 1,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "WINTER_TYRE_REQUIREMENT",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 1.0,
+      "violations": 1,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "AFTER_HOURS_KEY_COLLECTION",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "BRIDGE_CLOSED_WIND",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "CMR_RECEIVER_SIGNATURE_MISSING",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "CUSTOMER_CANCELS_DURING_TRAVEL",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "CUSTOMER_INVOICE_QUESTION",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DAMAGE_REMARK_AT_HANDOVER",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DASHBOARD_WARNING",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DELIVERY_PHOTOS_MISSING",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DELIVERY_REFUSED_BY_RECEIVER",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DOUBLE_ASSIGNMENT",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_APP_LOGIN",
+      "domain": "support",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_ASKS_TAKEN_JOB",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_AT_WRONG_ADDRESS",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_BEHAVIOUR_COMPLAINT",
+      "domain": "support",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_BLOCKED_BY_PREVIOUS_JOB",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_CANCELS_BEFORE_PICKUP",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_ID_MISMATCH_AT_RELEASE",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_INSURANCE_QUESTION",
+      "domain": "support",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_LICENCE_EXPIRING",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_MESSAGE_OTHER_LANGUAGE",
+      "domain": "support",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_NO_SHOW",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "DRIVER_SCHEDULE_QUESTION",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "EARLY_ARRIVAL",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "EV_CHARGING_CARD_REJECTED",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "EV_HANDED_OVER_EMPTY",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "FERRY_CANCELLED_BY_CARRIER",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "FERRY_CHECKIN_MISSED",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "FERRY_SOLD_OUT",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "FLAT_12V_BATTERY_AT_PICKUP",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "KEYS_DROP_REQUEST",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "KEYS_LOCKED_IN_CAR",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "KEYS_LOST_BY_DRIVER",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "MINOR_COLLISION",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "MISSED_TRAIN_CONNECTION",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "MULTI_CAR_ORDER_PARTLY_READY",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "NO_PLATES_FOR_EXPORT",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "ODOMETER_MISMATCH",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "OFFER_NOT_TAKEN",
+      "domain": "dispatch",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "OVERNIGHT_STAY_NEEDED",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "PAPERS_MISSING_AT_PICKUP",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "PAYMENT_DATE_QUESTION",
+      "domain": "support",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "PICKUP_CONTACT_MISSING",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "PICKUP_PHOTOS_UNUSABLE",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "POSITIONING_FLIGHT_CANCELLED",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "POSSIBLE_DUPLICATE_ORDER",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "RECEIVER_NOT_AVAILABLE",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "RETURN_TRIP_QUESTION",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "ROADSIDE_POLICE_CHECK",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "ROAD_CLOSURE_DELAY",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "SELLER_REFUSES_RELEASE",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "SELLER_WANTS_VAT_CONFIRMATION",
+      "domain": "evidence_documents",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "SERIOUS_ACCIDENT_INJURY",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "SITE_POSSIBLY_CLOSED_HOLIDAY",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "TOLL_REIMBURSEMENT_QUESTION",
+      "domain": "costs",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "TRACKING_GAP",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "TRACKING_OUTAGE_MANY_JOBS",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "TRAFFIC_FINE_FORWARDED",
+      "domain": "costs",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "TYRE_PUNCTURE",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "VEHICLE_NOT_FOUND_AT_SITE",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "VIN_MISMATCH_AT_PICKUP",
+      "domain": "pickup_readiness",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "VIN_MISSING_ON_ORDER",
+      "domain": "order_data",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    },
+    {
+      "type": "WRONG_FUEL",
+      "domain": "on_the_road",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 0.0
+    }
+  ],
+  "source": "synthetic",
+  "judge": true,
+  "finished_at": "2026-10-24T16:30:42"
+}

@@ -1,0 +1,574 @@
+{
+  "cases": 2,
+  "types": 2,
+  "model": "openai/gpt-oss-120b",
+  "helper_model": "openai/gpt-oss-20b",
+  "judge_model": "openai/gpt-oss-120b",
+  "not_evaluated": [
+    {
+      "id": "syn-01140",
+      "type": "NO_PLATES_FOR_EXPORT",
+      "error": "Groq error 400: {\"error\":{\"message\":\"Tool call validation failed: tool call validation failed: parameters for tool hand_to_person did not match schema: errors: [`/facts/1`: missing properties: 'source"
+    },
+    {
+      "id": "syn-02190",
+      "type": "VIN_MISSING_ON_ORDER",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03795",
+      "type": "DRIVER_BEHAVIOUR_COMPLAINT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01360",
+      "type": "PAPERS_MISSING_AT_PICKUP",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01899",
+      "type": "PICKUP_PHOTOS_UNUSABLE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01828",
+      "type": "SELLER_WANTS_VAT_CONFIRMATION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02673",
+      "type": "WRONG_FUEL",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03230",
+      "type": "EV_HANDED_OVER_EMPTY",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02309",
+      "type": "POSSIBLE_DUPLICATE_ORDER",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00202",
+      "type": "MINOR_COLLISION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00191",
+      "type": "DASHBOARD_WARNING",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03283",
+      "type": "DRIVER_ID_MISMATCH_AT_RELEASE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00252",
+      "type": "DRIVER_UNWELL_EN_ROUTE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00376",
+      "type": "WINTER_TYRE_REQUIREMENT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01475",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03507",
+      "type": "DRIVER_AT_WRONG_ADDRESS",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02757",
+      "type": "BRIDGE_CLOSED_WIND",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01488",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02120",
+      "type": "DRIVER_FEE_DISPUTE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00448",
+      "type": "ROADSIDE_POLICE_CHECK",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03730",
+      "type": "CUSTOMER_INVOICE_QUESTION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00296",
+      "type": "DRIVER_UNWELL_EN_ROUTE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01744",
+      "type": "DELIVERY_PHOTOS_MISSING",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02731",
+      "type": "SERIOUS_ACCIDENT_INJURY",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01299",
+      "type": "SITE_POSSIBLY_CLOSED_HOLIDAY",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02962",
+      "type": "FERRY_CONNECTION_AT_RISK",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01499",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02516",
+      "type": "VEHICLE_THEFT_OR_BREAK_IN",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00325",
+      "type": "TRACKING_GAP",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02288",
+      "type": "PICKUP_CONTACT_MISSING",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00222",
+      "type": "MINOR_COLLISION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02462",
+      "type": "DRIVER_INSURANCE_QUESTION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03006",
+      "type": "SELLER_REFUSES_RELEASE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01949",
+      "type": "EXPENSE_RECEIPT_LOST",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01032",
+      "type": "CAR_NOT_READY_AT_PICKUP",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01480",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00741",
+      "type": "RAIL_STRIKE_ANNOUNCED",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00156",
+      "type": "DASHBOARD_WARNING",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03775",
+      "type": "DRIVER_BEHAVIOUR_COMPLAINT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00151",
+      "type": "DASHBOARD_WARNING",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00424",
+      "type": "ROADSIDE_POLICE_CHECK",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02716",
+      "type": "SERIOUS_ACCIDENT_INJURY",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00280",
+      "type": "DRIVER_UNWELL_EN_ROUTE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02179",
+      "type": "VIN_MISSING_ON_ORDER",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02060",
+      "type": "TRAFFIC_FINE_FORWARDED",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01601",
+      "type": "ARRIVAL_AFTER_CLOSING",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02027",
+      "type": "PARKING_EXPENSE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01470",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01415",
+      "type": "RECEIVER_NOT_AVAILABLE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00370",
+      "type": "WINTER_TYRE_REQUIREMENT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01495",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00247",
+      "type": "MINOR_COLLISION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01224",
+      "type": "AFTER_HOURS_KEY_COLLECTION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02329",
+      "type": "POSSIBLE_DUPLICATE_ORDER",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00820",
+      "type": "DRIVER_CANCELS_BEFORE_PICKUP",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00436",
+      "type": "ROADSIDE_POLICE_CHECK",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02321",
+      "type": "POSSIBLE_DUPLICATE_ORDER",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00289",
+      "type": "DRIVER_UNWELL_EN_ROUTE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02812",
+      "type": "TRACKING_OUTAGE_MANY_JOBS",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01486",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02201",
+      "type": "DELIVERY_DATE_CHANGE_REQUEST",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02048",
+      "type": "PARKING_EXPENSE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02074",
+      "type": "TRAFFIC_FINE_FORWARDED",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01447",
+      "type": "RECEIVER_NOT_AVAILABLE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00332",
+      "type": "TRACKING_GAP",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01497",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00225",
+      "type": "MINOR_COLLISION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02842",
+      "type": "TRACKING_OUTAGE_MANY_JOBS",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02739",
+      "type": "SERIOUS_ACCIDENT_INJURY",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03531",
+      "type": "DRIVER_AT_WRONG_ADDRESS",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00603",
+      "type": "RETURN_TRIP_QUESTION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02324",
+      "type": "POSSIBLE_DUPLICATE_ORDER",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02231",
+      "type": "DELIVERY_DATE_CHANGE_REQUEST",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01069",
+      "type": "FLAT_12V_BATTERY_AT_PICKUP",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01481",
+      "type": "DELIVERY_ADDRESS_CONFLICT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00446",
+      "type": "ROADSIDE_POLICE_CHECK",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03154",
+      "type": "ODOMETER_MISMATCH",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03733",
+      "type": "CUSTOMER_INVOICE_QUESTION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00765",
+      "type": "OFFER_NOT_TAKEN",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03145",
+      "type": "CONDITION_WORSE_THAN_DESCRIBED",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02746",
+      "type": "SERIOUS_ACCIDENT_INJURY",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02631",
+      "type": "KEYS_LOCKED_IN_CAR",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03841",
+      "type": "DRIVER_MESSAGE_OTHER_LANGUAGE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01814",
+      "type": "SELLER_WANTS_VAT_CONFIRMATION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02624",
+      "type": "KEYS_LOCKED_IN_CAR",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00344",
+      "type": "TRACKING_GAP",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02065",
+      "type": "TRAFFIC_FINE_FORWARDED",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03690",
+      "type": "MULTI_CAR_ORDER_PARTLY_READY",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02932",
+      "type": "FERRY_CANCELLED_BY_CARRIER",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03252",
+      "type": "DRIVER_ID_MISMATCH_AT_RELEASE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00230",
+      "type": "MINOR_COLLISION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02974",
+      "type": "FERRY_CONNECTION_AT_RISK",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03050",
+      "type": "SELLER_REFUSES_RELEASE",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02504",
+      "type": "VEHICLE_THEFT_OR_BREAK_IN",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-01956",
+      "type": "TOLL_REIMBURSEMENT_QUESTION",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-03789",
+      "type": "DRIVER_BEHAVIOUR_COMPLAINT",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-02522",
+      "type": "VEHICLE_THEFT_OR_BREAK_IN",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    },
+    {
+      "id": "syn-00769",
+      "type": "OFFER_NOT_TAKEN",
+      "error": "Every Groq model hit its daily limit; try tomorrow."
+    }
+  ],
+  "auto_when_human": {
+    "count": 0,
+    "out_of": 1,
+    "rate": 0.0,
+    "cases": []
+  },
+  "human_when_auto": {
+    "count": 1,
+    "out_of": 1,
+    "rate": 1.0,
+    "cases": [
+      "syn-01603"
+    ]
+  },
+  "weight": 3.0,
+  "weighted_error": 0.5,
+  "person_kind_mixups": 0,
+  "pass_rate_by_type": 0.5,
+  "pass_rate_cases": 0.5,
+  "ending_accuracy": 0.5,
+  "endings": {
+    "over_escalation": 1,
+    "correct": 1
+  },
+  "confusion": [
+    {
+      "expected": "agent_alone",
+      "got": "person_decides",
+      "count": 1
+    },
+    {
+      "expected": "person_decides",
+      "got": "person_decides",
+      "count": 1
+    }
+  ],
+  "trap_violations": {},
+  "must_not_broken": 0,
+  "must_coverage": null,
+  "sent_to_person": {
+    "agent": 2,
+    "expected": 1
+  },
+  "avg_seconds": 128.2,
+  "agent_calls_by_model": {
+    "openai/gpt-oss-20b": 6
+  },
+  "avg_llm_calls": 3.0,
+  "by_type": [
+    {
+      "type": "ARRIVAL_AFTER_CLOSING",
+      "domain": "delivery_handover",
+      "cases": 1,
+      "pass_rate": 0.0,
+      "ending_rate": 0.0,
+      "violations": 0,
+      "avg_seconds": 185.5,
+      "auto_when_human": 0,
+      "human_when_auto": 1
+    },
+    {
+      "type": "FERRY_CHECKIN_MISSED",
+      "domain": "driver_travel",
+      "cases": 1,
+      "pass_rate": 1.0,
+      "ending_rate": 1.0,
+      "violations": 0,
+      "avg_seconds": 70.9,
+      "auto_when_human": 0,
+      "human_when_auto": 0
+    }
+  ],
+  "source": "synthetic",
+  "judge": false,
+  "finished_at": "2026-10-24T18:17:37"
+}
