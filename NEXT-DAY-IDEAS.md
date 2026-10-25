@@ -7,3 +7,6 @@ These are optional proposals, not overnight implementation tasks. The runner mus
 - Evaluate semantic memory ranking only after deterministic source-labelled search is reliable.
 - Review whether paid-provider usage needs a currency-based budget in addition to hard request caps.
 - Assess production hosting, secret storage and background scheduling separately from this local runner.
+
+- Defer snapshot/semantic incident memory until a concrete operational use case requires it. The supplied incident collection has no resolved rows; never synthesize historical resolutions to satisfy a gate.
+- Review manual unsupported-case assignment/closure and a richer event adapter after the supported ferry workflow is live-verified across multiple orders.

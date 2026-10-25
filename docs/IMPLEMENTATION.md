@@ -1,3 +1,5 @@
+> Current operational handoff (2026-10-25): see [Operating guide](operations/OPERATING-GUIDE.md). Iteration 3 is accepted from matching recorded evidence; the selected-order extension is automated/API/browser tested but awaits new live allowance. Older gaps below are retained as historical planning context, not current acceptance claims. Incident memory and optional provider routing are deferred per the latest operational scope.
+
 # Incident workflow handoff
 
 ## Existing work and current gaps
