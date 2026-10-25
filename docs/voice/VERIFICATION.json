@@ -1,0 +1,117 @@
+{
+  "status": "mocked_integration_verified_live_unverified",
+  "base": "43f39bd55d631e698db4f265b7a60207a13753f5",
+  "branch": "feature/simulated-driver-voice",
+  "worktree": "/home/matrix/home/projects/car-delivery-control-room-driver-voice",
+  "backup": {
+    "repository": "https://github.com/olivierFer3/car-delivery-control-room.git",
+    "remote_branch": "origin/agent/overnight-validation",
+    "remote_commit": "43f39bd55d631e698db4f265b7a60207a13753f5",
+    "upstream_set": true,
+    "reviewed_outgoing_commits": 12,
+    "historical_blobs_scanned": 77,
+    "credential_findings": 0,
+    "uncommitted_runner_files_preserved": 4,
+    "force_push_merge_visibility_change": false
+  },
+  "sdk": {
+    "name": "@elevenlabs/client",
+    "version": "1.30.0",
+    "mode": "Private signed WebSocket session; six incident-grounded dynamic variables; no API key in client"
+  },
+  "isolation": {
+    "database": "controlroom_driver_voice",
+    "container": "bahn-driver-voice-db",
+    "database_port": 15440,
+    "application_port": 3110,
+    "volume": "bahn_driver_voice_pg",
+    "other_worktrees_or_databases_reset": false
+  },
+  "checks": {
+    "client_lifecycle_tests": {
+      "passed": 6,
+      "provider": "injected local SDK/API/microphone doubles"
+    },
+    "server_integration": {
+      "passed": true,
+      "skipped": 0,
+      "database": "real isolated PostgreSQL",
+      "provider": "local transport doubles",
+      "includes": [
+        "disabled/missing config no request",
+        "auth and cross-origin refusal",
+        "connection failure and explicit recovery",
+        "cancel creates no reply",
+        "append-only transcript and stale version",
+        "cross-incident confirmation refusal",
+        "atomic concurrent identical confirmation",
+        "conflicting duplicate rejection",
+        "source/conversation IDs and timestamps",
+        "same-incident explicit resume with no repeated ask",
+        "no approvals/executions"
+      ]
+    },
+    "regression_tests": {
+      "passed": 35,
+      "scope": "incidents, iteration2, operational eligibility and voice client lifecycle"
+    },
+    "typecheck": "passed",
+    "production_build": "passed; existing attachment tracing warning retained",
+    "browser": {
+      "passed": true,
+      "provider": "MOCKED SIGNED URL AND WEBSOCKET; real SDK, fake microphone",
+      "businessModel": "LOCAL UI DOUBLE",
+      "networkProviderCalls": 0,
+      "transcriptReviewAfterReload": true,
+      "confirmedSameIncident": "23d45f87-a420-428f-882a-bdb98a1208df",
+      "sameIncidentResume": true,
+      "cancellationNoReply": true,
+      "microphoneDeniedNoSession": true,
+      "executions": 0,
+      "pageErrors": []
+    }
+  },
+  "external_evidence_sha256": {
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/voice-server.log": "8f0066ca8eae0ced523b6c9b6e3427bf9159600d2ab3ca21255f2bc8f2c1e423",
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/regressions.log": "a0208e89af772a34928acc8e2b8eefc3ddc5b7037e07707ce34967d4f1dd1e70",
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/voice-client-final.log": "253b30ad5ef8e4f1ee82abf82aef995d0db88e5df8b0d29948eb2c4abad2fd55",
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/build.log": "d1d8195a851bc9843eae88e82d0fb57e26046ed61a1a7358ff34ad9074205339",
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/build-final.log": "e7423ba993de75a6f8ed9a4487e695b0b130705b4feccb545ec3c1a837e0790e",
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/voice-browser.log": "cf2fdc74abd03418cfb2235181f38a2d85bfefd3d52156296b0436471ce9b8f1",
+    "/home/matrix/home/.local/state/car-delivery-driver-voice/browser-result.json": "d5b484f81f17b284c6657ec6c6dce8de73eb8089aa688f5b2f61e2b8723aa044"
+  },
+  "original_runner_counters_preserved": {
+    "status": "stopped",
+    "cycles": 6,
+    "elapsed": 358.52,
+    "coding_sessions": 1,
+    "coding_tokens": 749646,
+    "business_api_calls": 30,
+    "live_verification_runs": 6
+  },
+  "live_requests": {
+    "elevenlabs": 0,
+    "business_models": 0
+  },
+  "live_feature_enabled": false,
+  "remaining_live_budget_needed": {
+    "elevenlabs_signed_url_requests": 1,
+    "elevenlabs_browser_conversations": 1,
+    "conversation_duration_max_seconds": 120,
+    "business_model_requests_for_capture_and_confirm": 0,
+    "optional_explicit_business_resume_requires_separate_authorization": {
+      "safe_early_reply_max_requests": 2,
+      "late_reply_max_requests": 4
+    }
+  },
+  "limitations": [
+    "No real microphone/ASR/TTS/latency or private agent account configuration verified",
+    "Transcript is client-reported and operator-confirmed, not server-authenticated ElevenLabs transcript",
+    "Agent-side duration, origin allowlist, tools disabled and privacy/retention must be configured before live use",
+    "Client watchdog cannot guarantee billing cap if browser freezes; provider-side max duration required",
+    "Existing four moderate npm findings and attachment tracing warning retained",
+    "No booking, real call, customer contact or paid integration test performed",
+    "Feature branch commits are local only; original operational branch backup was explicitly pushed"
+  ]
+}
