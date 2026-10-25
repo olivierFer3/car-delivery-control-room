@@ -151,3 +151,9 @@
 .tabs button { border: 0; border-bottom: 3px solid transparent; background: none; padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--muted); min-height: 44px; }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--orange); }
 .tabs button:hover { color: var(--ink); }
+.verdict { display: grid; gap: 8px; margin: 4px 0 8px; padding: 12px 14px; border-radius: 10px; background: var(--tray); border-left: 4px solid var(--sand); }
+.verdict div { display: grid; gap: 2px; }
+.verdict dt { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.verdict dd { margin: 0; font-size: 13px; }
+.verdict[data-kind="agent"] { border-left-color: var(--green); }
+.verdict[data-kind="person"] { border-left-color: var(--orange); }

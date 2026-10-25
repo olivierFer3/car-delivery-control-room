@@ -53,3 +53,18 @@ export function responsible(incident: Pick<PublicIncident, "state" | "workflow">
     resolved: "No one: the incident is closed (delivery is tracked separately)",
   }[incident.state]
 }
+
+/** What the agent decided, in plain words: its own solution, or a handoff to a person. */
+export function agentDecision(i: PublicIncident): { kind: "agent" | "person" | "pending"; text: string } {
+  const proposal = i.proposals.at(-1)
+  if (i.workflow === "human_review") return { kind: "person", text: "Handed to a person: outside what the agent is allowed to handle" }
+  if (i.state === "technical_error") return { kind: "person", text: "Could not finish (technical problem): a person must check and resume" }
+  if (i.state === "needs_decision" && proposal) return { kind: "agent", text: `Proposed: ${proposal.summary} · waiting for your approval` }
+  if (i.state === "approved" && proposal) return { kind: "agent", text: `Proposed and approved: ${proposal.summary} · not applied yet` }
+  if (i.state === "resolved") return i.executions.length && proposal
+    ? { kind: "agent", text: `Solved: ${proposal.summary} (applied after approval)` }
+    : { kind: "agent", text: `Solved: ${i.stopReason ?? i.nextStep}` }
+  if (i.state === "waiting") return { kind: "pending", text: "No decision yet: asked the driver and waiting for the reply" }
+  if (paused(i)) return { kind: "pending", text: "No decision yet: stopped mid-investigation, resume needed" }
+  return { kind: "pending", text: "No decision yet: investigating" }
+}
