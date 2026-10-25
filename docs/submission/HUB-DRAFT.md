@@ -1,57 +1,66 @@
 # Hub submission draft
 
-**Status:** editable submission copy, not published. Based on recorded operational/voice evidence, not a claim that Claude's unfinished iteration-5 integration has passed. Hub field names/limits are unknown; adapt after checking the actual form.
+**Status:** text to paste into the hub. Hub field names and word limits are not known yet: adapt it once you see the form. Fill in the two remaining placeholders (video URL, final commit) right before you submit.
+
+## Team
+
+**Aalright**. Members: **[MEMBERS — names to add]**
 
 ## Project name
 
-Car Delivery Control Room **[WORKING TITLE — confirm team choice]**
+Car Delivery Control Room
 
 ## One-line description
 
-An evidence-backed incident workspace where a real LLM investigates a fictional delivery risk and a human approves any proposed booking change.
+A control room that shows a person only the delivery cases that need them. A real LLM agent investigates a driver at risk of missing a booked ferry and brings the operator one decision, with the evidence behind it.
 
 ## What it does
 
-Delivery alerts often require several checks before anyone can decide what to do. Our application brings the investigation, its sources, missing information, proposed decision and action history into one workspace.
+Delivery problems take several checks before anyone can decide anything. Someone has to read the messages, find the booking, ask the driver, check the cutoff and compare alternatives. Our control room puts that investigation, its sources, what is still missing, the proposed decision and the action history into one workspace. Cases are split into two queues: *Needs a person* and *Handled by the agent*.
 
-An operator can browse all 100 supplied orders, open a supported ferry-risk investigation, and follow the agent's model-selected tool calls. The agent reads the selected order, asks the simulated driver for missing facts and checks booking constraints. It can wait for information, retain a safe connection with evidence, or prepare a versioned proposal for human review. Unsupported sources are explicitly handed to a human.
+The agent is a real language model in a tool loop (Groq `openai/gpt-oss-120b` or Gemini). It reads the order and asks the simulated driver for an ETA, safety and blockers. It looks up live weather, Autobahn warnings, Finnish roads and trains, then checks the booked ferry against the ETA and searches alternative sailings. Then it stops in one of three ways:
+- **Waiting:** a fact is missing, so the case waits. It never invents an ETA.
+- **Checked:** no action needed.
+- **Proposal:** a versioned proposal goes to a person, with its sources, cost, timing and uncertainty.
 
-Approval and applying a simulated booking change are separate. A material revision needs new approval; duplicate execution returns the existing receipt. An incident marked resolved is not a claim that the car was delivered. Missing provider configuration and technical errors never silently switch to mock reasoning or become business conclusions.
+A driver can report a problem from a mobile Driver Support page and answer by text or by phone call (simulated by default). The operator watches it live.
+
+Approval and execution are separate. A person approves one exact proposal version. Applying the simulated booking change is a second step, and repeating it returns the same receipt. A revised proposal needs a new approval. The agent never books, pays, changes a date or contacts a customer. Every result is labelled REAL (live public data) or SIMULATED (driver replies, ferries, quotes, bookings). A missing model key shows a clear message instead of switching silently to mock reasoning.
 
 ## Supported scope
 
-- One workflow: future booked-ferry connection risk in Bahn's synthetic environment. Recorded eligibility checks found six compatible supplied orders; other sources require human review.
-- Explicit simulated driver replies, fictional travel alternatives and booking effects. No real people are contacted, and no real purchase or booking is made.
-- Persistent incident history, source IDs/timestamps, waiting/reply/resume, operator questions, rejection/revision, exact-version approval and separate execution.
-- The voice feature is prepared on its own branch: an operator acts as a fictional driver, reviews a captured transcript and confirms a structured reply. **Its provider responses/audio transport were mocked in tests. Real ElevenLabs microphone/ASR/TTS behavior is unverified; final integration is pending Claude's work.** Omit this feature from the headline if it is not ready at submission time.
+- **One workflow:** a booked-ferry connection at risk. Six of the 100 supplied orders qualify. For the others, the agent hands the case to a human and says why.
+- **Simulated:** driver replies, alternative sailings and booking effects. **Real:** the model, plus the weather, road, train and flight lookups. No real person is contacted and nothing is purchased.
+- **Persistent case history:** source IDs and timestamps, waiting/reply/resume, operator questions, rejection and revision, approval of an exact version, separate execution.
+- **Optional, off by default:** real phone calls through ElevenLabs + Twilio, and a browser voice driver. Both are tested with mocked providers only.
 
 ## Architecture
 
-Next.js/React/TypeScript provides the operator interface and server endpoints. PostgreSQL stores incident overlays and audit history alongside the fixed dataset; Drizzle supports the supplied snapshot schema. The TypeScript supervisor loop uses configured Groq/Gemini adapters to make real model requests. The model selects a tool, receives its result and chooses again. The server enforces tool arguments, scope, deterministic timing checks, execution limits, approval versions and duplicate protection.
+The operator interface and the server endpoints are built with Next.js, React and TypeScript. PostgreSQL stores the fixed dataset, plus the incident overlays and audit history. The TypeScript supervisor loop calls Groq or Gemini for real: the model picks a tool, gets its result, and picks again. Server code (not the model) enforces:
+- tool arguments and scope;
+- the deterministic cutoff check;
+- request limits;
+- approval versions;
+- duplicate protection.
 
-Driver responses, travel services and booking effects are simulated. Simulation time is fixed at `2026-10-21T09:00:00Z`. The optional voice branch uses the official ElevenLabs browser SDK and server-generated signed session URLs; API keys remain server-side. Transcript confirmation calls the existing reply contract, then leaves incident resume explicit.
+Live context comes from free public APIs: Open-Meteo, autobahn.de, Digitraffic, OpenSky and GDELT. A source that fails is recorded as unavailable. The simulation clock is fixed at `2026-10-21T09:00:00Z`.
 
-There is also a separate Python triage/evaluation path with stored evaluation results. It is not the TypeScript booking-execution authority. Learned evaluation rules cannot supply present-case evidence or approval. Avoid presenting evaluation scores as proof that the integrated product is complete or safe in every case.
+There is a separate Python triage agent with an evaluation set (77 cases, stored results). It is an evaluation tool; it does not authorize bookings in the app.
 
-## What was verified — exact boundaries
+## What was verified
 
-- A real Gemini normal-browser investigation on CD-420324 selected `get_order_context` then `ask_driver`; it persisted waiting after no response, without inventing an ETA. This recorded run used two model requests and preserved the source order and 26 earlier incidents.
-- Earlier real-model ferry cases and browser checks recorded evidence-backed proposals, versioned review and separate duplicate-safe simulated execution. Those are scenario/revision-bound results, not a new live test of every selected-order branch.
-- Provider-double tests exercised normal selected-order API/persistence/recovery/review flows. Voice tests used real PostgreSQL and the real browser SDK, with fake microphone, signed-URL/WebSocket responses and business-model responses.
-- A literal independent local Git clone at `d23341d` passed setup, typecheck/build, 100-order checks and signed-URL downloads for both attachment formats. This predates final voice/integration work and is not final-release fresh-clone evidence.
+- **Real Groq, end to end, on two orders (CD-420324, CD-420075):** driver report, agent questions, live sources, missed cutoff, alternatives, proposal v1, operator approval, simulated change applied. `../verification/driver-phone/RESULT.md`.
+- **Real Gemini on CD-420324:** the model chose `get_order_context` and then `ask_driver`. With no reply from the driver, it stopped at *waiting*, without inventing an ETA. `../verification/selected-order-run6.json`.
+- **Earlier real-model ferry cases:** evidence-backed proposals, versioned review and duplicate-safe simulated execution. `../overnight/final-acceptance-demo.md`.
+- **Checks on main:** typecheck, build, the provider-double test suites, smoke checks over all 100 orders, attachment downloads and a fresh-database setup. `../verification/main-check-20261025.md`.
 
-- On main with the official logo, typecheck, build, the provider-double test suites listed there, both smoke scripts and a fresh-database setup passed (`../verification/main-check-20261025.md`); three database tests refused to run against a different database, and no real-model or voice call was made.
+**Not verified:** a real phone call or real ElevenLabs audio, use by several operators at once, and incident types other than the ferry connection. Passing tests do not prove there are no bugs. We claim no measured time saving.
 
-**Not yet established:** a real-provider run on the final build; final-release reproducibility; live ElevenLabs audio; a real-provider late-reply/proposal run on the newly generalized order path; production multi-user operation or broad incident automation. Passing tests is not proof of no bugs. No measured operator-time saving is claimed.
+## Links
 
-## Links and credits — complete before submission
+- Repository: https://github.com/olivierFer3/car-delivery-control-room
+- Setup instructions: the repository `README.md` ("Run it from a fresh clone")
+- Video: **[VIDEO_URL]**
+- Final commit: **[FINAL_COMMIT — `git rev-parse --short HEAD` after the last push]**
 
-- Repository: **[REPOSITORY_URL — confirm accessible public repository and final branch/commit]**
-- Video: **[VIDEO_URL — record, upload and check access manually]**
-- Team / members: **[TEAM_NAME_AND_MEMBERS]**
-- Final integrated commit: **[FINAL_COMMIT — supplied by Claude/owner]**
-- Demo instructions: **[FINAL_README_OR_SETUP_LINK — validate against that commit]**
-
-Editor context only: the existing repository is `https://github.com/olivierFer3/car-delivery-control-room`. A valid URL alone does not prove the final feature set is on its default branch. Confirm the actual submission target rather than promising an unmerged branch is integrated. This is a participant prototype for Bahn's fictional challenge, not a deployed Bahn operations system.
-
-Sources: `../verification/selected-order-run6.json`, `../verification/literal-fresh-clone.json`, `../voice/VERIFICATION.json`, `../operations/OPERATING-GUIDE.md`, `../../PARTICIPANT-BRIEF.md`.
+This is a participant prototype for Bahn's fictional challenge, not a deployed Bahn system.
