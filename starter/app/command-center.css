@@ -1,0 +1,59 @@
+/* Command-center layer: dark operations-room surface on top of the shared tokens in globals.css.
+   Signal colours keep one meaning everywhere: amber = decision, red = technical/danger,
+   cyan = agent working, green = clear. Visual only; no layout or behaviour changes. */
+
+body {
+  background:
+    radial-gradient(900px 480px at 85% -8%, rgba(60, 199, 222, 0.10), transparent 70%),
+    radial-gradient(700px 420px at -5% 105%, rgba(255, 154, 60, 0.06), transparent 70%),
+    linear-gradient(rgba(147, 162, 178, 0.035) 1px, transparent 1px) 0 0 / 100% 44px,
+    linear-gradient(90deg, rgba(147, 162, 178, 0.035) 1px, transparent 1px) 0 0 / 44px 100%,
+    var(--canvas);
+  background-attachment: fixed;
+}
+::selection { background: rgba(60, 199, 222, 0.35); color: #fff; }
+:focus-visible { outline-color: var(--teal); }
+* { scrollbar-width: thin; scrollbar-color: var(--sand) transparent; }
+
+/* Sidebar: signal-box rail */
+.sidebar { background: linear-gradient(180deg, #0e151d, #0a1017); border-right: 1px solid var(--hair); }
+.wordmark { display: flex; align-items: center; gap: 10px; letter-spacing: 0.02em; text-transform: uppercase; font-size: 13px; }
+.wordmark::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18), 0 0 12px var(--green); animation: cc-led 2.4s ease-in-out infinite; flex: none; }
+.nav-label { text-transform: uppercase; letter-spacing: 0.12em; font-size: 10.5px; }
+.nav-link { position: relative; transition: background-color 0.15s ease, color 0.15s ease; }
+.nav-link:hover { background: rgba(147, 162, 178, 0.09); }
+.nav-link.active { background: linear-gradient(90deg, rgba(60, 199, 222, 0.18), rgba(60, 199, 222, 0.04)); }
+.nav-link.active::before { content: ""; position: absolute; left: -14px; top: 6px; bottom: 6px; width: 3px; border-radius: 0 3px 3px 0; background: var(--teal); box-shadow: 0 0 10px var(--teal); }
+.nav-link.active .icon { color: var(--teal); }
+.sidebar-foot { font-family: var(--font-mono); font-size: 11px; padding: 12px 10px 0; border-top: 1px solid var(--hair); }
+.sidebar-foot::before { content: "SIMULATION"; display: inline-block; margin-bottom: 6px; padding: 2px 7px; border-radius: 4px; font-size: 10px; letter-spacing: 0.1em; color: var(--orange-ink); background: var(--orange-bg); border: 1px solid rgba(255, 154, 60, 0.35); }
+.sidebar-foot::before { display: block; width: max-content; }
+
+/* Board and shared cards */
+.board-head { background: transparent; border-bottom: 1px solid var(--hair); }
+.board-title h1, .page-title { text-shadow: 0 0 28px rgba(60, 199, 222, 0.18); }
+.lane-head h2 { text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; }
+.lane { background: rgba(10, 15, 21, 0.35); }
+.card { transition: box-shadow 0.18s ease, transform 0.18s ease; }
+.card:hover { transform: translateY(-2px); }
+.panel, .tile { background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent), var(--birch); box-shadow: var(--shadow-card); }
+.cover { box-shadow: 0 0 0 1px var(--hair), 0 18px 40px rgba(0, 0, 0, 0.45); }
+.cover img { filter: saturate(0.92) brightness(0.92); }
+.skeleton { background: linear-gradient(90deg, var(--hair-soft), var(--tray), var(--hair-soft)); background-size: 200% 100%; }
+.chip { border: 1px solid rgba(147, 162, 178, 0.12); }
+.mono { letter-spacing: 0.01em; }
+.search:focus-within { box-shadow: 0 0 0 2px rgba(60, 199, 222, 0.4); }
+
+/* Entrance: content rises into place once */
+@keyframes cc-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes cc-led { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.main > * { animation: cc-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@media (max-width: 900px) {
+  .sidebar { background: #0c131b; }
+  .nav-link.active::before { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .main > *, .wordmark::before { animation: none; }
+  .card, .card:hover { transition: none; transform: none; }
+}

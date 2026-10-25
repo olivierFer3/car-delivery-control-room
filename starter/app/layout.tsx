@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
+import "./command-center.css"
 
 export const metadata: Metadata = {
   title: "Car Delivery Control Room starter",
   description: "A fictional operations dataset and a simple read-only starting point.",
 }
 
-export const viewport: Viewport = { themeColor: "#fffef7", width: "device-width", initialScale: 1 }
+export const viewport: Viewport = { themeColor: "#0a0f15", width: "device-width", initialScale: 1 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
