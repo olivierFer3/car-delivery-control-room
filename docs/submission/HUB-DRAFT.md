@@ -40,7 +40,9 @@ There is also a separate Python triage/evaluation path with stored evaluation re
 - Provider-double tests exercised normal selected-order API/persistence/recovery/review flows. Voice tests used real PostgreSQL and the real browser SDK, with fake microphone, signed-URL/WebSocket responses and business-model responses.
 - A literal independent local Git clone at `d23341d` passed setup, typecheck/build, 100-order checks and signed-URL downloads for both attachment formats. This predates final voice/integration work and is not final-release fresh-clone evidence.
 
-**Not yet established:** Claude's final integration/UI acceptance; final-release reproducibility; live ElevenLabs audio; a real-provider late-reply/proposal run on the newly generalized order path; production multi-user operation or broad incident automation. Passing tests is not proof of no bugs. No measured operator-time saving is claimed.
+- On main with the official logo, typecheck, build, the provider-double test suites listed there, both smoke scripts and a fresh-database setup passed (`../verification/main-check-20261025.md`); three database tests refused to run against a different database, and no real-model or voice call was made.
+
+**Not yet established:** a real-provider run on the final build; final-release reproducibility; live ElevenLabs audio; a real-provider late-reply/proposal run on the newly generalized order path; production multi-user operation or broad incident automation. Passing tests is not proof of no bugs. No measured operator-time saving is claimed.
 
 ## Links and credits — complete before submission
 
