@@ -9,7 +9,7 @@ import { fmtDateTime, fmtMoney } from "@/lib/present/time"
 import { commandIncident } from "../actions"
 import { LiveAgentControls } from "../live-agent-controls"
 import { OperatorAccess } from "../operator-access"
-import { StatusBadge, incidentStatus, responsible } from "../status"
+import { StatusBadge, incidentStatus, paused, responsible } from "../status"
 import styles from "../incidents.module.css"
 
 const toolLabels: Record<string, string> = { get_order_context: "Read the order and linked records", ask_driver: "Asked the simulated driver for an ETA", search_travel_options: "Compared fictional ferry alternatives", check_option_constraints: "Checked ferry timing and constraints", check_booking_constraints: "Checked original booking against driver ETA, safety and blockers", receive_driver_reply: "Received a new simulated driver reply", create_proposal: "Prepared a proposal for review", wait: "Paused for missing information", close_disproved_alert: "Closed the disproved alert" }
@@ -82,7 +82,7 @@ export default function IncidentPage() {
         <dl className={styles.situationFacts}><div><dt>Booked ferry check-in cutoff</dt><dd>{cutoff ? <a href={`#evidence-${bookedFerry!.evidence.id}`}>{fmtDateTime(cutoff)}</a> : "Not checked yet"}</dd></div><div><dt>Simulated driver terminal ETA</dt><dd>{driverEta ? <a href={`#evidence-${incident.driverReplies?.at(-1)?.id ?? `driver:${incident.id}`}`}>{fmtDateTime(driverEta)} · driver report</a> : incident.tasks.some(task => task.tool === "ask_driver") ? "No ETA received" : "Not checked yet"}</dd></div></dl>
         {missesCutoff !== null && <p className={styles.footnote}>{missesCutoff ? "The simulated driver ETA is after the booked cutoff. A later ferry alternative needs review before any booking change." : "The simulated driver ETA meets the booked cutoff. This report alone does not prove check-in or boarding."}</p>}
       </section>
-      <div aria-live="polite" className={styles.next}><p className={styles.eyebrow}>What happens next</p><p>{incident.nextStep}</p><p className={styles.who}><strong>Who acts:</strong> {responsible(incident)}</p>{busy && <p role="status">{busy}</p>}
+      <div aria-live="polite" className={styles.next}><p className={styles.eyebrow}>What happens next</p><p>{paused(incident) ? `The agent stopped after its last check (${incident.nextStep.toLowerCase()}). Resume the investigation below to let it continue.` : incident.nextStep}</p><p className={styles.who}><strong>Who acts:</strong> {responsible(incident)}</p>{busy && <p role="status">{busy}</p>}
         {canPrepare && <button disabled={!!busy} className={styles.primary} onClick={() => act({ command: "mock_proposal" }, "Preparing mock proposal…")}>{proposal ? "Prepare another mock proposal" : "Prepare mock proposal"}</button>}
       </div>
       {incident.mode === "llm" && <LiveAgentControls incident={incident} busy={!!busy} act={act} />}

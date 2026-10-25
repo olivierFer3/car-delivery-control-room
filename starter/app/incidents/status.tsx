@@ -35,9 +35,15 @@ export function StatusBadge({ status }: { status: { label: string; glyph: string
   return <span className={styles.status} data-tone={status.tone}><span aria-hidden="true">{status.glyph}</span> {status.label}</span>
 }
 
+/** An LLM investigation with no run in progress: the agent waits for someone to resume it. */
+export function paused(incident: { state: string; mode?: string; activeRun?: unknown }) {
+  return incident.mode === "llm" && incident.state === "investigating" && !incident.activeRun
+}
+
 /** Who acts next, in plain words, from the incident state. */
-export function responsible(incident: Pick<PublicIncident, "state" | "workflow">) {
+export function responsible(incident: Pick<PublicIncident, "state" | "workflow"> & { mode?: PublicIncident["mode"]; activeRun?: unknown }) {
   if (incident.workflow === "human_review") return "An operator handles this case manually"
+  if (paused(incident)) return "You: resume the investigation (the agent is paused, nothing is running)"
   return {
     needs_decision: "You: approve, reject or ask for an alternative",
     approved: "You: apply the approved change, as a separate step",

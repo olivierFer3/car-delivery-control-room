@@ -8,7 +8,7 @@ import { SIMULATION_TIME, type PublicIncident } from "@/lib/incidents/contracts"
 import { createDemoIncident } from "./actions"
 import { LiveAgentLauncher } from "./live-agent-controls"
 import { OperatorAccess } from "./operator-access"
-import { StatusBadge, incidentStatus, responsible } from "./status"
+import { StatusBadge, incidentStatus, paused, responsible } from "./status"
 import type { OperationalOrder } from "@/lib/incidents/operational"
 import styles from "./incidents.module.css"
 
@@ -47,7 +47,8 @@ export default function IncidentsPage() {
   const groups = [
     { id: "decisions", tab: "person", title: "Decisions needed", note: "A change is proposed. Nothing is booked or paid until you approve this exact version, then apply it.", urgent: true, rows: incidents?.filter(i => !human(i) && ["needs_decision", "approved"].includes(i.state)) ?? [] },
     { id: "waiting", tab: "person", title: "Waiting for information", note: "The case needs a fact first, usually a reply from the simulated driver (voice or text).", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "waiting") ?? [] },
-    { id: "investigating", tab: "agent", title: "Investigating", note: "The agent is checking the facts.", rows: incidents?.filter(i => !human(i) && i.state === "investigating") ?? [] },
+    { id: "paused", tab: "person", title: "Paused · resume needed", note: "The agent stopped between checks. Open the incident and resume the investigation.", urgent: true, rows: incidents?.filter(i => !human(i) && paused(i)) ?? [] },
+    { id: "investigating", tab: "agent", title: "Investigating", note: "The agent is checking the facts right now.", rows: incidents?.filter(i => !human(i) && i.state === "investigating" && !paused(i)) ?? [] },
     { id: "technical", tab: "person", title: "Technical review", note: "A provider or storage problem stopped the run. Nothing was changed; check and resume.", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "technical_error") ?? [] },
     { id: "unsupported", tab: "person", title: "Unsupported · human handling", note: "Outside what the agent may handle. An operator takes these by hand.", rows: incidents?.filter(human) ?? [] },
     { id: "resolved", tab: "agent", title: "Solved by the agent", note: "The agent found the solution and the incident is closed (any booking change was approved by a person first). Delivery status is tracked separately.", rows: incidents?.filter(i => !human(i) && i.state === "resolved") ?? [] },
