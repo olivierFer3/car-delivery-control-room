@@ -13,14 +13,12 @@ export type ModelTurn = { id: string; provider: string; model: string; responseI
 export type DriverReport = { text: string; reportedAt: string; driverName: string; vehicle: string; reference: string; channel: "driver_app" }
 /** One line of the driver conversation. `at` is real wall-clock time; everything else in an incident is simulated time. */
 export type DriverMessage = { id: string; role: "driver" | "agent" | "operator" | "system"; text: string; at: string; via: "text" | "voice" | "system"; callId?: string }
-/** A phone conversation about one incident. `live` means a real call through the telephone network; `test` never leaves this server. */
+/** A SIMULATED call about one incident: the driver types what they would say. No phone network is ever used. */
 export type CallSession = {
-  id: string; mode: "live" | "test"; provider: "elevenlabs-twilio" | "twilio-direct" | "test-mode"
+  id: string; mode: "test"; provider: "test-mode"
   status: "requested" | "ringing" | "in_progress" | "processing" | "completed" | "failed"
-  toMasked: string; requestedAt: string; startedAt?: string; endedAt?: string
-  conversationId?: string; callSid?: string; failure?: string
-  /** Twilio's own view of the call (direct mode): queued, ringing, in-progress, completed, busy, no-answer, failed. */
-  twilioStatus?: string; durationSecs?: number; price?: string
+  requestedAt: string; startedAt?: string; endedAt?: string
+  failure?: string
   transcript: { role: "agent" | "driver"; text: string; t?: number }[]
   extracted?: { minutesToTerminal: number | null; safe: boolean | null; blockers: string[]; summary: string; applied: boolean; note: string }
 }

@@ -136,3 +136,5 @@ Mistakes and corrections:
 Rejected: letting the browser choose a phone number; auto-applying a model's reading of a call without showing it (kept visible to the operator, who still approves the proposal); a public tunnel opened by the agent.
 
 Known limits: a model reads call transcripts into ETA and safety (shown with the transcript); real phone calls and live public data go beyond the brief's fixed snapshot and are off or labelled by default; the fresh-clone run was not repeated after these additions.
+
+Decision (owner): real phone calls were removed again. Reason: they did not help the judging criteria, needed credentials and money, and the brief allows a mocked phone. The simulated, typed call stays and is labelled everywhere. The earlier implementation is in git history (`7be2402`).

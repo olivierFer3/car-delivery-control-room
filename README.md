@@ -22,7 +22,7 @@ on the road, specifically a driver at risk of missing a booked ferry.**
   approves one exact proposal version; applying the change is a separate step; repeating it returns the
   same receipt. A changed proposal needs a new approval.
 - **Driver Support** (`/driver`, mobile): a driver reports a problem, the agent starts at once, and the
-  driver answers by text or by a (simulated by default) phone call. The operator sees it live.
+  driver answers by text or by a clearly labelled SIMULATED call (typed, no phone network). The operator sees it live.
 - **Honest labels.** Every result is labelled *REAL* (live weather, Autobahn, Digitraffic, OpenSky) or
   *SIMULATED* (driver replies, ferries, quotes, bookings). A missing model key shows a clear message; it never
   falls back to fake reasoning. A source that fails is shown as unavailable.
@@ -84,8 +84,7 @@ APP_URL=http://localhost:3000 npm run smoke
 APP_URL=http://localhost:3000 npm run attachments:smoke
 ```
 
-Optional, all **off by default**: real phone calls through ElevenLabs + Twilio
-([docs/telephony](docs/telephony/README.md)) and a browser voice driver ([docs/voice](docs/voice/README.md)).
+Optional, **off by default**: a browser voice driver ([docs/voice](docs/voice/README.md)). Real phone calls were deliberately removed: the brief allows mocking the phone, and a real call added cost and risk without helping the judging criteria.
 The Python triage agent and its evaluation set are in [`agent/`](agent/README.md) (standard library only).
 
 ## How we built it with coding agents
@@ -104,7 +103,7 @@ kept every failure on record. Concrete mistakes we caught and rejected are in
   ([receipt](docs/verification/selected-order-run6.json)).
 - Typecheck, build, provider-double test suites, smoke checks and a fresh-database setup passed on main
   ([check](docs/verification/main-check-20261025.md)).
-- **Not verified:** a real phone call or ElevenLabs audio (no credentials), production use with several
+- **Not verified:** ElevenLabs audio (no credentials), production use with several
   operators, and incident types other than the ferry connection. Passing tests do not prove there are no bugs.
 
 ## Repository map

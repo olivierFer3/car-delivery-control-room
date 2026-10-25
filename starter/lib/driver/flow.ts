@@ -8,10 +8,7 @@ import { commandIncidentService } from "@/lib/incidents/service"
 import { getIncident, insertIncident, mutateIncident, toolsData } from "@/lib/incidents/store"
 import { loadOrder } from "@/lib/present/load"
 import { buildBoardCard } from "@/lib/present/board"
-import { maskNumber, telephonyStatus } from "@/lib/telephony/config"
-import { fetchConversation, startOutboundCall, TelephonyError } from "@/lib/telephony/elevenlabs"
-import { createTwilioCall, fetchTwilioCall, findConversation, registerCall } from "@/lib/telephony/twilio"
-import { extractReply } from "@/lib/telephony/extract"
+import { extractReply } from "@/lib/driver/extract"
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 /** Product mutations refuse while an agent step holds the lease; the driver's action simply waits for it. */
@@ -93,94 +90,22 @@ export async function submitDriverReply(id: string, input: { minutes: unknown; s
   startAgent(id)
 }
 
-/* ---------- Telephony ---------- */
-const active = ["requested", "ringing", "in_progress", "processing"]
+/* ---------- Simulated call (no phone network, ever) ---------- */
+const active = ["requested", "in_progress", "processing"]
 export function callActive(i: Incident) { return (i.calls ?? []).some(c => active.includes(c.status)) }
-const cutoffMinutes = (i: Incident) => {
-  const t = i.tasks.find(x => x.tool === "get_order_context")?.result as { reservations?: { kind?: string; status?: string; check_in_cutoff_at?: string }[] } | undefined
-  const cutoff = t?.reservations?.find(r => r.kind === "FERRY" && r.status === "BOOKED")?.check_in_cutoff_at
-  return cutoff ? Math.round((Date.parse(cutoff) - Date.parse(i.simulationTime)) / 60_000) : null
-}
-export async function requestCall(id: string, input: { authorizeLive?: unknown }) {
-  const status = telephonyStatus()
-  if (status.mode === "live" && input.authorizeLive !== true) throw new WorkflowError(`Confirm that you authorize a real, chargeable phone call to ${status.toMasked}.`)
-  const session: CallSession = { id: randomUUID(), mode: status.mode, provider: status.mode === "live" ? status.provider! : "test-mode", status: "requested", toMasked: status.toMasked ?? "test mode (no phone number)", requestedAt: new Date().toISOString(), transcript: [] }
-  let vars: Record<string, string> = {}
+export async function requestCall(id: string) {
+  const session: CallSession = { id: randomUUID(), mode: "test", provider: "test-mode", status: "in_progress", requestedAt: new Date().toISOString(), startedAt: new Date().toISOString(), transcript: [] }
   await mutateWithRetry(id, i => {
     if (!i.driverReport) throw new WorkflowError("Not a driver incident")
     const q = pendingQuestion(i)
     if (!q) throw new WorkflowError("The agent has no question for you yet.")
-    if (callActive(i)) throw new WorkflowError("A call is already in progress for this incident.")
-    if ((i.calls ?? []).filter(c => c.mode === "live").length >= 2 && status.mode === "live") throw new WorkflowError("The live call limit for this incident was reached. Send your answer by text.")
-    if (status.mode === "test") { session.status = "in_progress"; session.startedAt = session.requestedAt; session.transcript = [{ role: "agent", text: q }] }
-    vars = { driver_name: i.driverReport.driverName, order_reference: i.driverReport.reference, vehicle: i.driverReport.vehicle, incident_report: i.driverReport.text.slice(0, 400), agent_question: q, minutes_until_ferry_check_in_closes: String(cutoffMinutes(i) ?? "unknown"), simulated_clock: "09:00 UTC on 21 October 2026 (simulation)" }
-    vars.call_ref = session.id
+    if (callActive(i)) throw new WorkflowError("A simulated call is already in progress for this incident.")
+    session.transcript = [{ role: "agent", text: q }]
     i.calls = [...(i.calls ?? []), session]
-    i.driverMessages = [...(i.driverMessages ?? []), message(`call-requested:${session.id}`, "system", status.mode === "live" ? `A real phone call to ${session.toMasked} was requested. The phone should ring in a few seconds.` : "A SIMULATED test call was started. No phone network is used.", "system", session.id)]
+    i.driverMessages = [...(i.driverMessages ?? []), message(`call-requested:${session.id}`, "system", "A SIMULATED call was started. No phone network is used; the driver types what they would say.", "system", session.id)]
     syncThread(i)
   })
-  if (status.mode === "live") {
-    const cfg = status.config!
-    try {
-      if (cfg.provider === "twilio-direct") {
-        const twiml = await registerCall(cfg, vars)
-        const { callSid } = await createTwilioCall(cfg, twiml)
-        await mutateWithRetry(id, i => { const c = i.calls!.find(x => x.id === session.id)!; c.callSid = callSid; c.twilioStatus = "queued"; c.status = "ringing" })
-      } else {
-        const started = await startOutboundCall(cfg, vars)
-        await mutateWithRetry(id, i => { const c = i.calls!.find(x => x.id === session.id)!; c.conversationId = started.conversationId; c.callSid = started.callSid; c.status = "ringing" })
-      }
-      void pollCall(id, session.id)
-    } catch (e) { await failCall(id, session.id, e instanceof TelephonyError ? e.message : "The call could not be started.") }
-  }
   return session.id
-}
-async function failCall(id: string, callId: string, reason: string) {
-  await mutateWithRetry(id, i => { const c = i.calls?.find(x => x.id === callId); if (!c) return; c.status = "failed"; c.failure = reason; c.endedAt = new Date().toISOString(); i.driverMessages = [...(i.driverMessages ?? []), message(`call-failed:${callId}`, "system", `The call did not connect: ${reason} You can answer by text instead.`, "system", callId)]; syncThread(i) }).catch(() => {})
-}
-const polling = new Set<string>()
-export async function pollCall(id: string, callId: string, intervalMs = 3000) {
-  if (polling.has(callId)) return
-  polling.add(callId)
-  try {
-    const cfg = telephonyStatus().config
-    let errors = 0, endedAt = 0
-    for (let n = 0; cfg && n < (20 * 60_000) / intervalMs; n++) {
-      const i = await getIncident(id), c = i?.calls?.find(x => x.id === callId)
-      if (!i || !c || ["completed", "failed"].includes(c.status)) return
-      if (c.status === "ringing" && Date.now() - Date.parse(c.requestedAt) > 120_000) { await failCall(id, callId, "Nobody answered."); return }
-      try {
-        // Direct mode: Twilio is the source of truth for ringing / answered / ended; the voice agent supplies the conversation.
-        let status: CallSession["status"] = c.status, twilio: Awaited<ReturnType<typeof fetchTwilioCall>> | undefined, conversationId = c.conversationId
-        if (c.provider === "twilio-direct" && cfg.twilio && c.callSid) {
-          twilio = await fetchTwilioCall(cfg, c.callSid)
-          if (twilio.status === "failed") { await mutateWithRetry(id, inc => { const s = inc.calls!.find(x => x.id === callId)!; s.twilioStatus = twilio!.twilioStatus; s.price = twilio!.price }).catch(() => {}); await failCall(id, callId, twilio.failure ?? "The call failed."); return }
-          status = twilio.status as CallSession["status"]
-          if (!conversationId && twilio.twilioStatus !== "queued" && twilio.twilioStatus !== "ringing") conversationId = (await findConversation(cfg, callId, c.callSid, Math.floor(Date.parse(c.requestedAt) / 1000) - 30)) ?? undefined
-          if (twilio.status === "processing") { endedAt ||= Date.now(); if (!conversationId && Date.now() - endedAt > 90_000) { await failCall(id, callId, "The call ended but its conversation could not be found at the voice provider."); return } }
-        }
-        let transcript = c.transcript, done = false, failedConv = false
-        if (conversationId) {
-          const conv = await fetchConversation(cfg, conversationId)
-          transcript = conv.transcript; done = conv.status === "completed"; failedConv = conv.status === "failed"
-          if (c.provider !== "twilio-direct") status = conv.status
-          else if (conv.status === "in_progress" && status === "ringing") status = "in_progress"
-        }
-        errors = 0
-        const changed = status !== c.status || conversationId !== c.conversationId || JSON.stringify(transcript) !== JSON.stringify(c.transcript) || twilio?.twilioStatus !== c.twilioStatus || twilio?.price !== c.price
-        if (changed) await mutateWithRetry(id, inc => {
-          const s = inc.calls!.find(x => x.id === callId)!
-          s.status = status; s.transcript = transcript; if (conversationId) s.conversationId = conversationId
-          if (twilio) { s.twilioStatus = twilio.twilioStatus; s.durationSecs = twilio.durationSecs; s.price = twilio.price }
-          if (status === "in_progress" && !s.startedAt) s.startedAt = new Date().toISOString()
-          syncThread(inc)
-        })
-        if (failedConv) { await failCall(id, callId, "The voice agent reported a failed conversation."); return }
-        if (done && (c.provider !== "twilio-direct" || twilio?.status === "processing")) { await ingestCall(id, callId); return }
-      } catch (e) { if (++errors >= 6) { await failCall(id, callId, e instanceof TelephonyError ? e.message : "Lost contact with the voice provider."); return } }
-      await sleep(intervalMs)
-    }
-  } finally { polling.delete(callId) }
 }
 /** Turns a finished call into evidence: read the transcript, hand the investigation agent the structured reply, resume it. */
 export async function ingestCall(id: string, callId: string) {
@@ -193,7 +118,7 @@ export async function ingestCall(id: string, callId: string) {
     c.status = "completed"; c.endedAt ??= new Date().toISOString()
     const driverText = c.transcript.filter(l => l.role === "driver").map(l => l.text).join(" ").slice(0, 1000)
     if (pendingQuestion(inc) && extracted.minutesToTerminal !== null && extracted.safe !== null && driverText) {
-      receiveDriverReply(inc, { command: "receive_driver_reply", terminalEta: iso(Date.parse(inc.simulationTime) + extracted.minutesToTerminal * 60_000), safe: extracted.safe, blockers: extracted.blockers, text: `${c.mode === "live" ? "Phone call" : "Simulated test call"}: ${driverText}` })
+      receiveDriverReply(inc, { command: "receive_driver_reply", terminalEta: iso(Date.parse(inc.simulationTime) + extracted.minutesToTerminal * 60_000), safe: extracted.safe, blockers: extracted.blockers, text: `${"Simulated call"}: ${driverText}` })
       applied = true
     }
     c.extracted = { ...extracted, applied }
@@ -211,8 +136,6 @@ export async function endTestCall(id: string, callId: string) {
   await mutateWithRetry(id, i => { const c = i.calls?.find(x => x.id === callId); if (!c || c.mode !== "test" || c.status !== "in_progress") throw new WorkflowError("No test call in progress."); c.status = "processing"; syncThread(i) })
   await ingestCall(id, callId)
 }
-/** After a restart, calls that were still in flight resume being followed. */
-export function resumePollers(i: Incident) { for (const c of i.calls ?? []) if (c.mode === "live" && active.includes(c.status) && (c.conversationId || c.callSid)) void pollCall(i.id, c.id) }
 
 /* ---------- Driver-safe view ---------- */
 export function driverView(i: Incident) {
@@ -232,14 +155,12 @@ export function driverView(i: Incident) {
     approved: "The operator approved. The simulated change is applied as a separate step; this page updates by itself.",
     resolved: i.summary, agent_working: i.agentRetry ? "The AI service is busy (a per-minute limit). The agent retries by itself in a moment; nothing is lost." : "It is checking the order, live weather, roads and trains. This page updates by itself.",
   }[phase]
-  const st = telephonyStatus()
   return {
     id: i.id, reference: i.driverReport?.reference, vehicle: i.driverReport?.vehicle, driverName: i.driverReport?.driverName, report: i.driverReport?.text,
     state: i.state, phase, headline, detail, question: q, working: agentBusy(i),
     steps: activitySteps(i), thread: i.driverMessages ?? [],
-    calls: (i.calls ?? []).map(c => ({ id: c.id, mode: c.mode, provider: c.provider, status: c.status, twilioStatus: c.twilioStatus, durationSecs: c.durationSecs, toMasked: c.toMasked, failure: c.failure, extracted: c.extracted, transcriptLines: c.transcript.length })),
-    phone: { mode: st.mode, toMasked: st.toMasked, canCall: !!q && !calling, calling, missing: st.mode === "test" ? st.missing : [] },
+    calls: (i.calls ?? []).map(c => ({ id: c.id, mode: c.mode, status: c.status, failure: c.failure, extracted: c.extracted, transcriptLines: c.transcript.length })),
+    phone: { canCall: !!q && !calling, calling },
     serverTime: new Date().toISOString(),
   }
 }
-export { maskNumber }

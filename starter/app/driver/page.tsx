@@ -6,9 +6,9 @@ import styles from "./driver.module.css"
 type Order = { id: string; reference: string; vehicle: string; plate: string | null; route: string; driverName: string; ferry: { checkInCutoffAt: string; departureAt: string; from: string | null; to: string | null } | null; openIncidentId: string | null }
 type Step = { id: string; at: string; label: string; origin: "real" | "simulated" | "dataset" | "driver" | "agent"; status: "done" | "error" | "running"; summary: string; findings?: { text: string; severity: string }[] }
 type Msg = { id: string; role: "driver" | "agent" | "operator" | "system"; text: string; at: string; via: "text" | "voice" | "system"; callId?: string }
-type Call = { id: string; mode: "live" | "test"; status: string; twilioStatus?: string; toMasked: string; failure?: string; extracted?: { applied: boolean; summary: string } }
-type View = { id: string; reference: string; vehicle: string; driverName: string; report: string; state: string; phase: string; headline: string; detail: string; question: string | null; working: boolean; steps: Step[]; thread: Msg[]; calls: Call[]; phone: { mode: "live" | "test"; toMasked: string | null; canCall: boolean; calling: boolean }; serverTime: string }
-type Status = { simulationTime: string; agent: { provider: string; model: string } | null; phone: { mode: "live" | "test"; toMasked: string | null; missing: string[] } }
+type Call = { id: string; mode: "test"; status: string; failure?: string; extracted?: { applied: boolean; summary: string } }
+type View = { id: string; reference: string; vehicle: string; driverName: string; report: string; state: string; phase: string; headline: string; detail: string; question: string | null; working: boolean; steps: Step[]; thread: Msg[]; calls: Call[]; phone: { canCall: boolean; calling: boolean }; serverTime: string }
+type Status = { simulationTime: string; agent: { provider: string; model: string } | null }
 
 const ORIGIN: Record<Step["origin"], string> = { real: "REAL data", simulated: "SIMULATED", dataset: "Synthetic data", driver: "You", agent: "Agent" }
 const SIM_START = Date.parse("2026-10-21T09:00:00Z")
@@ -27,7 +27,7 @@ export default function DriverSupport() {
   const [error, setError] = useState("")
   const [offline, setOffline] = useState(false)
   const [busy, setBusy] = useState("")
-  const [authorize, setAuthorize] = useState(false)
+
   const [say, setSay] = useState("")
   const [form, setForm] = useState({ minutes: "", safe: "", blockers: "", text: "" })
   const threadEnd = useRef<HTMLDivElement>(null)
@@ -70,7 +70,7 @@ export default function DriverSupport() {
     const d = await api("/api/driver/incidents", { method: "POST", body: JSON.stringify({ orderId, text }) })
     store.set("driver-case", d.id); setCaseId(d.id); setView(null); setText("")
   })
-  const call = () => act("Calling", () => api(`/api/driver/incidents/${caseId}/call`, { method: "POST", body: JSON.stringify({ authorizeLive: authorize }) }))
+  const call = () => act("Calling", () => api(`/api/driver/incidents/${caseId}/call`, { method: "POST", body: JSON.stringify({}) }))
   const sendReply = () => act("Sending", async () => {
     await api(`/api/driver/incidents/${caseId}/reply`, { method: "POST", body: JSON.stringify({ minutes: Number(form.minutes), safe: form.safe === "yes" ? true : form.safe === "no" ? false : undefined, blockers: form.blockers.split("\n"), text: form.text }) })
     setForm({ minutes: "", safe: "", blockers: "", text: "" })
@@ -79,7 +79,7 @@ export default function DriverSupport() {
   const newCase = () => { store.set("driver-case", ""); setCaseId(null); setView(null) }
 
   if (code === "") return <Shell><section className={styles.card}><h1>Driver Support</h1><p>Open the Driver Support link shown in the Control Room. It carries the access code for this demo.</p></section></Shell>
-  const live = status?.phone.mode === "live"
+
   const activeCall = view?.calls.find(c => ["requested", "ringing", "in_progress", "processing"].includes(c.status))
   const selected = orders?.find(o => o.id === orderId)
 
@@ -120,15 +120,15 @@ export default function DriverSupport() {
         <p className={styles.kicker}>The agent asks</p>
         <p className={styles.question}>{view.question}</p>
         {activeCall ? <div className={styles.callbox}>
-          <p><span className={styles.badge} data-kind={activeCall.mode}>{activeCall.mode === "live" ? "LIVE PHONE CALL" : "SIMULATED CALL"}</span> {activeCall.mode === "live" ? (activeCall.status === "ringing" ? `Your phone (${activeCall.toMasked}) is ringing. Answer it to talk to the voice agent.` : activeCall.status === "processing" ? "Call ended. Reading what you said…" : "You are on the call. Speak with the voice agent.") : "No phone network is used. Type what you would say."}{activeCall.mode === "live" && activeCall.twilioStatus ? <span className={styles.muted}> Phone network status: {activeCall.twilioStatus}.</span> : null}</p>
-          {activeCall.mode === "test" && activeCall.status === "in_progress" && <>
+          <p><span className={styles.badge} data-kind="test">SIMULATED CALL</span> {activeCall.status === "processing" ? "Call ended. Reading what you said…" : "No phone network is used. Type what you would say."}</p>
+          {activeCall.status === "in_progress" && <>
             <label className={styles.field}>You say<textarea rows={2} value={say} maxLength={600} onChange={e => setSay(e.target.value)} placeholder="It will take me about 5 hours. I am safe. The truck is waiting for a tow." /></label>
             <div className={styles.row}><button className={styles.secondary} disabled={!say.trim() || !!busy} onClick={() => testCall(activeCall, "say")}>Say it</button><button className={styles.primary} disabled={!!busy} onClick={() => testCall(activeCall, "end")}>End call and send</button></div>
           </>}
         </div> : <div className={styles.callbox}>
-          <p><span className={styles.badge} data-kind={live ? "live" : "test"}>{live ? "LIVE PHONE" : "TEST MODE"}</span> {live ? `The agent can call your phone (${status?.phone.toMasked}) now. This is a real, chargeable call.` : "No phone number is configured, so calls are simulated here. Nothing leaves this server."}</p>
-          {live && <label className={styles.check}><input type="checkbox" checked={authorize} onChange={e => setAuthorize(e.target.checked)} /> I authorize a real phone call to {status?.phone.toMasked}</label>}
-          <button className={styles.primary} disabled={!view.phone.canCall || (live && !authorize) || !!busy} onClick={call}>{busy === "Calling" ? "Starting…" : live ? "Call me now" : "Start a simulated call"}</button>
+          <p><span className={styles.badge} data-kind="test">SIMULATED CALL</span> The agent's question is read as a call. Nothing leaves this server and no phone rings: you type what you would say.</p>
+
+          <button className={styles.primary} disabled={!view.phone.canCall || !!busy} onClick={call}>{busy === "Calling" ? "Starting…" : "Start a simulated call"}</button>
         </div>}
         <details className={styles.text} open={!activeCall}><summary>Or answer by text</summary>
           <label className={styles.field}>Minutes until you reach the ferry terminal<input inputMode="numeric" value={form.minutes} onChange={e => setForm({ ...form, minutes: e.target.value.replace(/\D/g, "") })} placeholder="e.g. 300" /></label>
@@ -141,9 +141,9 @@ export default function DriverSupport() {
 
       <section className={styles.card}>
         <h2>Conversation</h2>
-        <ol className={styles.thread}>{view.thread.map(m => { const c = m.callId ? view.calls.find(x => x.id === m.callId) : undefined; return <li key={m.id} data-role={m.role}>
+        <ol className={styles.thread}>{view.thread.map(m => { return <li key={m.id} data-role={m.role}>
           <span className={styles.who}>{m.role === "driver" ? "You" : m.role === "agent" ? "Support agent" : m.role === "operator" ? "Operator" : "System"}
-            {m.via === "voice" && <span className={styles.badge} data-kind={c?.mode ?? "test"}>{c?.mode === "live" ? "LIVE CALL" : "SIMULATED CALL"}</span>}
+            {m.via === "voice" && <span className={styles.badge} data-kind="test">SIMULATED CALL</span>}
             <time>{clock(m.at)}</time></span><p>{m.text}</p></li> })}</ol>
         <div ref={threadEnd} />
       </section>
@@ -161,13 +161,13 @@ export default function DriverSupport() {
 }
 
 function Shell({ children, status }: { children: React.ReactNode; status?: Status | null }) {
-  const live = status?.phone.mode === "live"
+
   return <div className={styles.page}>
     <header className={styles.top}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/bahn-logo.png" width={512} height={512} alt="Bahn Express" className={styles.logo} />
       <span className={styles.title}>Driver Support</span>
-      {status && <span className={styles.badge} data-kind={live ? "live" : "test"}>{live ? "PHONE: LIVE" : "PHONE: TEST MODE"}</span>}
+      <span className={styles.badge} data-kind="test">SIMULATED CALLS</span>
     </header>
     <p className={styles.notice}>Synthetic demo. Real AI agent and real weather, road and train data; simulated drivers, ferries and bookings. No booking is ever made.</p>
     <main className={styles.main}>{children}</main>

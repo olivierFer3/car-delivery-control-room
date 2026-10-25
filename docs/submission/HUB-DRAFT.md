@@ -23,7 +23,7 @@ The agent is a real language model in a tool loop (Groq `openai/gpt-oss-120b` or
 - **Checked:** no action needed.
 - **Proposal:** a versioned proposal goes to a person, with its sources, cost, timing and uncertainty.
 
-A driver can report a problem from a mobile Driver Support page and answer by text or by phone call (simulated by default). The operator watches it live.
+A driver can report a problem from a mobile Driver Support page and answer by text or by a labelled simulated call (typed, no phone network). The operator watches it live.
 
 Approval and execution are separate. A person approves one exact proposal version. Applying the simulated booking change is a second step, and repeating it returns the same receipt. A revised proposal needs a new approval. The agent never books, pays, changes a date or contacts a customer. Every result is labelled REAL (live public data) or SIMULATED (driver replies, ferries, quotes, bookings). A missing model key shows a clear message instead of switching silently to mock reasoning.
 
@@ -32,7 +32,7 @@ Approval and execution are separate. A person approves one exact proposal versio
 - **One workflow:** a booked-ferry connection at risk. Six of the 100 supplied orders qualify. For the others, the agent hands the case to a human and says why.
 - **Simulated:** driver replies, alternative sailings and booking effects. **Real:** the model, plus the weather, road, train and flight lookups. No real person is contacted and nothing is purchased.
 - **Persistent case history:** source IDs and timestamps, waiting/reply/resume, operator questions, rejection and revision, approval of an exact version, separate execution.
-- **Optional, off by default:** real phone calls through ElevenLabs + Twilio, and a browser voice driver. Both are tested with mocked providers only.
+- **Optional, off by default:** a browser voice driver, tested with mocked providers only. Real phone calls were removed on purpose.
 
 ## Architecture
 
@@ -54,7 +54,7 @@ There is a separate Python triage agent with an evaluation set (77 cases, stored
 - **Earlier real-model ferry cases:** evidence-backed proposals, versioned review and duplicate-safe simulated execution. `../overnight/final-acceptance-demo.md`.
 - **Checks on main:** typecheck, build, the provider-double test suites, smoke checks over all 100 orders, attachment downloads and a fresh-database setup. `../verification/main-check-20261025.md`.
 
-**Not verified:** a real phone call or real ElevenLabs audio, use by several operators at once, and incident types other than the ferry connection. Passing tests do not prove there are no bugs. We claim no measured time saving.
+**Not verified:** real ElevenLabs audio, use by several operators at once, and incident types other than the ferry connection. Passing tests do not prove there are no bugs. We claim no measured time saving.
 
 ## Links
 

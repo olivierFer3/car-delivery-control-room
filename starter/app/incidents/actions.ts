@@ -8,7 +8,6 @@ import { publicIncident } from "@/lib/incidents/http"
 import { insertOrGetIncident, toolsData } from "@/lib/incidents/store"
 import { issueSession, OPERATOR_COOKIE, tokenMatches, validSession } from "@/lib/incidents/operator-session"
 import { driverCode } from "@/lib/driver/access"
-import { telephonyStatus } from "@/lib/telephony/config"
 
 type Result = { incident?: PublicIncident; error?: string }
 export async function unlockOperator(token: string): Promise<{ error?: string }> {
@@ -56,9 +55,8 @@ export async function openOrderInvestigation(orderId:string,signalId:string,prov
 }
 
 /** The Driver Support link carries a code derived from the operator token; only an unlocked operator can see it. */
-export async function driverAccess(): Promise<{ code?: string; phone: { mode: "live" | "test"; toMasked: string | null; missing: string[] }; error?: string }> {
-  const t = telephonyStatus(), phone = { mode: t.mode, toMasked: t.toMasked, missing: t.missing }
-  if (!await operatorAccess()) return { phone, error: "Unlock operator access to show the Driver Support link." }
+export async function driverAccess(): Promise<{ code?: string; error?: string }> {
+  if (!await operatorAccess()) return { error: "Unlock operator access to show the Driver Support link." }
   const code = driverCode()
-  return code ? { code, phone } : { phone, error: "Operator access is not configured on this server." }
+  return code ? { code } : { error: "Operator access is not configured on this server." }
 }
