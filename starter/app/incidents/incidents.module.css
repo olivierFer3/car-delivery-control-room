@@ -147,3 +147,7 @@
 .orderRow select { width: 100%; }
 .cardTop { flex-wrap: wrap; gap: 8px; }
 .page :is(.raw, .raw summary, dt, .eyebrow, .count, details, details span) { font-size: max(12px, 1em); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--hair); margin-bottom: 18px; flex-wrap: wrap; }
+.tabs button { border: 0; border-bottom: 3px solid transparent; background: none; padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--muted); min-height: 44px; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--orange); }
+.tabs button:hover { color: var(--ink); }

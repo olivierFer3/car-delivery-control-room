@@ -19,6 +19,7 @@ export default function IncidentsPage() {
   const [busy, setBusy] = useState(false)
   const [refresh, setRefresh] = useState(0)
   const [orders, setOrders] = useState<OperationalOrder[] | null>(null)
+  const [tab, setTab] = useState<"person" | "agent">("person")
   useEffect(() => {
     const controller = new AbortController()
     setError("")
@@ -44,26 +45,32 @@ export default function IncidentsPage() {
   }
   const human = (i: PublicIncident) => i.workflow === "human_review"
   const groups = [
-    { id: "decisions", title: "Decisions needed", note: "A change is proposed. Nothing is booked or paid until you approve this exact version, then apply it.", urgent: true, rows: incidents?.filter(i => !human(i) && ["needs_decision", "approved"].includes(i.state)) ?? [] },
-    { id: "waiting", title: "Waiting for information", note: "The case needs a fact first, usually a reply from the simulated driver (voice or text).", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "waiting") ?? [] },
-    { id: "investigating", title: "Investigating", note: "The agent is checking the facts.", rows: incidents?.filter(i => !human(i) && i.state === "investigating") ?? [] },
-    { id: "technical", title: "Technical review", note: "A provider or storage problem stopped the run. Nothing was changed; check and resume.", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "technical_error") ?? [] },
-    { id: "unsupported", title: "Unsupported · human handling", note: "Outside what the agent may handle. An operator takes these by hand.", rows: incidents?.filter(i => human(i) && i.state !== "resolved") ?? [] },
-    { id: "resolved", title: "Resolved incidents", note: "The incident is closed. Delivery status is tracked separately.", rows: incidents?.filter(i => i.state === "resolved") ?? [] },
+    { id: "decisions", tab: "person", title: "Decisions needed", note: "A change is proposed. Nothing is booked or paid until you approve this exact version, then apply it.", urgent: true, rows: incidents?.filter(i => !human(i) && ["needs_decision", "approved"].includes(i.state)) ?? [] },
+    { id: "waiting", tab: "person", title: "Waiting for information", note: "The case needs a fact first, usually a reply from the simulated driver (voice or text).", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "waiting") ?? [] },
+    { id: "investigating", tab: "agent", title: "Investigating", note: "The agent is checking the facts.", rows: incidents?.filter(i => !human(i) && i.state === "investigating") ?? [] },
+    { id: "technical", tab: "person", title: "Technical review", note: "A provider or storage problem stopped the run. Nothing was changed; check and resume.", urgent: true, rows: incidents?.filter(i => !human(i) && i.state === "technical_error") ?? [] },
+    { id: "unsupported", tab: "person", title: "Unsupported · human handling", note: "Outside what the agent may handle. An operator takes these by hand.", rows: incidents?.filter(human) ?? [] },
+    { id: "resolved", tab: "agent", title: "Solved by the agent", note: "The agent found the solution and the incident is closed (any booking change was approved by a person first). Delivery status is tracked separately.", rows: incidents?.filter(i => !human(i) && i.state === "resolved") ?? [] },
   ]
+  const tabs = [{ id: "person" as const, label: "Needs a person" }, { id: "agent" as const, label: "Handled by the agent" }]
+  const count = (t: string) => groups.filter(g => g.tab === t).reduce((n, g) => n + g.rows.length, 0)
+  const shown = groups.filter(g => g.tab === tab)
   const unchecked = orders?.filter(o => o.checkStatus === "Not checked").length
   return <AppFrame section="incidents" snapshotAt={SIMULATION_TIME}><main className={styles.page}>
     <header className={styles.hero}><div><p className={styles.eyebrow}>Control room · fictional simulation</p><h1>Operations workspace</h1><p>What needs you now, what the agent is doing, and what is still unchecked. No real messages, bookings or payments are made.</p></div><Link className={styles.secondary} href="/incidents/orders">All {orders?.length ?? 100} orders →</Link></header>
     <OperatorAccess />
     {error && <div className={styles.error} role="alert">{error}<button className={styles.secondary} onClick={() => setRefresh(n => n + 1)}>Try again</button></div>}
     {!incidents && !error && <p role="status" aria-busy="true" className={styles.panel}>Loading incidents…</p>}
+    {incidents && <div role="tablist" aria-label="Incident view" className={styles.tabs} onKeyDown={e => { if (["ArrowLeft", "ArrowRight"].includes(e.key)) { const next = tab === "person" ? "agent" : "person"; setTab(next); document.getElementById(`tab-${next}`)?.focus() } }}>
+      {tabs.map(t => <button key={t.id} id={`tab-${t.id}`} role="tab" aria-selected={tab === t.id} aria-controls="queues-panel" tabIndex={tab === t.id ? 0 : -1} onClick={() => setTab(t.id)}>{t.label} <span className={styles.count}>{count(t.id)}</span></button>)}
+    </div>}
     {incidents && <nav aria-label="Queues" className={styles.queueSummary}>
-      {groups.map(g => <a key={g.id} href={`#${g.id}`} data-urgent={g.urgent && g.rows.length > 0}><strong>{g.rows.length}</strong><span>{g.title}</span></a>)}
+      {shown.map(g => <a key={g.id} href={`#${g.id}`} data-urgent={g.urgent && g.rows.length > 0}><strong>{g.rows.length}</strong><span>{g.title}</span></a>)}
       <Link href="/incidents/orders?check=Not+checked"><strong>{unchecked ?? "–"}</strong><span>Orders not checked</span></Link>
     </nav>}
-    {incidents && groups.map(group => <section key={group.id} id={group.id} aria-labelledby={`${group.id}-title`} className={styles.section}><div className={styles.sectionHead}><h2 id={`${group.id}-title`}>{group.title} <span className={styles.count}>{group.rows.length}</span></h2><p>{group.note}</p></div>
+    {incidents && <div id="queues-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>{shown.map(group => <section key={group.id} id={group.id} aria-labelledby={`${group.id}-title`} className={styles.section}><div className={styles.sectionHead}><h2 id={`${group.id}-title`}>{group.title} <span className={styles.count}>{group.rows.length}</span></h2><p>{group.note}</p></div>
       {group.rows.length === 0 ? <p className={styles.empty}>Nothing in this queue.</p> : <ul className={styles.cards}>{group.rows.map(i => <li key={i.id}><Link className={styles.card} href={`/incidents/${i.id}`}><div className={styles.cardTop}><span className={styles.reference}>{i.orderId === "ord-00603" ? "CD-420603" : i.orderId}</span><StatusBadge status={incidentStatus(i)} /></div><p className={styles.source}>{human(i) ? "Unsupported case · human handling" : i.mode === "llm" ? "Real model investigation · simulated services" : "Preserved scripted demo"}</p><h3>{i.summary}</h3><p>{i.nextStep}</p><p className={styles.who}><strong>Next:</strong> {responsible(i)}</p><span className={styles.open}>Open incident →</span></Link></li>)}</ul>}
-    </section>)}
+    </section>)}</div>}
     <p className={styles.footnote}>Orders without an investigation stay <strong>Not checked</strong>. A quiet queue is not proof that every order is safe.</p>
     <details className={styles.raw}><summary>Earlier demos (kept for comparison)</summary>
       <div className={styles.notice}><strong>Scripted iteration-1 demo</strong><span>The original ferry-delay demo, with mock reasoning. No real messages or bookings are made.</span><button className={styles.primary} disabled={busy || !incidents} onClick={openDemo}>{busy ? "Opening incident…" : "Open ferry-delay demo"}</button></div>
