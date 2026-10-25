@@ -71,9 +71,8 @@ GEMINI_API_KEY=your-gemini-key
 `starter/compose.yaml` (Postgres on 5438, attachment store on 9009). If you change a port there, change it here
 too. The `*_MODEL` / `*_ALLOWED_MODELS` lines already hold the models we tested.
 
-**Optional, off by default**: `ELEVENLABS_*`, `DRIVER_TEST_PHONE` and `TELEPHONY_LIVE_ENABLED` are only for real
-phone calls ([docs/telephony](docs/telephony/README.md)). Leave them empty and `false`; the Driver Support page
-then runs a clearly labelled test mode.
+**Optional, off by default**: `ELEVENLABS_*` are only for the browser voice driver ([docs/voice](docs/voice/README.md)).
+Leave them empty and `ELEVENLABS_LIVE_ENABLED=false`; the driver's call stays a clearly labelled simulation.
 
 Restart `npm run dev` after any change to `.env`.
 
